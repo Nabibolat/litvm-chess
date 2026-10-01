@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>LitVM Chess</title>
+    <style>
+                * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: linear-gradient(180deg, #0a0d14 0%, #0f1117 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #ffb84d;
+            text-align: center;
+            font-size: 28px;
+            margin: 0 0 24px 0;
+            letter-spacing: 0.5px;
+        }
+        h3 { margin: 0 0 12px 0; font-size: 17px; color: #ffb84d; }
+        .card {
+            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #2a2e3a;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: #3a3e4a; }
+        input, select, button {
+            font-size: 15px;
+            padding: 11px 14px;
+            border-radius: 9px;
+            border: 1px solid #2a2e3a;
+            font-family: inherit;
+        }
+        input, select {
+            background: #0f1117;
+            color: #e6e6e6;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ffb84d;
+        }
+        button {
+            background: linear-gradient(180deg, #ffc670 0%, #ffb84d 100%);
+            color: #0f1117;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(255,184,77,0.2);
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,184,77,0.35);
+        }
+        button:active:not(:disabled) { transform: translateY(0); }
+        button:disabled {
+            background: #2a2e3a;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        button.small {
+            font-size: 13px;
+            padding: 6px 11px;
+            margin-right: 5px;
+            margin-top: 6px;
+        }
+        button.white-win { background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%); }
+        button.black-win { background: linear-gradient(180deg, #3a3a3a 0%, #222 100%); color: #fff; }
+        button.draw { background: linear-gradient(180deg, #8a92a6 0%, #6a7286 100%); color: #fff; }
+        .status {
+            font-size: 13px;
+            color: #8a92a6;
+            margin-top: 8px;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+        .match {
+            border-left: 3px solid #ffb84d;
+            padding: 12px 14px;
+            margin: 10px 0;
+            background: linear-gradient(90deg, #1a1d26 0%, #161922 100%);
+            border-radius: 8px;
+            transition: transform 0.15s;
+        }
+        .match:hover { transform: translateX(2px); }
+        .match.finished { border-left-color: #1e5c2b; }
+        .match small { color: #8a92a6; display: block; margin-top: 2px; }
+        .net-badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+        .net-ok { background: #1e5c2b; color: #b6f7c4; }
+        .net-bad { background: #5c1e1e; color: #f7b6b6; }
+        .timer {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: #2a2e3a;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+        #board {
+            border: 4px solid #ffb84d;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(255,184,77,0.15);
+            margin: 0 auto;
+        }
+        .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
+        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 600px) {
+            body { padding: 16px 12px; }
+            h1 { font-size: 22px; }
+            .card { padding: 16px; border-radius: 12px; }
+            #board { width: 100% !important; max-width: 100% !important; }
+            .clock-row { font-size: 14px; }
+        }
+    </style>
+  </head>
+  <body>
+    <h1>♟ LitVM Chess</h1>
+
+    <div class="card">
+        <button id="connectBtn">Connect MetaMask</button>
+        <div class="status" id="walletStatus">Wallet not connected</div>
+    </div>
+
+    <div class="card">
+        <h3>Create a Game</h3>
+        <input id="opponentInput" placeholder="Opponent address (0x...)" />
+        <select id="timeControlSelect">
+            <option value="60">1 minute</option>
+            <option value="300" selected>5 minutes</option>
+            <option value="900">15 minutes</option>
+            <option value="1800">30 minutes</option>
+        </select>
+        <button id="createBtn" disabled>Create Game</button>
+        <div class="status" id="createStatus"></div>
+    </div>
+<div class="card">
+    <h3>🎮 Open Games (Lobby)</h3>
+    <p class="status">Create an open game and wait for an opponent, or join an existing one.</p>
+    <button id="createOpenBtn" disabled>Create Open Game</button>
+    <button id="refreshOpenBtn" disabled>Refresh Lobby</button>
+    <div class="status" id="openStatus"></div>
+    <div id="openMatchesList"></div>
+</div>
+        <div class="card">
+    <h3>Your Stats</h3>
+    <div id="statsBlock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+        <div>🎮 Games: <b id="statGames">-</b></div>
+        <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
+        <div>💀 Losses: <b id="statLosses" style="color: #f7b6b6;">-</b></div>
+        <div>🤝 Draws: <b id="statDraws" style="color: #ffd88a;">-</b></div>
+        <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
+    </div>
+</div>
+    <div class="card">
+       <h3>My Games</h3>
+       <button id="loadBtn" disabled>Load Games</button>
+        <div id="matchesList"></div>
+    </div>
+    <div class="card">
+ <div class="card">
+    <h3>Play vs Bot</h3>
+    <p class="status">Choose difficulty and start a game against the computer.</p>
+    <select id="botDifficulty">
+        <option value="0">Easy (level 0)</option>
+        <option value="5" selected>Medium (level 5)</option>
+        <option value="10">Hard (level 10)</option>
+        <option value="15">Very Hard (level 15)</option>
+        <option value="20">Master (level 20)</option>
+    </select>
+    <div style="margin-top: 10px;">
+        <button id="startBotBtn">Start Bot Game</button>
+        <button id="stopBotBtn" style="background: #5c1e1e; color: #fff;">Stop Bot</button>
+    </div>
+    <p class="status" id="botStatus"></p>
+ </div>
+        <h3>Chess Board</h3>
+        <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
+            <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+        <div>⚪ White: <span id="whiteTimer">--:--</span></div>
+        <div>⚫ Black: <span id="blackTimer">--:--</span></div>
+    </div>
+        <div id="board" style="width: 400px; margin: 20px auto;"></div>
+        <div style="text-align: center; margin-top: 10px;">
+            <button id="resetBoardBtn">Reset Board</button>
+        </div>
+    </div>
+
+         <!-- ===== ПОДКЛЮЧЕНИЕ БИБЛИОТЕК ===== -->
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
+<script src="ethers.umd.min.js"></script>
+     <script>
+        // ==== НАСТРОЙКИ ====
+        const CONTRACT_ADDRESS = "0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8";
+        const LITVM_CHAIN_ID = "0x1159"; // 4441
+
+                const ABI = [
+            "function createMatch(address _blackPlayer, uint256 _timeControl) returns (uint256)",
+            "function createOpenMatch(uint256 _timeControl) returns (uint256)",
+            "function joinMatch(uint256 _matchId)",
+            "function submitResult(uint256 _matchId, string _result)",
+            "function getMatch(uint256 _matchId) view returns (tuple(uint256 id, address whitePlayer, address blackPlayer, string result, uint256 timeControl, bool isFinished, uint256 createdAt))",
+            "function matchCounter() view returns (uint256)",
+            "function getOpenMatches() view returns (uint256[])",
+            "event MatchCreated(uint256 indexed id, address indexed white, uint256 timeControl)",
+            "event MatchJoined(uint256 indexed id, address indexed black)",
+            "event MatchResultSubmitted(uint256 indexed id, string result, address submittedBy)"
+        ];
+
+        let provider, signer, contract, userAddress;
+
+        // Принудительно переключает MetaMask на LitVM
+        async function ensureLitVM() {
+            const current = await window.ethereum.request({ method: "eth_chainId" });
+            if (current === LITVM_CHAIN_ID) return;
+            try {
+                await window.ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: LITVM_CHAIN_ID }]
+                });
+            } catch (e) {
+                if (e.code === 4902) {
+                    await window.ethereum.request({
+                        method: "wallet_addEthereumChain",
+                        params: [{
+                            chainId: LITVM_CHAIN_ID,
+                            chainName: "LitVM LiteForge",
+                            nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
+                            rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
+                            blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
+                        }]
+                    });
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        async function initContract() {
+            await ensureLitVM();
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            userAddress = await signer.getAddress();
+            contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        }
+
+        async function connect() {
+            if (!window.ethereum) return alert("Установи MetaMask!");
+            try {
+                await initContract();
+                const net = await provider.getNetwork();
+                const badge = net.chainId === 4441
+                    ? '<span class="net-badge net-ok">LitVM ✅</span>'
+                    : '<span class="net-badge net-bad">⚠️ chain ' + net.chainId + '</span>';
+                document.getElementById("walletStatus").innerHTML = "Подключён: " + userAddress + badge;
+                document.getElementById("createBtn").disabled = false;
+                document.getElementById("loadBtn").disabled = false;
+                document.getElementById("createOpenBtn").disabled = false;
+                document.getElementById("refreshOpenBtn").disabled = false;
+            } catch (e) {
+                document.getElementById("walletStatus").textContent = "❌ " + (e.message || e);
+            }
+        }
+
+        async function createMatch() {
+            const opponent = document.getElementById("opponentInput").value.trim();
+            const tc = parseInt(document.getElementById("timeControlSelect").value, 10);
+            if (!ethers.utils.isAddress(opponent)) return alert("Некорректный адрес!");
+            try {
+                await initContract();
+                document.getElementById("createStatus").textContent = "Отправка транзакции...";
+                const tx = await contract.createMatch(opponent, tc);
+                document.getElementById("createStatus").textContent = "Ожидание подтверждения...";
+                await tx.wait();
+                document.getElementById("createStatus").textContent = "✅ Партия создана! Транзакция: " + tx.hash;
+            } catch (e) {
+                document.getElementById("createStatus").textContent = "❌ Ошибка: " + (e.reason || e.message);
+            }
+        }
+
+        function formatTime(sec) {
+            if (sec === 60) return "1 мин";
+            if (sec === 300) return "5 мин";
+            if (sec === 900) return "15 мин";
+            if (sec === 1800) return "30 мин";
+            return sec + " сек";
+        }
+
+        async function submitResult(matchId, result) {
+            try {
+                await initContract();
+                const tx = await contract.submitResult(matchId, result);
+                alert("Транзакция отправлена: " + tx.hash);
+                await tx.wait();
+                alert("✅ Результат записан!");
+                loadMatches();
+            } catch (e) {
+                alert("❌ Ошибка: " + (e.reason || e.message));
+            }
+        }
+
+        async function loadMatches() {
+            const list = document.getElementById("matchesList");
+            list.innerHTML = "Загрузка...";
+            try {
+                await initContract();
+                const total = await contract.matchCounter();
+                let html = "";
+                // Счётчики статистики
+                 let statGames = 0;
+                 let statWins = 0;
+                 let statLosses = 0;
+                 let statDraws = 0;
+                for (let i = 1; i <= total.toNumber(); i++) {
+                    const m = await contract.getMatch(i);
+                    if (m.whitePlayer.toLowerCase() !== userAddress.toLowerCase() &&
+                        m.blackPlayer.toLowerCase() !== userAddress.toLowerCase()) continue;
+
+                    const isMyMatch = !m.isFinished;
+                    html += '<div class="match' + (m.isFinished ? ' finished' : '') + '">'
+                        + '<b>Партия #' + m.id + '</b>'
+                        + '<span class="timer">⏱ ' + formatTime(m.timeControl.toNumber()) + '</span>'
+                        + '<br>'
+                        + '<small>Белые: ' + m.whitePlayer + '</small><br>'
+                        + '<small>Чёрные: ' + m.blackPlayer + '</small><br>'
+                        + '<small>Результат: ' + (m.isFinished ? m.result : "не завершена") + '</small>';
+                    // Подсчёт статистики (только для завершённых партий)
+if (m.isFinished) {
+    statGames++;
+    const result = m.result;
+    const iAmWhite = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
+    if (result === "draw") {
+        statDraws++;
+    } else if (result === "white") {
+        if (iAmWhite) statWins++; else statLosses++;
+    } else if (result === "black") {
+        if (iAmWhite) statLosses++; else statWins++;
+    }
+}
+
+                    if (isMyMatch) {
+    html += '<div>'
+        + '<button class="small" onclick="startMatchGame(' + m.id + ', ' + m.timeControl.toNumber() + ')">▶️ Play</button>'
+        + '<button class="small white-win" onclick="submitResult(' + m.id + ', \'white\')">⚪ White wins</button>'
+        + '<button class="small black-win" onclick="submitResult(' + m.id + ', \'black\')">⚫ Black wins</button>'
+        + '<button class="small draw" onclick="submitResult(' + m.id + ', \'draw\')">🤝 Draw</button>'
+        + '</div>';
+ }
+                    html += '</div>';
+                }
+                 // Обновляем блок статистики
+document.getElementById("statGames").textContent = statGames;
+document.getElementById("statWins").textContent = statWins;
+document.getElementById("statLosses").textContent = statLosses;
+document.getElementById("statDraws").textContent = statDraws;
+const winRate = statGames > 0 ? Math.round((statWins / statGames) * 100) : 0;
+document.getElementById("statWinRate").textContent = winRate + "%";
+                list.innerHTML = html || "<p>Пока нет партий с твоим участием.</p>";
+            } catch (e) {
+                list.innerHTML = "❌ Ошибка: " + (e.reason || e.message);
+            }
+        }
+
+        document.getElementById("connectBtn").onclick = connect;
+        document.getElementById("createBtn").onclick = createMatch;
+        document.getElementById("loadBtn").onclick = loadMatches;
+        // ===== ШАХМАТНАЯ ДОСКА =====
+        let board = null;
+        let game = new Chess();
+
+        function onDragStart(source, piece, position, orientation) {
+    if (game.game_over()) return false;
+    if (game.turn() === "w" && piece.search(/^b/) !== -1) return false;
+    if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
+  }
+
+                function onDrop(source, target) {
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: "q"
+            });
+            if (move === null) return "snapback";
+            updateBoardStatus();
+            // Если включён бот — передаём ему ход
+            if (botEnabled && !game.game_over()) {
+                setTimeout(requestBotMove, 100);
+            }
+        }
+
+        function updateBoardStatus() {
+    const status = document.getElementById("boardStatus");
+    if (game.game_over()) {
+        let resultText = "";
+        let resultCode = "";
+        
+        if (game.in_checkmate()) {
+            // Если мат — тот, чей ход сейчас, проиграл
+            const loser = game.turn();     // тот, кто должен ходить, и есть проигравший
+            const winner = loser === "w" ? "b" : "w";
+            resultText = "Checkmate! " + (winner === "w" ? "White" : "Black") + " wins";
+            resultCode = winner === "w" ? "white" : "black";
+        } else if (game.in_draw()) {
+            resultText = "Draw!";
+            resultCode = "draw";
+        } else {
+            resultText = "Game over";
+        }
+        
+        status.textContent = resultText;
+        
+        // Автоматически завершаем партию в блокчейне
+        if (activeMatchId !== null && resultCode !== "") {
+            autoFinishMatch(resultCode);
+        }
+    } else {
+        status.textContent = "Turn: " + (game.turn() === "w" ? "White" : "Black")
+            + (game.in_check() ? " (check!)" : "");
+    }
+}
+
+async function autoFinishMatch(resultCode) {
+    const matchId = activeMatchId;
+    activeMatchId = null;  // сбрасываем сразу, чтобы не вызвалось дважды
+    
+    try {
+        await initContract();
+        const tx = await contract.submitResult(matchId, resultCode);
+        document.getElementById("boardStatus").textContent += 
+            " — Saving to blockchain...";
+        await tx.wait();
+        document.getElementById("boardStatus").textContent += 
+            " ✅ Saved to LitVM!";
+        botEnabled = false;
+        loadMatches();  // обновляем список
+    } catch (e) {
+        document.getElementById("boardStatus").textContent += 
+            " ❌ Blockchain error: " + (e.reason || e.message);
+    }
+}
+
+        function initBoard() {
+            board = Chessboard("board", {
+                draggable: true,
+                position: "start",
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+            });
+            updateBoardStatus();
+        }
+
+        document.getElementById("resetBoardBtn").onclick = function() {
+            game.reset();
+            board.position("start");
+            updateBoardStatus();
+        };
+         
+                // ===== ТАЙМЕР =====
+        let whiteTime = 0;
+        let blackTime = 0;
+        let timerInterval = null;
+
+        function formatClock(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m + ":" + (s < 10 ? "0" : "") + s;
+        }
+
+        function updateClocks() {
+            document.getElementById("whiteTimer").textContent = formatClock(whiteTime);
+            document.getElementById("blackTimer").textContent = formatClock(blackTime);
+        }
+
+        function startClock(timeControl) {
+            whiteTime = timeControl;
+            blackTime = timeControl;
+            updateClocks();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        function stopClock() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function tick() {
+            if (game.game_over()) { stopClock(); return; }
+            if (game.turn() === "w") {
+                whiteTime--;
+                if (whiteTime <= 0) { whiteTime = 0; updateClocks(); onTimeOut("black"); return; }
+            } else {
+                blackTime--;
+                if (blackTime <= 0) { blackTime = 0; updateClocks(); onTimeOut("white"); return; }
+            }
+            updateClocks();
+        }
+
+        function onTimeOut(winnerColor) {
+            stopClock();
+            document.getElementById("boardStatus").textContent =
+                "⏰ Time out! " + (winnerColor === "white" ? "White" : "Black") + " wins on time";
+            if (activeMatchId !== null) {
+                autoFinishMatch(winnerColor);
+            }
+        }
+        window.addEventListener("load", initBoard);
+// ===== АКТИВНАЯ ПАРТИЯ =====
+let activeMatchId = null;       // ID партии в блокчейне (или null)
+let activePlayerColor = "w";    // за кого играешь (всегда белые)
+
+function startMatchGame(matchId, timeControl) {
+    activeMatchId = matchId;
+    game.reset();
+    board.position("start");
+    updateBoardStatus();
+    
+    // Включаем бота автоматически
+    botEnabled = true;
+    document.getElementById("botStatus").textContent = 
+        "Playing match #" + matchId + " (time: " + formatTime(timeControl) + ")";
+    
+    startClock(timeControl);
+    initBot();
+    alert("Match #" + matchId + " loaded. You play White. Bot is opponent.");
+}
+     // ===== STOCKFISH BOT =====
+  let stockfish = new Worker('stockfish.js');
+  let botEnabled = false;
+  let playerColor = "w"; // игрок всегда играет белыми
+
+  stockfish.onmessage = onEngineMessage;
+
+        function initBot() {
+    console.log("Stockfish initialized (Worker mode)");
+ }
+
+            function onEngineMessage(event) {
+        const line = event.data;
+        if (typeof line !== "string") return;
+
+        if (line.indexOf("bestmove") === 0) {
+            const move = line.split(" ")[1];
+            if (move && move !== "(none)") {
+                makeBotMove(move);
+            }
+        }
+    }
+
+        function makeBotMove(moveStr) {
+            const from = moveStr.substring(0, 2);
+            const to = moveStr.substring(2, 4);
+            const promotion = moveStr.length > 4 ? moveStr[4] : "q";
+            game.move({ from: from, to: to, promotion: promotion });
+            board.position(game.fen());
+            updateBoardStatus();
+        }
+
+        function requestBotMove() {
+            if (!stockfish || !botEnabled) return;
+            if (game.game_over()) return;
+            if (game.turn() === playerColor) return;
+
+            const skill = parseInt(document.getElementById("botDifficulty").value, 10);
+            stockfish.postMessage("setoption name Skill Level value " + skill);
+            stockfish.postMessage("position fen " + game.fen());
+            stockfish.postMessage("go depth 10");
+        }
+
+            const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
+    const BOT_TIME_CONTROL = 300;
+    function initBot() {
+        console.log("Stockfish initialized (Worker mode)");
+    }
+
+    async function startBotGame() {
+        try {
+            await initContract();
+            document.getElementById("botStatus").textContent = "Creating match on blockchain...";
+            const tx = await contract.createMatch(BOT_ADDRESS, BOT_TIME_CONTROL);
+            document.getElementById("botStatus").textContent = "Waiting for confirmation...";
+            await tx.wait();
+            const counter = await contract.matchCounter();
+            activeMatchId = counter.toNumber();
+            startClock(BOT_TIME_CONTROL);
+            initBot();
+            botEnabled = true;
+            game.reset();
+            board.position("start");
+            updateBoardStatus();
+            const difficulty = document.getElementById("botDifficulty").selectedOptions[0].text;
+            document.getElementById("botStatus").textContent = 
+                "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
+            loadMatches();
+        } catch (e) {
+            document.getElementById("botStatus").textContent = 
+                "❌ Error: " + (e.reason || e.message);
+        }
+    }
+
+             function stopBotGame() {
+         botEnabled = false;
+         stopClock();
+         document.getElementById("botStatus").textContent = "Bot stopped.";
+  }
+
+        document.getElementById("startBotBtn").onclick = startBotGame;
+        document.getElementById("stopBotBtn").onclick = stopBotGame;
+                // ===== ЛОББИ (OPEN GAMES) =====
+        
+        async function createOpenMatch() {
+            const tc = parseInt(document.getElementById("timeControlSelect").value, 10);
+            try {
+                await initContract();
+                document.getElementById("openStatus").textContent = "Creating open game...";
+                const tx = await contract.createOpenMatch(tc);
+                document.getElementById("openStatus").textContent = "Waiting for confirmation...";
+                await tx.wait();
+                document.getElementById("openStatus").textContent = "✅ Open game created! Waiting for opponent...";
+                loadOpenMatches();
+                loadMatches();
+            } catch (e) {
+                document.getElementById("openStatus").textContent = "❌ Error: " + (e.reason || e.message);
+            }
+        }
+
+        async function joinMatch(matchId) {
+            try {
+                await initContract();
+                document.getElementById("openStatus").textContent = "Joining match #" + matchId + "...";
+                const tx = await contract.joinMatch(matchId);
+                document.getElementById("openStatus").textContent = "Waiting for confirmation...";
+                await tx.wait();
+                document.getElementById("openStatus").textContent = "✅ Joined match #" + matchId + "! Load the game and play.";
+                loadOpenMatches();
+                loadMatches();
+            } catch (e) {
+                document.getElementById("openStatus").textContent = "❌ Error: " + (e.reason || e.message);
+            }
+        }
+
+        async function loadOpenMatches() {
+            const list = document.getElementById("openMatchesList");
+            list.innerHTML = "Loading...";
+            try {
+                await initContract();
+                const ids = await contract.getOpenMatches();
+                if (ids.length === 0) {
+                    list.innerHTML = "<p class='status'>No open games right now. Create one!</p>";
+                    return;
+                }
+                let html = "";
+                for (let i = 0; i < ids.length; i++) {
+                    const id = ids[i].toNumber();
+                    const m = await contract.getMatch(id);
+                    const isMine = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
+                    html += '<div class="match">'
+                        + '<b>Game #' + id + '</b>'
+                        + '<span class="timer">⏱ ' + formatTime(m.timeControl.toNumber()) + '</span>'
+                        + '<br><small>White: ' + m.whitePlayer + '</small>'
+                        + '<br><small>Status: ' + (isMine ? 'Waiting for opponent (yours)' : 'Open for join') + '</small>';
+                    if (!isMine) {
+                        html += '<br><button class="small" onclick="joinMatch(' + id + ')">Join</button>';
+                    }
+                    html += '</div>';
+                }
+                list.innerHTML = html;
+            } catch (e) {
+                list.innerHTML = "❌ Error: " + (e.reason || e.message);
+            }
+        }
+
+        document.getElementById("createOpenBtn").onclick = createOpenMatch;
+        document.getElementById("refreshOpenBtn").onclick = loadOpenMatches;
+    </script>
+</body>
+</html>
