@@ -328,7 +328,7 @@
         }
 
         function setWalletButtons(enabled) {
-            ["createBtn", "createOpenBtn", "refreshOpenBtn", "loadBtn"].forEach(id => {
+            ["createBtn", "createOpenBtn", "loadBtn"].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.disabled = !enabled;
             });
