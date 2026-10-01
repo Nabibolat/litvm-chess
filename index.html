@@ -139,7 +139,7 @@
 
     <div class="card">
         <button id="connectBtn">Connect MetaMask</button>
-        <div class="status" id="walletStatus">Wallet not connected</div>
+        <div class="status" id="walletStatus">Wallet not connected. Network: LitVM LiteForge (Chain ID 4441).</div>
     </div>
 
     <div class="card">
@@ -180,7 +180,7 @@
     <div class="card">
  <div class="card">
     <h3>Play vs Bot</h3>
-    <p class="status">Choose difficulty and start a game against the computer.</p>
+    <p class="status">Choose difficulty and start a game against the computer. The bot address is only a match identifier; no funds are sent to it.</p>
     <select id="botDifficulty">
         <option value="0">Easy (level 0)</option>
         <option value="5" selected>Medium (level 5)</option>
@@ -230,12 +230,35 @@
             "event MatchResultSubmitted(uint256 indexed id, string result, address submittedBy)"
         ];
 
-        let provider, signer, contract, userAddress;
+        const LITVM_RPC_URL = "https://liteforge.rpc.caldera.xyz/http";
+        const LITVM_EXPLORER_URL = "https://liteforge.explorer.caldera.xyz";
+        // On-chain identifier for the Stockfish bot only. No funds are sent to this address.
+        const BOT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
-        // Принудительно переключает MetaMask на LitVM
+        let provider = null;
+        let signer = null;
+        let contract = null;
+        let userAddress = null;
+
+        function getReadProvider() {
+            return new ethers.providers.JsonRpcProvider(LITVM_RPC_URL);
+        }
+
+        function getReadContract() {
+            return new ethers.Contract(CONTRACT_ADDRESS, ABI, getReadProvider());
+        }
+
+        async function getConnectedAccount() {
+            if (!window.ethereum) return null;
+            const accounts = await window.ethereum.request({ method: "eth_accounts" });
+            return accounts && accounts.length ? accounts[0] : null;
+        }
+
         async function ensureLitVM() {
+            if (!window.ethereum) throw new Error("MetaMask is not installed.");
             const current = await window.ethereum.request({ method: "eth_chainId" });
             if (current === LITVM_CHAIN_ID) return;
+
             try {
                 await window.ethereum.request({
                     method: "wallet_switchEthereumChain",
@@ -249,41 +272,96 @@
                             chainId: LITVM_CHAIN_ID,
                             chainName: "LitVM LiteForge",
                             nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
-                            rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
-                            blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
+                            rpcUrls: [LITVM_RPC_URL],
+                            blockExplorerUrls: [LITVM_EXPLORER_URL]
                         }]
                     });
                 } else {
-                    throw e;
+                    throw new Error("Please switch MetaMask to LitVM LiteForge (Chain ID 4441).");
                 }
             }
+
+            const after = await window.ethereum.request({ method: "eth_chainId" });
+            if (after !== LITVM_CHAIN_ID) {
+                throw new Error("Please switch MetaMask to LitVM LiteForge (Chain ID 4441).");
+            }
+        }
+
+        async function connectWallet() {
+            if (!window.ethereum) {
+                document.getElementById("walletStatus").textContent = "MetaMask is not installed.";
+                return;
+            }
+            try {
+                await ensureLitVM();
+                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                if (!accounts.length) throw new Error("No wallet account selected.");
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAddress = accounts[0];
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+                document.getElementById("walletStatus").textContent =
+                    "Connected: " + userAddress + " • LitVM LiteForge";
+                setWalletButtons(true);
+                await loadMatches();
+            } catch (e) {
+                document.getElementById("walletStatus").textContent =
+                    "Connection error: " + (e.reason || e.message || e);
+            }
+        }
+
+        async function getWriteContract() {
+            if (!window.ethereum) throw new Error("MetaMask is not installed.");
+            const chain = await window.ethereum.request({ method: "eth_chainId" });
+            if (chain !== LITVM_CHAIN_ID) throw new Error("Switch MetaMask to LitVM LiteForge first.");
+
+            const account = await getConnectedAccount();
+            if (!account) throw new Error("Connect MetaMask first.");
+
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            userAddress = account;
+            contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+            return contract;
+        }
+
+        function setWalletButtons(enabled) {
+            ["createBtn", "createOpenBtn", "refreshOpenBtn", "loadBtn"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = !enabled;
+            });
         }
 
         async function initContract() {
-            await ensureLitVM();
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+            return getWriteContract();
         }
 
-        async function connect() {
-            if (!window.ethereum) return alert("Установи MetaMask!");
-            try {
-                await initContract();
-                const net = await provider.getNetwork();
-                const badge = net.chainId === 4441
-                    ? '<span class="net-badge net-ok">LitVM ✅</span>'
-                    : '<span class="net-badge net-bad">⚠️ chain ' + net.chainId + '</span>';
-                document.getElementById("walletStatus").innerHTML = "Подключён: " + userAddress + badge;
-                document.getElementById("createBtn").disabled = false;
-                document.getElementById("loadBtn").disabled = false;
-                document.getElementById("createOpenBtn").disabled = false;
-                document.getElementById("refreshOpenBtn").disabled = false;
-            } catch (e) {
-                document.getElementById("walletStatus").textContent = "❌ " + (e.message || e);
+        async function refreshWalletState() {
+            if (!window.ethereum) return;
+            const account = await getConnectedAccount();
+            if (!account) {
+                userAddress = null;
+                setWalletButtons(false);
+                return;
             }
+            const chain = await window.ethereum.request({ method: "eth_chainId" });
+            if (chain === LITVM_CHAIN_ID) {
+                userAddress = account;
+                setWalletButtons(true);
+                document.getElementById("walletStatus").textContent =
+                    "Connected: " + account + " • LitVM LiteForge";
+            } else {
+                setWalletButtons(false);
+                document.getElementById("walletStatus").textContent =
+                    "Wallet connected, but wrong network. Use Connect MetaMask to switch.";
+            }
+        }
+
+        if (window.ethereum) {
+            window.ethereum.on("accountsChanged", refreshWalletState);
+            window.ethereum.on("chainChanged", refreshWalletState);
         }
 
         async function createMatch() {
@@ -336,7 +414,7 @@
                  let statLosses = 0;
                  let statDraws = 0;
                 for (let i = 1; i <= total.toNumber(); i++) {
-                    const m = await contract.getMatch(i);
+                    const m = await readContract.getMatch(i);
                     if (m.whitePlayer.toLowerCase() !== userAddress.toLowerCase() &&
                         m.blackPlayer.toLowerCase() !== userAddress.toLowerCase()) continue;
 
@@ -346,7 +424,7 @@
                         + '<span class="timer">⏱ ' + formatTime(m.timeControl.toNumber()) + '</span>'
                         + '<br>'
                         + '<small>Белые: ' + m.whitePlayer + '</small><br>'
-                        + '<small>Чёрные: ' + m.blackPlayer + '</small><br>'
+                        + '<small>Чёрные: ' + (m.blackPlayer.toLowerCase() === BOT_ADDRESS.toLowerCase() ? 'Stockfish Bot' : m.blackPlayer) + '</small><br>'
                         + '<small>Результат: ' + (m.isFinished ? m.result : "не завершена") + '</small>';
                     // Подсчёт статистики (только для завершённых партий)
 if (m.isFinished) {
@@ -388,6 +466,10 @@ document.getElementById("statWinRate").textContent = winRate + "%";
         document.getElementById("connectBtn").onclick = connect;
         document.getElementById("createBtn").onclick = createMatch;
         document.getElementById("loadBtn").onclick = loadMatches;
+        document.getElementById("connectBtn").onclick = connectWallet;
+        document.getElementById("refreshOpenBtn").onclick = loadOpenMatches;
+        setWalletButtons(false);
+        refreshWalletState();
         // ===== ШАХМАТНАЯ ДОСКА =====
         let board = null;
         let game = new Chess();
@@ -534,22 +616,39 @@ async function autoFinishMatch(resultCode) {
 let activeMatchId = null;       // ID партии в блокчейне (или null)
 let activePlayerColor = "w";    // за кого играешь (всегда белые)
 
-function startMatchGame(matchId, timeControl) {
-    activeMatchId = matchId;
-    game.reset();
-    board.position("start");
-    updateBoardStatus();
-    
-    // Включаем бота автоматически
-    botEnabled = true;
-    document.getElementById("botStatus").textContent = 
-        "Playing match #" + matchId + " (time: " + formatTime(timeControl) + ")";
-    
-    startClock(timeControl);
-    initBot();
-    alert("Match #" + matchId + " loaded. You play White. Bot is opponent.");
+async function startMatchGame(matchId, timeControl) {
+    try {
+        const readContract = getReadContract();
+        const m = await readContract.getMatch(matchId);
+        if (!userAddress) userAddress = await getConnectedAccount();
+        if (!userAddress) throw new Error("Connect MetaMask first.");
+
+        const mineAsWhite = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
+        const mineAsBlack = m.blackPlayer.toLowerCase() === userAddress.toLowerCase();
+        if (!mineAsWhite && !mineAsBlack) throw new Error("This match does not belong to the connected wallet.");
+
+        activeMatchId = matchId;
+        activePlayerColor = mineAsWhite ? "w" : "b";
+        playerColor = activePlayerColor;
+        game.reset();
+        board.position("start");
+        updateBoardStatus();
+
+        const isBotMatch = m.blackPlayer.toLowerCase() === BOT_ADDRESS.toLowerCase();
+        botEnabled = isBotMatch && activePlayerColor === "w";
+
+        document.getElementById("botStatus").textContent = isBotMatch
+            ? "Playing match #" + matchId + " vs Stockfish (" + formatTime(timeControl) + ")"
+            : "Match #" + matchId + " loaded. This board is local; blockchain stores the match and final result.";
+
+        startClock(timeControl);
+        if (botEnabled) initBot();
+    } catch (e) {
+        document.getElementById("boardStatus").textContent =
+            "❌ " + (e.reason || e.message || e);
+    }
 }
-     // ===== STOCKFISH BOT =====
+// ===== STOCKFISH BOT =====
   let stockfish = new Worker('stockfish.js');
   let botEnabled = false;
   let playerColor = "w"; // игрок всегда играет белыми
@@ -677,7 +776,7 @@ function startMatchGame(matchId, timeControl) {
                 let html = "";
                 for (let i = 0; i < ids.length; i++) {
                     const id = ids[i].toNumber();
-                    const m = await contract.getMatch(id);
+                    const m = await readContract.getMatch(id);
                     const isMine = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
                     html += '<div class="match">'
                         + '<b>Game #' + id + '</b>'
@@ -696,6 +795,7 @@ function startMatchGame(matchId, timeControl) {
         }
 
         document.getElementById("createOpenBtn").onclick = createOpenMatch;
+        loadOpenMatches();
         document.getElementById("refreshOpenBtn").onclick = loadOpenMatches;
     </script>
 </body>
