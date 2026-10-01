@@ -696,8 +696,6 @@ async function startMatchGame(matchId, timeControl) {
             stockfish.postMessage("position fen " + game.fen());
             stockfish.postMessage("go depth 10");
         }
-
-            const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
     const BOT_TIME_CONTROL = 300;
     function initBot() {
         console.log("Stockfish initialized (Worker mode)");
