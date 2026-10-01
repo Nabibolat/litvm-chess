@@ -405,8 +405,14 @@
             const list = document.getElementById("matchesList");
             list.innerHTML = "Загрузка...";
             try {
-                await initContract();
-                const total = await contract.matchCounter();
+                const readContract = getReadContract();
+                const account = userAddress || await getConnectedAccount();
+                if (!account) {
+                    list.innerHTML = "<p>Please connect MetaMask to view your games.</p>";
+                    return;
+                }
+                userAddress = account;
+                const total = await readContract.matchCounter();
                 let html = "";
                 // Счётчики статистики
                  let statGames = 0;
