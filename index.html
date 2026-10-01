@@ -446,7 +446,7 @@ if (m.isFinished) {
     }
 }
 
-                    if (isMyMatch) {
+                    if (isMyMatch && (m.whitePlayer.toLowerCase() === userAddress.toLowerCase() || m.blackPlayer.toLowerCase() === userAddress.toLowerCase())) {
     html += '<div>'
         + '<button class="small" onclick="startMatchGame(' + m.id + ', ' + m.timeControl.toNumber() + ')">▶️ Play</button>'
         + '<button class="small white-win" onclick="submitResult(' + m.id + ', \'white\')">⚪ White wins</button>'
