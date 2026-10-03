@@ -156,12 +156,17 @@
         <div class="status" id="createStatus"></div>
     </div>
 <div class="card">
-    <h3>🎮 Open Games (Lobby)</h3>
-    <p class="status">Create an open game and wait for an opponent, or join an existing one.</p>
-    <button id="createOpenBtn" disabled>Create Open Game</button>
-    <button id="refreshOpenBtn" disabled>Refresh Lobby</button>
-    <div class="status" id="openStatus"></div>
-    <div id="openMatchesList"></div>
+    <h3>🌐 Play Online</h3>
+    <p class="status">Find an opponent automatically. Random color.</p>
+    <select id="onlineTimeControl">
+        <option value="60">1 minute</option>
+        <option value="300" selected>5 minutes</option>
+        <option value="900">15 minutes</option>
+        <option value="1800">30 minutes</option>
+    </select>
+    <button id="findMatchBtn" disabled>🔍 Find Match</button>
+    <button id="cancelMatchBtn" disabled style="background:linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color:#fff;">✖ Cancel Search</button>
+    <div class="status" id="matchStatus"></div>
 </div>
         <div class="card">
     <h3>Your Stats</h3>
@@ -213,6 +218,7 @@
      <script src="chessboard.min.js"></script>
      <script src="chess.min.js"></script>
      <script src="ethers.umd.min.js"></script>
+     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
       <script>
         // ==== НАСТРОЙКИ ====
         const CONTRACT_ADDRESS = "0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8";
@@ -232,6 +238,29 @@
         ];
 
         let provider, signer, contract, userAddress;
+
+        // ===== WEBSOCKET ДЛЯ PVP =====
+const SOCKET_URL = "https://litvm-chess-server.onrender.com";
+let socket = null;
+let currentMatchId = null;
+let myColor = null;
+
+function connectSocket() {
+    if (socket && socket.connected) return;
+    socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+    
+    socket.on("connect", () => {
+        console.log("✅ Socket connected:", socket.id);
+    });
+    
+    socket.on("disconnect", () => {
+        console.log("❌ Socket disconnected");
+    });
+    
+    socket.on("connect_error", (err) => {
+        console.log("⚠️ Socket error:", err.message);
+    });
+}
 
         // Принудительно переключает MetaMask на LitVM
         async function ensureLitVM() {
@@ -297,8 +326,8 @@
                 "Connected: " + userAddress + ' <span class="net-badge net-ok">LitVM ✅</span>';
             document.getElementById("createBtn").disabled = false;
             document.getElementById("loadBtn").disabled = false;
-            document.getElementById("createOpenBtn").disabled = false;
-            document.getElementById("refreshOpenBtn").disabled = false;
+            document.getElementById("findMatchBtn").disabled = false;
+            document.getElementById("cancelMatchBtn").disabled = true;
             document.getElementById("switchNetworkBtn").style.display = "none";
         } else {
             // Не та сеть — показываем кнопку Switch to LitVM
@@ -413,6 +442,63 @@ document.getElementById("statWinRate").textContent = winRate + "%";
                 list.innerHTML = "❌ Ошибка: " + (e.reason || e.message);
             }
         }
+        // ===== ПРИЁМ ХОДОВ ОТ СОПЕРНИКА =====
+
+function attachSocketListeners() {
+    if (!socket) return;
+    
+    socket.on("moveMade", (data) => {
+    console.log("Move received:", data);
+    game.move({
+        from: data.from,
+        to: data.to,
+        promotion: "q"
+    });
+    board.position(game.fen());
+    updateBoardStatus();
+    
+    // ===== ЕСЛИ ИГРА ОКОНЧЕНА — СОХРАНЯЕМ В БЛОКЧЕЙН =====
+    if (data.isGameOver && currentMatchId && myColor) {
+        const winner = data.isCheckmate ? data.winner : (data.isDraw ? "draw" : null);
+        
+        if (winner) {
+            const iAmWinner = (winner === myColor);
+            const isDraw = (winner === "draw");
+            const iAmWhite = (myColor === "white");
+            
+            // Пишет: победитель. Если ничья — белый.
+            if (iAmWinner || (isDraw && iAmWhite)) {
+                console.log("🏆 I will save the result to blockchain");
+                saveMatchToBlockchain(
+                    winner, 
+                    window.opponentAddress, 
+                    window.currentTimeControl
+                );
+            } else {
+                console.log("⏳ Winner will save the result. Waiting...");
+            }
+        }
+    }
+});
+    
+    socket.on("gameState", (data) => {
+        console.log("Game state:", data);
+        // Загружаем позицию при входе в партию
+        game.load(data.fen);
+        board.position(game.fen());
+        updateBoardStatus();
+    });
+    
+    socket.on("opponentJoined", (data) => {
+        console.log("Opponent joined:", data);
+        document.getElementById("boardStatus").textContent += " — Opponent joined!";
+    });
+    
+    socket.on("moveError", (data) => {
+        console.error("Move rejected by server:", data.message);
+        alert("❌ Server rejected move: " + data.message);
+    });
+}
 
         document.getElementById("connectBtn").onclick = connect;
         document.getElementById("switchNetworkBtn").onclick = async function() {
@@ -452,23 +538,45 @@ document.getElementById("statWinRate").textContent = winRate + "%";
 
         function onDragStart(source, piece, position, orientation) {
     if (game.game_over()) return false;
+    
+    // Если PvP — блокируем ход, если сейчас не наш цвет
+    if (currentMatchId && myColor) {
+        const myPiecePrefix = myColor === "white" ? "^w" : "^b";
+        if (piece.search(new RegExp(myPiecePrefix)) === -1) return false;
+        const currentTurn = game.turn() === "w" ? "white" : "black";
+        if (currentTurn !== myColor) return false;
+        return;
+    }
+    
+    // Игра с ботом — старая логика
     if (game.turn() === "w" && piece.search(/^b/) !== -1) return false;
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
-  }
+}
 
                 function onDrop(source, target) {
-            const move = game.move({
-                from: source,
-                to: target,
-                promotion: "q"
-            });
-            if (move === null) return "snapback";
-            updateBoardStatus();
-            // Если включён бот — передаём ему ход
-            if (botEnabled && !game.game_over()) {
-                setTimeout(requestBotMove, 100);
-            }
-        }
+    const move = game.move({
+        from: source,
+        to: target,
+        promotion: "q"
+    });
+    if (move === null) return "snapback";
+    updateBoardStatus();
+    
+    // Если играем PvP — отправляем ход на сервер
+    if (socket && currentMatchId && myColor) {
+        socket.emit("makeMove", {
+            roomId: currentMatchId,
+            from: source,
+            to: target,
+            promotion: "q"
+        });
+    }
+    
+    // Если играем с ботом — он отвечает
+    if (botEnabled && !game.game_over()) {
+        setTimeout(requestBotMove, 100);
+    }
+}
 
         function updateBoardStatus() {
     const status = document.getElementById("boardStatus");
@@ -521,16 +629,17 @@ async function autoFinishMatch(resultCode) {
     }
 }
 
-        function initBoard() {
-            board = Chessboard("board", {
-                draggable: true,
-                position: "start",
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
-            });
-            updateBoardStatus();
-        }
+       function initBoard() {
+    board = Chessboard("board", {
+        draggable: true,
+        position: "start",
+        orientation: "white",
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+    });
+    updateBoardStatus();
+}
 
         document.getElementById("resetBoardBtn").onclick = function() {
             game.reset();
@@ -588,9 +697,78 @@ async function autoFinishMatch(resultCode) {
             }
         }
         window.addEventListener("load", initBoard);
+        window.addEventListener("load", () => {
+    connectSocket();
+    setTimeout(() => {
+        attachSocketListeners();
+        setupMatchmakingListeners();
+    }, 500);
+});
 // ===== АКТИВНАЯ ПАРТИЯ =====
-let activeMatchId = null;       // ID партии в блокчейне (или null)
-let activePlayerColor = "w";    // за кого играешь (всегда белые)
+let activeMatchId = null;   
+let activePlayerColor = "w";        
+   // ===== PVP GAME (Matchmaking) =====
+        
+        function startPvPGame(roomId, color, opponentAddress, timeControl) {
+             window.opponentAddress = opponentAddress;        // ← ДОБАВИТЬ
+            window.currentTimeControl = timeControl;         // ← ДОБАВИТЬ
+            // Останавливаем бота (если был запущен)
+            botEnabled = false;
+            stopBotGame();
+            
+            // Запоминаем параметры PvP
+            currentMatchId = roomId;
+            myColor = color;              // "white" или "black"
+            playerColor = color === "white" ? "w" : "b";
+            
+            // Сброс доски
+            game.reset();
+            board.position("start");
+            board.orientation(color);
+            updateBoardStatus();
+            
+            // Показываем информацию
+            document.getElementById("botStatus").textContent = 
+                "🆚 PvP: You play " + color.toUpperCase() + 
+                " vs " + opponentAddress.substring(0, 6) + "..." + opponentAddress.substring(38);
+            
+            document.getElementById("matchStatus").textContent = 
+                "✅ Match started! Color: " + color.toUpperCase();
+            
+            // Запускаем таймер
+            startClock(timeControl);
+        }
+                      // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
+        
+        async function saveMatchToBlockchain(winner, opponentAddress, timeControl) {
+            try {
+                await initContract();
+                document.getElementById("boardStatus").textContent += 
+                    " — Saving to blockchain...";
+                
+                // 1. Создаём партию в блокчейне
+                const tx1 = await contract.createMatch(opponentAddress, timeControl || 300);
+                await tx1.wait();
+                
+                // 2. Получаем ID новой партии
+                const counter = await contract.matchCounter();
+                const matchId = counter.toNumber();
+                
+                // 3. Записываем результат
+                const tx2 = await contract.submitResult(matchId, winner);
+                await tx2.wait();
+                
+                document.getElementById("boardStatus").textContent = 
+                    "Checkmate! " + (winner === "white" ? "White" : winner === "black" ? "Black" : "Draw") + 
+                    " ✅ Saved to LitVM (match #" + matchId + ")";
+                
+                loadMatches();
+            } catch (e) {
+                document.getElementById("boardStatus").textContent += 
+                    " ❌ Blockchain error: " + (e.reason || e.message);
+                console.error("Blockchain save error:", e);
+            }
+        }
 
 function startMatchGame(matchId, timeControl) {
     activeMatchId = matchId;
@@ -753,8 +931,82 @@ function startMatchGame(matchId, timeControl) {
             }
         }
 
-        document.getElementById("createOpenBtn").onclick = createOpenMatch;
-        document.getElementById("refreshOpenBtn").onclick = loadOpenMatches;
+                // ===== MATCHMAKING (FIND MATCH) =====
+        
+        async function findMatch() {
+            if (!socket || !socket.connected) {
+                document.getElementById("matchStatus").textContent = "❌ Not connected to server";
+                return;
+            }
+            
+            const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
+            document.getElementById("matchStatus").textContent = "🔍 Searching for opponent...";
+            document.getElementById("findMatchBtn").disabled = true;
+            document.getElementById("cancelMatchBtn").disabled = false;
+            
+            // Отправляем запрос на сервер
+            socket.emit("findMatch", {
+                userAddress: userAddress,
+                timeControl: tc
+            });
+        }
+        
+        function cancelMatch() {
+            if (socket && socket.connected) {
+                socket.emit("cancelFindMatch");
+            }
+            document.getElementById("matchStatus").textContent = "❌ Search cancelled";
+            document.getElementById("findMatchBtn").disabled = false;
+            document.getElementById("cancelMatchBtn").disabled = true;
+        }
+        
+        // Обработчики событий от сервера
+        function setupMatchmakingListeners() {
+            if (!socket) return;
+            
+            socket.on("waitingForOpponent", () => {
+                document.getElementById("matchStatus").textContent = 
+                    "⏳ Waiting for opponent... (don't close the page)";
+            });
+            
+            socket.on("matchFound", (data) => {
+                console.log("Match found:", data);
+                document.getElementById("matchStatus").textContent = 
+                    "✅ Match found! Color: " + data.color.toUpperCase();
+                document.getElementById("findMatchBtn").disabled = false;
+                document.getElementById("cancelMatchBtn").disabled = true;
+                
+                // Запускаем PvP-партию
+                startPvPGame(data.roomId, data.color, data.opponentAddress, data.timeControl);
+            });
+            
+            socket.on("searchCancelled", () => {
+                document.getElementById("matchStatus").textContent = "Search cancelled";
+            });
+            
+            socket.on("opponentDisconnected", (data) => {
+                console.log("Opponent disconnected:", data.message);
+                document.getElementById("boardStatus").textContent = 
+                    "⚠️ " + data.message;
+            });
+            
+            socket.on("opponentForfeit", (data) => {
+    console.log("🏆 Opponent forfeit:", data);
+    alert("🏆 You win by forfeit! " + data.reason);
+    
+    // Записываем результат в блокчейн
+    if (window.opponentAddress) {
+        saveMatchToBlockchain(
+            data.winner,  // "white" или "black"
+            window.opponentAddress,
+            window.currentTimeControl
+        );
+    }
+});
+        }
+        
+        document.getElementById("findMatchBtn").onclick = findMatch;
+        document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
 </body>
 </html>
