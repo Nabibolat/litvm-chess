@@ -755,6 +755,7 @@ function attachSocketListeners() {
         // Полная синхронизация из FEN, который прислал сервер.
         // Не вызываем game.move() — иначе у отправителя будет двойной ход.
         game.load(data.fen);
+        if (data.san && currentMatchId && myColor) pvpMoveHistory.push(data.san);
         board.position(data.fen, false);   // false = без анимации
         updateBoardStatus();
         updateMoveHistory();
