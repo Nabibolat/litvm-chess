@@ -757,6 +757,7 @@ function attachSocketListeners() {
         game.load(data.fen);
         board.position(data.fen, false);   // false = без анимации
         updateBoardStatus();
+        updateMoveHistory();
 
         // Если игра окончена — обрабатываем результат
         if (data.isGameOver && currentMatchId && myColor) {
