@@ -1102,6 +1102,7 @@ let activePlayerColor = "w";
             
             // Сброс доски
             game.reset();
+            pvpMoveHistory = [];
             board.position("start");
             board.orientation(color);
             updateBoardStatus();
@@ -1246,6 +1247,11 @@ function startMatchGame(matchId, timeControl) {
             initBot();
             botEnabled = true;
             game.reset();
+                        // Сбрасываем PvP-состояние (мы в партии с ботом)
+            currentMatchId = null;
+            myColor = null;
+            pvpMoveHistory = [];
+            updateMoveHistory();
             board.position("start");
             updateBoardStatus();
             const botNamesMap = { "0":"Easy", "5":"Medium", "10":"Hard", "15":"Very Hard", "20":"Master" };
