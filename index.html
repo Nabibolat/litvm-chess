@@ -920,6 +920,9 @@ function attachSocketListeners() {
 
         pendingMove = true;
         lastMoveSentAt = Date.now();
+                // Запоминаем ход в отдельной истории PvP
+        pvpMoveHistory.push(dry.san);
+        updateMoveHistory();
         socket.emit("makeMove", {
             roomId: currentMatchId,
             from: source,
