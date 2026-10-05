@@ -1386,7 +1386,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                     "⏳ Waiting for opponent... (don't close the page)";
             });
             
-            socket.on("matchFound", (data) => {
+                        socket.on("matchFound", (data) => {
                 console.log("Match found:", data);
                 document.getElementById("matchStatus").textContent = 
                     "✅ Match found! Color: " + data.color.toUpperCase();
@@ -1395,6 +1395,22 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 
                 // Запускаем PvP-партию
                 startPvPGame(data.roomId, data.color, data.opponentAddress, data.timeControl);
+
+                // Показываем данные соперника в панели
+                const oppPanel = document.getElementById("opponentPanel");
+                if (oppPanel) oppPanel.style.display = "flex";
+
+                const oppName = document.getElementById("opponentName");
+                const oppElo = document.getElementById("opponentElo");
+                const oppAvatar = document.getElementById("opponentAvatar");
+
+                const name = data.opponentLichess || "Anonymous";
+                const elo = data.opponentElo ? (data.opponentElo + " Elo") : "— Elo";
+                const seed = data.opponentLichess || data.opponentAddress || "Opponent";
+
+                if (oppName) oppName.textContent = name;
+                if (oppElo) oppElo.textContent = elo;
+                if (oppAvatar) oppAvatar.src = "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(seed);
             });
             
             socket.on("searchCancelled", () => {
