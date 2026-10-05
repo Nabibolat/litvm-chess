@@ -123,6 +123,78 @@
         }
         .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
         .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
+                 /* ===== Сетка ботов ===== */
+                 /* ===== Игровой режим ===== */
+        body.game-mode #menuWrap { display: none; }
+        body.game-mode #chessBoardCard { display: block !important; }
+                #opponentPanel {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
+            border: 1px solid #2a2e3a;
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+        .bot-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .bot-card {
+            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
+            border: 1px solid #2a2e3a;
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+        .bot-card:hover {
+            transform: translateY(-2px);
+            border-color: #ffb84d;
+            box-shadow: 0 4px 12px rgba(255,184,77,0.25);
+        }
+        .bot-card.selected {
+            border-color: #ffb84d;
+            background: linear-gradient(180deg, #2a2418 0%, #1f1a10 100%);
+        }
+        .bot-avatar {
+            width: 100%;
+            max-width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #0f1117;
+            display: block;
+            margin: 0 auto 6px;
+        }
+        .bot-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e6e6e6;
+            margin-bottom: 3px;
+        }
+        .bot-elo {
+            font-size: 12px;
+            color: #ffb84d;
+            font-weight: 600;
+        }
+
+        /* Мобильные: 5 в ряд станут тесными → 3 в ряд + перенос */
+        @media (max-width: 600px) {
+            .bot-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .bot-avatar {
+                max-width: 44px;
+                height: 44px;
+            }
+            .bot-name { font-size: 12px; }
+            .bot-elo  { font-size: 11px; }
+        }
 
         /* Адаптивность для мобильных */
         @media (max-width: 600px) {
@@ -135,7 +207,9 @@
     </style>
   </head>
   <body>
+    <div id="gameModeWrap" style="display: none;">
     <h1>♟ LitVM Chess</h1>
+    <div id="menuWrap">
 
     <div class="card">
     <button id="connectBtn">Connect MetaMask</button>
@@ -189,32 +263,72 @@
        <button id="loadBtn" disabled>Load Games</button>
         <div id="matchesList"></div>
     </div>
-    <div class="card">
- <div class="card">
-    <h3>Play vs Bot</h3>
-    <p class="status">Choose difficulty and start a game against the computer.</p>
-    <select id="botDifficulty">
-        <option value="0">Easy (level 0)</option>
-        <option value="5" selected>Medium (level 5)</option>
-        <option value="10">Hard (level 10)</option>
-        <option value="15">Very Hard (level 15)</option>
-        <option value="20">Master (level 20)</option>
-    </select>
-    <div style="margin-top: 10px;">
-        <button id="startBotBtn">Start Bot Game</button>
-        <button id="stopBotBtn" style="background: #5c1e1e; color: #fff;">Stop Bot</button>
+        <div class="card">
+        <h3>Play vs Bot</h3>
+        <p class="status">Выбери бота — игра начнётся сразу.</p>
+
+        <div class="bot-grid" id="botGrid">
+            <div class="bot-card" data-bot="0">
+                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Easy&facialHairProbability=0&accessoriesProbability=0&top=shortRound&hairColor=4a312c" alt="Easy">
+                <div class="bot-name">Easy</div>
+                <div class="bot-elo">1320</div>
+            </div>
+            <div class="bot-card" data-bot="5">
+                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Medium&facialHair=moustacheMagnum&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shortFlat" alt="Medium">
+                <div class="bot-name">Medium</div>
+                <div class="bot-elo">1500</div>
+            </div>
+            <div class="bot-card" data-bot="10">
+                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Hard&facialHair=beardMajestic&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shaggy" alt="Hard">
+                <div class="bot-name">Hard</div>
+                <div class="bot-elo">1800</div>
+            </div>
+            <div class="bot-card" data-bot="15">
+                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=VeryHard&top=hat&facialHairProbability=0&accessoriesProbability=0" alt="Very Hard">
+                <div class="bot-name">Very Hard</div>
+                <div class="bot-elo">2200</div>
+            </div>
+            <div class="bot-card" data-bot="20">
+                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Master&top=shortFlat&hairColor=transparent&accessories=prescription02&accessoriesProbability=100&facialHairProbability=0" alt="Master">
+                <div class="bot-name">Master</div>
+                <div class="bot-elo">3190</div>
+            </div>
+        </div>
+
+        <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
+        <p class="status" id="botStatus"></p>
     </div>
-    <p class="status" id="botStatus"></p>
- </div>
+   </div>
+             <div class="card" id="chessBoardCard" style="display: none;">
+             <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Назад</button>
+             <div id="opponentPanel" style="display: none;">
+            <img id="opponentAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Opponent" alt="" style="width: 48px; height: 48px; border-radius: 50%; background: #0f1117;">
+            <div style="margin-left: 10px;">
+                <div id="opponentName" style="font-weight: 600; color: #e6e6e6;">—</div>
+                <div id="opponentElo" style="font-size: 13px; color: #ffb84d;">—</div>
+            </div>
+        </div>
         <h3>Chess Board</h3>
         <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
-            <div style="display: flex; justify-content: space-around; margin: 10px 0;">
-        <div>⚪ White: <span id="whiteTimer">--:--</span></div>
-        <div>⚫ Black: <span id="blackTimer">--:--</span></div>
-    </div>
+        <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+            <div>⚪ White: <span id="whiteTimer">--:--</span></div>
+            <div>⚫ Black: <span id="blackTimer">--:--</span></div>
+        </div>
         <div id="board" style="width: 400px; margin: 20px auto;"></div>
-        <div style="text-align: center; margin-top: 10px;">
-            <button id="resetBoardBtn">Reset Board</button>
+                <div id="moveHistoryPanel" style="margin-top: 16px;">
+            <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">История ходов</div>
+            <div id="moveHistoryList" style="
+                background: #0f1117;
+                border: 1px solid #2a2e3a;
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-family: 'Courier New', monospace;
+                font-size: 13px;
+                color: #e6e6e6;
+                white-space: nowrap;
+                overflow-x: auto;
+                line-height: 1.6;
+            ">—</div>
         </div>
     </div>
 
@@ -407,6 +521,8 @@
 
         // ===== WEBSOCKET ДЛЯ PVP =====
 const SOCKET_URL = "https://litvm-chess-server.onrender.com";
+const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
+const BOT_TIME_CONTROL = 300;
 let socket = null;
 let currentMatchId = null;
 let myColor = null;
@@ -654,6 +770,31 @@ function attachSocketListeners() {
         setTimeout(updateBoardStatus, 2000);
     });
 }
+                // ===== Игровой режим =====
+        function enterGameMode() {
+            document.body.classList.add("game-mode");
+            // Обновляем URL: ?game=1
+            history.pushState({ game: true }, "", "?game=1");
+        }
+
+        function exitGameMode() {
+            document.body.classList.remove("game-mode");
+            // Убираем ?game=1 из URL
+            history.pushState({}, "", window.location.pathname);
+            // Скрываем доску
+            const b = document.getElementById("chessBoardCard");
+            if (b) b.style.display = "none";
+        }
+         
+        // Привязка кнопки «← Назад» из игрового режима
+        document.addEventListener("DOMContentLoaded", () => {
+            const backBtn = document.getElementById("backToMenuBtn");
+            if (backBtn) backBtn.addEventListener("click", () => {
+                exitGameMode();
+                stopBotGame();   // останавливаем бота, если шла партия с ботом
+            });
+        });
+
         function handleGameOver(data) {
     const winner = data.isCheckmate ? data.winner : (data.isDraw ? "draw" : null);
     if (!winner) return;
@@ -730,6 +871,25 @@ function attachSocketListeners() {
     if (game.turn() === "w" && piece.search(/^b/) !== -1) return false;
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
+              // ===== История ходов (PGN-стиль) =====
+        function updateMoveHistory() {
+            const list = document.getElementById("moveHistoryList");
+            if (!list) return;
+            const history = game.history();
+            if (history.length === 0) {
+                list.textContent = "—";
+                return;
+            }
+            const parts = [];
+            for (let i = 0; i < history.length; i += 2) {
+                const num = (i / 2) + 1;
+                const whiteMove = history[i];
+                const blackMove = history[i + 1] || "";
+                parts.push(num + ". " + whiteMove + " " + blackMove);
+            }
+            list.textContent = parts.join("  ");
+        }
+
 
  function onDrop(source, target) {
     // ===== PvP: не двигаем локально, ждём сервер =====
@@ -761,6 +921,7 @@ function attachSocketListeners() {
     });
     if (move === null) return "snapback";
     updateBoardStatus();
+    updateMoveHistory();
 
     if (botEnabled && !game.game_over()) {
         setTimeout(requestBotMove, 100);
@@ -827,12 +988,6 @@ async function autoFinishMatch(resultCode) {
     });
     updateBoardStatus();
 }
-
-        document.getElementById("resetBoardBtn").onclick = function() {
-            game.reset();
-            board.position("start");
-            updateBoardStatus();
-        };
          
                 // ===== ТАЙМЕР =====
         let whiteTime = 0;
@@ -884,6 +1039,7 @@ async function autoFinishMatch(resultCode) {
             }
         }
         window.addEventListener("load", initBoard);
+        document.getElementById("gameModeWrap").style.display = "block";
         window.addEventListener("load", async () => {
     // Если вернулись с Lichess OAuth — обрабатываем callback
     const wasCallback = await handleLichessCallback();
@@ -934,6 +1090,8 @@ let activePlayerColor = "w";
             
             document.getElementById("matchStatus").textContent = 
                 "✅ Match started! Color: " + color.toUpperCase();
+             document.getElementById("chessBoardCard").style.display = "block";
+             enterGameMode();
             
             // Запускаем таймер
             startClock(timeControl);
@@ -984,7 +1142,7 @@ function startMatchGame(matchId, timeControl) {
     alert("Match #" + matchId + " loaded. You play White. Bot is opponent.");
 }
      // ===== STOCKFISH BOT =====
-  let stockfish = new Worker('stockfish.js');
+  let stockfish = new Worker('stockfish-19-lite-single.js');
   let botEnabled = false;
   let playerColor = "w"; // игрок всегда играет белыми
 
@@ -1013,24 +1171,44 @@ function startMatchGame(matchId, timeControl) {
             game.move({ from: from, to: to, promotion: promotion });
             board.position(game.fen());
             updateBoardStatus();
+            updateMoveHistory();
         }
 
-        function requestBotMove() {
+                        function requestBotMove() {
             if (!stockfish || !botEnabled) return;
             if (game.game_over()) return;
             if (game.turn() === playerColor) return;
 
-            const skill = parseInt(document.getElementById("botDifficulty").value, 10);
-            stockfish.postMessage("setoption name Skill Level value " + skill);
-            stockfish.postMessage("position fen " + game.fen());
-            stockfish.postMessage("go depth 10");
-        }
+            // Раскладка 5 ботов: [Elo, depth]
+            const BOT_LEVELS = {
+                "0":  { elo: 1320, depth: 1  },   // Easy
+                "5":  { elo: 1500, depth: 3  },   // Medium
+                "10": { elo: 1800, depth: 6  },   // Hard
+                "15": { elo: 2200, depth: 10 },   // Very Hard
+                "20": { elo: 3190, depth: 18 }    // Master
+            };
 
-            const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
-    const BOT_TIME_CONTROL = 300;
-    function initBot() {
-        console.log("Stockfish initialized (Worker mode)");
-    }
+            // Определяем уровень: либо из карточки бота (новая логика), либо из select (fallback)
+            let level = null;
+            if (window.currentBotLevel) {
+                level = window.currentBotLevel;
+            } else {
+                const sel = document.getElementById("botDifficulty");
+                if (sel) {
+                    level = BOT_LEVELS[sel.value] || null;
+                }
+            }
+
+            // Если по какой-то причине уровень не определён — берём Medium
+            if (!level) {
+                level = BOT_LEVELS["5"];
+            }
+
+            stockfish.postMessage("setoption name UCI_LimitStrength value true");
+            stockfish.postMessage("setoption name UCI_Elo value " + level.elo);
+            stockfish.postMessage("position fen " + game.fen());
+            stockfish.postMessage("go depth " + level.depth);
+        }
 
     async function startBotGame() {
         try {
@@ -1047,9 +1225,18 @@ function startMatchGame(matchId, timeControl) {
             game.reset();
             board.position("start");
             updateBoardStatus();
-            const difficulty = document.getElementById("botDifficulty").selectedOptions[0].text;
+            const botNamesMap = { "0":"Easy", "5":"Medium", "10":"Hard", "15":"Very Hard", "20":"Master" };
+const selectedKey = document.querySelector("#botGrid .bot-card.selected")?.dataset.bot;
+const difficulty = botNamesMap[selectedKey] || "Bot";
             document.getElementById("botStatus").textContent = 
                 "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
+           document.getElementById("chessBoardCard").style.display = "block";
+           enterGameMode();
+            const oppPanel = document.getElementById("opponentPanel");
+            if (oppPanel) oppPanel.style.display = "flex";
+            document.getElementById("opponentName").textContent = difficulty;
+            document.getElementById("opponentElo").textContent = (window.currentBotLevel ? window.currentBotLevel.elo : "—") + " Elo";
+           setTimeout(() => { if (board && board.resize) board.resize(); }, 50);
         } catch (e) {
             document.getElementById("botStatus").textContent = 
                 "❌ Error: " + (e.reason || e.message);
@@ -1057,13 +1244,46 @@ function startMatchGame(matchId, timeControl) {
     }
 
              function stopBotGame() {
-         botEnabled = false;
-         stopClock();
-         document.getElementById("botStatus").textContent = "Bot stopped.";
-  }
+    botEnabled = false;
+    stopClock();
+    document.getElementById("botStatus").textContent = "Bot stopped.";
+    document.getElementById("chessBoardCard").style.display = "none";
+ }
 
-        document.getElementById("startBotBtn").onclick = startBotGame;
-        document.getElementById("stopBotBtn").onclick = stopBotGame;
+                // ===== Сетка ботов: клик по карточке = старт =====
+        window.currentBotLevel = null;
+
+        document.querySelectorAll("#botGrid .bot-card").forEach(card => {
+            card.addEventListener("click", () => {
+                const botKey = card.dataset.bot;
+                const BOT_LEVELS = {
+                    "0":  { elo: 1320, depth: 1  },
+                    "5":  { elo: 1500, depth: 3  },
+                    "10": { elo: 1800, depth: 6  },
+                    "15": { elo: 2200, depth: 10 },
+                    "20": { elo: 3190, depth: 18 }
+                };
+                const level = BOT_LEVELS[botKey];
+                if (!level) return;
+
+                // Подсветка выбранной карточки
+                document.querySelectorAll("#botGrid .bot-card").forEach(c => c.classList.remove("selected"));
+                card.classList.add("selected");
+
+                // Устанавливаем выбранный уровень — requestBotMove() его подхватит
+                window.currentBotLevel = level;
+
+                // Обновляем надпись «Medium (level 5)» в статусе через имя карточки
+                document.getElementById("botStatus").textContent = "Starting game vs " + card.querySelector(".bot-name").textContent + " (" + level.elo + ")...";
+
+                // Запускаем партию
+                startBotGame();
+            });
+        });
+
+        // Кнопка «Сдаться» (бывшая Stop Bot)
+        const stopBtn = document.getElementById("stopBotBtn");
+        if (stopBtn) stopBtn.onclick = stopBotGame;
                 // ===== ЛОББИ (OPEN GAMES) =====
         
         async function createOpenMatch() {
@@ -1205,5 +1425,6 @@ function startMatchGame(matchId, timeControl) {
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
+    </div>
 </body>
 </html>
