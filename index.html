@@ -1379,9 +1379,25 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             document.getElementById("cancelMatchBtn").disabled = false;
             
             // Отправляем запрос на сервер
+                        // Достаём Lichess-данные из localStorage (если игрок вошёл)
+            let lichessUsername = null;
+            let lichessElo = null;
+            if (userAddress) {
+                const saved = localStorage.getItem("lichess_" + userAddress.toLowerCase());
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        lichessUsername = parsed.username || null;
+                        lichessElo = parsed.rapidRating || null;
+                    } catch (e) { /* ignore */ }
+                }
+            }
+
             socket.emit("findMatch", {
                 userAddress: userAddress,
-                timeControl: tc
+                timeControl: tc,
+                lichessUsername: lichessUsername,
+                lichessElo: lichessElo
             });
         }
         
