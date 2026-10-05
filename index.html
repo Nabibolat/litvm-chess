@@ -890,10 +890,14 @@ function attachSocketListeners() {
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
               // ===== История ходов (PGN-стиль) =====
+                let pvpMoveHistory = [];   // отдельная история для PvP
+
         function updateMoveHistory() {
             const list = document.getElementById("moveHistoryList");
             if (!list) return;
-            const history = game.history();
+
+            const history = (currentMatchId && myColor) ? pvpMoveHistory : game.history();
+
             if (history.length === 0) {
                 list.textContent = "—";
                 return;
