@@ -467,7 +467,13 @@
                     ? data.perfs.rapid.rating
                     : "—";
 
-                // Сохраняем в localStorage по адресу кошелька
+                                // Сохраняем профиль под фиксированным ключом (не зависит от кошелька)
+                localStorage.setItem("lichess_profile", JSON.stringify({
+                    username: username,
+                    rapidRating: rapidRating
+                }));
+
+                // Если кошелёк уже подключён — сразу привязываем к адресу
                 if (userAddress) {
                     localStorage.setItem("lichess_" + userAddress.toLowerCase(), JSON.stringify({
                         username: username,
