@@ -619,6 +619,17 @@ function connectSocket() {
             document.getElementById("findMatchBtn").disabled = false;
             document.getElementById("cancelMatchBtn").disabled = true;
             document.getElementById("switchNetworkBtn").style.display = "none";
+                        // Доклеиваем Lichess-профиль к адресу кошелька (если профиль уже есть)
+            const savedProfile = localStorage.getItem("lichess_profile");
+            if (savedProfile && userAddress) {
+                try {
+                    const parsed = JSON.parse(savedProfile);
+                    localStorage.setItem("lichess_" + userAddress.toLowerCase(), JSON.stringify(parsed));
+                    console.log("Lichess profile linked to", userAddress);
+                } catch (e) {
+                    console.error("Lichess profile parse error:", e);
+                }
+            }
         } else {
             // Не та сеть — показываем кнопку Switch to LitVM
             document.getElementById("walletStatus").innerHTML = 
