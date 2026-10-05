@@ -300,7 +300,7 @@
     </div>
    </div>
              <div class="card" id="chessBoardCard" style="display: none;">
-             <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Назад</button>
+             <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Back</button>
              <div id="opponentPanel" style="display: none;">
             <img id="opponentAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Opponent" alt="" style="width: 48px; height: 48px; border-radius: 50%; background: #0f1117;">
             <div style="margin-left: 10px;">
@@ -316,7 +316,7 @@
         </div>
         <div id="board" style="width: 400px; margin: 20px auto;"></div>
                 <div id="moveHistoryPanel" style="margin-top: 16px;">
-            <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">История ходов</div>
+            <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
             <div id="moveHistoryList" style="
                 background: #0f1117;
                 border: 1px solid #2a2e3a;
@@ -805,7 +805,7 @@ function attachSocketListeners() {
             if (b) b.style.display = "none";
         }
          
-        // Привязка кнопки «← Назад» из игрового режима
+        // Привязка кнопки «← Back» из игрового режима
         document.addEventListener("DOMContentLoaded", () => {
             const backBtn = document.getElementById("backToMenuBtn");
             if (backBtn) backBtn.addEventListener("click", () => {
@@ -890,7 +890,7 @@ function attachSocketListeners() {
     if (game.turn() === "w" && piece.search(/^b/) !== -1) return false;
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
-              // ===== История ходов (PGN-стиль) =====
+              // ===== Move history (PGN-стиль) =====
                 let pvpMoveHistory = [];   // отдельная история для PvP
 
         function updateMoveHistory() {
