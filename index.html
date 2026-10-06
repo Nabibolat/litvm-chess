@@ -970,7 +970,6 @@ function attachSocketListeners() {
 
 
         function onSquareClick(event) {
-            console.log("onSquareClick CALLED, this =", this, "square =", this.getAttribute && this.getAttribute("data-square"));
             // В PvP запрещаем клики, пока ждём подтверждения от сервера
             if (pendingMove) return;
             if (game.game_over()) return;
