@@ -1121,7 +1121,7 @@ function attachSquareClickHandlers() {
     boardEl.addEventListener("click", (e) => {
         const sq = e.target.closest(".square-55d63");
         if (!sq) return;
-        onSquareClick.call(sq, e);
+        onSquareClick.call(sq, { currentTarget: sq, target: e.target });
     });
 
     markOccupiedSquares();
