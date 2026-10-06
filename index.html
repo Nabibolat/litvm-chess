@@ -1120,11 +1120,12 @@ function attachSquareClickHandlers() {
 
     // Делегирование: один обработчик на весь #board
     boardEl.addEventListener("click", (e) => {
-        const sq = e.target.closest(".square-55d63");
+        // Ищем клетку под курсором через elementsFromPoint (включая элементы за фигурой)
+        const els = document.elementsFromPoint(e.clientX, e.clientY);
+        const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
         if (!sq) return;
         onSquareClick.call(sq, { currentTarget: sq, target: e.target });
     });
-
     markOccupiedSquares();
 }
 
