@@ -1371,7 +1371,6 @@ function startMatchGame(matchId, timeControl) {
             await tx.wait();
             const counter = await contract.matchCounter();
             activeMatchId = counter.toNumber();
-            startClock(BOT_TIME_CONTROL);
             initBot();
             botEnabled = true;
             game.reset();
