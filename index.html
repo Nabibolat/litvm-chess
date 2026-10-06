@@ -1278,7 +1278,8 @@ let activePlayerColor = "w";
    // ===== PVP GAME (Matchmaking) =====
         
         function startPvPGame(roomId, color, opponentAddress, timeControl) {
-             window.opponentAddress = opponentAddress;        // ← ДОБАВИТЬ
+            window._resultSaved = false;
+            window.opponentAddress = opponentAddress;        // ← ДОБАВИТЬ
             window.currentTimeControl = timeControl;         // ← ДОБАВИТЬ
             // Останавливаем бота (если был запущен)
             botEnabled = false;
@@ -1313,6 +1314,12 @@ let activePlayerColor = "w";
                       // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
         
         async function saveMatchToBlockchain(winner, opponentAddress, timeControl) {
+                        // Защита от дублей: сохраняем результат только один раз
+            if (window._resultSaved) {
+                console.log("Result already saved, skipping");
+                return;
+            }
+            window._resultSaved = true;
             try {
                 await initContract();
                 document.getElementById("boardStatus").textContent += 
