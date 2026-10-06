@@ -122,7 +122,32 @@
             margin: 0 auto;
         }
         .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
-        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
+        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; } 
+                   /* ===== Click-to-Move подсветка ===== */
+        .square-55d63.highlight-selected {
+            box-shadow: inset 0 0 0 4px #4CAF50;
+        }
+        .square-55d63.highlight-legal::after {
+            content: "";
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background: rgba(76, 175, 80, 0.7);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .square-55d63.highlight-legal.occupied::after {
+            /* Если на клетке фигура — рисуем кольцо вместо точки */
+            width: 90%;
+            height: 90%;
+            background: transparent;
+            border: 4px solid rgba(76, 175, 80, 0.7);
+            box-sizing: border-box;
+        }
+
                  /* ===== Сетка ботов ===== */
                  /* ===== Игровой режим ===== */
         body.game-mode #menuWrap { display: none; }
