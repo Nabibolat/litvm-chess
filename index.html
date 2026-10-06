@@ -937,6 +937,36 @@ function attachSocketListeners() {
             }
             return true;
         }
+                  function makeMove(from, to) {
+            // PvP: отправляем ход на сервер, локально не двигаем
+            if (socket && currentMatchId && myColor) {
+                const probe = new Chess(game.fen());
+                const dry = probe.move({ from: from, to: to, promotion: "q" });
+                if (dry === null) return false;
+
+                pendingMove = true;
+                lastMoveSentAt = Date.now();
+                socket.emit("makeMove", {
+                    roomId: currentMatchId,
+                    from: from,
+                    to: to,
+                    promotion: "q"
+                });
+                return true;
+            }
+
+            // Партия с ботом: двигаем локально
+            const move = game.move({ from: from, to: to, promotion: "q" });
+            if (move === null) return false;
+            board.position(game.fen());
+            updateBoardStatus();
+            updateMoveHistory();
+            if (botEnabled && !game.game_over()) {
+                setTimeout(requestBotMove, 100);
+            }
+            return true;
+        }
+
 
 
         function onSquareClick(event) {
