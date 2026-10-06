@@ -335,7 +335,7 @@
         </div>
         <h3>Chess Board</h3>
         <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
-        <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+        <div id="clockRow" style="display: flex; justify-content: space-around; margin: 10px 0;">
             <div>⚪ White: <span id="whiteTimer">--:--</span></div>
             <div>⚫ Black: <span id="blackTimer">--:--</span></div>
         </div>
@@ -1305,6 +1305,7 @@ let activePlayerColor = "w";
                 "✅ Match started! Color: " + color.toUpperCase();
              document.getElementById("chessBoardCard").style.display = "block";
              enterGameMode();
+            document.getElementById("clockRow").style.display = "flex";
             
             // Запускаем таймер
             startClock(timeControl);
@@ -1449,6 +1450,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
            document.getElementById("chessBoardCard").style.display = "block";
            enterGameMode();
+            document.getElementById("clockRow").style.display = "none";
             const oppPanel = document.getElementById("opponentPanel");
             if (oppPanel) oppPanel.style.display = "flex";
             document.getElementById("opponentName").textContent = difficulty;
