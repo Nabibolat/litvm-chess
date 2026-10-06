@@ -1088,7 +1088,7 @@ async function autoFinishMatch(resultCode) {
     }
 }
 
-       function initBoard() {
+              function initBoard() {
     board = Chessboard("board", {
         draggable: true,
         position: "start",
@@ -1097,7 +1097,40 @@ async function autoFinishMatch(resultCode) {
         onDrop: onDrop,
         pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
     });
+
+    // Привязка click-to-move: на каждую клетку — обработчик клика
+    attachSquareClickHandlers();
+
+    // Перерисовываем класс "occupied" при каждом ходе
+    const origPosition = board.position.bind(board);
+    board.position = function(pos, useAnimation) {
+        const result = origPosition(pos, useAnimation);
+        setTimeout(markOccupiedSquares, 30);
+        return result;
+    };
+
     updateBoardStatus();
+}
+
+// ===== CLICK-TO-MOVE: helpers =====
+function attachSquareClickHandlers() {
+    document.querySelectorAll("#board .square-55d63").forEach(sq => {
+        sq.addEventListener("click", onSquareClick);
+    });
+    markOccupiedSquares();
+}
+
+function markOccupiedSquares() {
+    document.querySelectorAll("#board .square-55d63").forEach(sq => {
+        const square = sq.getAttribute("data-square");
+        if (!square) return;
+        const piece = game.get(square);
+        if (piece) {
+            sq.classList.add("occupied");
+        } else {
+            sq.classList.remove("occupied");
+        }
+    });
 }
          
                 // ===== ТАЙМЕР =====
