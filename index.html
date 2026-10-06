@@ -1149,7 +1149,7 @@ function attachSquareClickHandlers() {
     if (!boardEl) return;
 
     // Делегирование: один обработчик на весь #board
-    boardEl.addEventListener("click", (e) => {
+    boardEl.addEventListener("mousedown", (e) => {
         // Ищем клетку под курсором через elementsFromPoint (включая элементы за фигурой)
         const els = document.elementsFromPoint(e.clientX, e.clientY);
         const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
