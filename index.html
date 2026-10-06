@@ -872,6 +872,67 @@ function attachSocketListeners() {
         let game = new Chess();
         let selectedSquare = null;      // выбранная клетка (click-to-move)
         let legalMovesFromSelected = []; // легальные ходы от выбранной фигуры
+                  // ===== CLICK-TO-MOVE =====
+        function clearHighlights() {
+            document.querySelectorAll(".square-55d63").forEach(sq => {
+                sq.classList.remove("highlight-selected", "highlight-legal");
+            });
+        }
+
+        function highlightSquare(square, className) {
+            const el = document.querySelector('[data-square="' + square + '"]');
+            if (el) el.classList.add(className);
+        }
+
+        function onSquareClick(event) {
+            // В PvP запрещаем клики, пока ждём подтверждения от сервера
+            if (pendingMove) return;
+            if (game.game_over()) return;
+
+            const square = event.currentTarget.getAttribute("data-square");
+            if (!square) return;
+
+            const piece = game.get(square);
+
+            // ===== Если уже что-то выбрано — пробуем сделать ход =====
+            if (selectedSquare) {
+                const legal = legalMovesFromSelected.find(m => m.to === square);
+                if (legal) {
+                    // Это легальный ход — играем!
+                    makeMove(selectedSquare, square);
+                    clearHighlights();
+                    selectedSquare = null;
+                    legalMovesFromSelected = [];
+                    return;
+                }
+            }
+
+            // ===== Иначе — пытаемся выбрать фигуру =====
+            clearHighlights();
+            selectedSquare = null;
+            legalMovesFromSelected = [];
+
+            if (!piece) return; // пустая клетка — просто снимаем выделение
+
+            // Проверяем, что это наша фигура и сейчас наш ход
+            if (currentMatchId && myColor) {
+                // PvP
+                const myPrefix = myColor === "white" ? "w" : "b";
+                if (piece.color !== myPrefix) return;
+                const currentTurn = game.turn() === "w" ? "white" : "black";
+                if (currentTurn !== myColor) return;
+            } else {
+                // Игра с ботом
+                if (game.turn() === "w" && piece.color !== "w") return;
+                if (game.turn() === "b" && piece.color !== "b") return;
+            }
+
+            // Выделяем фигуру
+            selectedSquare = square;
+            legalMovesFromSelected = game.moves({ square: square, verbose: true });
+            highlightSquare(square, "highlight-selected");
+            legalMovesFromSelected.forEach(m => highlightSquare(m.to, "highlight-legal"));
+        }
 
         function onDragStart(source, piece, position, orientation) {
     if (game.game_over()) return false;
