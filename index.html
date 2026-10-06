@@ -870,6 +870,8 @@ function attachSocketListeners() {
         // ===== ШАХМАТНАЯ ДОСКА =====
         let board = null;
         let game = new Chess();
+        let selectedSquare = null;      // выбранная клетка (click-to-move)
+        let legalMovesFromSelected = []; // легальные ходы от выбранной фигуры
 
         function onDragStart(source, piece, position, orientation) {
     if (game.game_over()) return false;
