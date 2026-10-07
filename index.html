@@ -1147,7 +1147,7 @@ function attachSocketListeners() {
                 // Текущая позиция в навигации (ply — индекс последнего сыгранного хода)
         window._currentPly = -1;
 
-        function goToPly(ply) {
+                function goToPly(ply) {
             const history = window._savedHistory || [];
             if (ply < -1 || ply >= history.length) return;
 
@@ -1167,11 +1167,50 @@ function attachSocketListeners() {
                 if (activeEl) activeEl.classList.add("active");
             }
 
-            // Кнопки вкл/выкл
+            // Значок на доске
+            clearBoardMarks();
+            if (ply >= 0) {
+                const mark = getMarkForPly(ply);
+                if (mark) {
+                    const verboseMove = new Chess();
+                    for (let i = 0; i < ply; i++) verboseMove.move(history[i]);
+                    const mv = verboseMove.move(history[ply]);
+                    if (mv) showBoardMark(mv.to, mark);
+                }
+            }
+
+            // Кнопки
             const prevBtn = document.getElementById("movePrevBtn");
             const nextBtn = document.getElementById("moveNextBtn");
             if (prevBtn) prevBtn.disabled = (ply <= -1);
             if (nextBtn) nextBtn.disabled = (ply >= history.length - 1);
+        }
+
+        // Убирает все значки с доски
+        function clearBoardMarks() {
+            document.querySelectorAll(".analysis-mark").forEach(el => el.remove());
+        }
+
+        // Достаёт пометку для хода ply
+        function getMarkForPly(ply) {
+            if (!analysisResults || analysisResults.length === 0) return "";
+            const found = analysisResults.find(r => r.index === ply);
+            return found ? found.mark : "";
+        }
+
+        // Ставит значок на клетку
+        function showBoardMark(square, mark) {
+            if (!mark) return;
+            const sqEl = document.querySelector('.square-55d63[data-square="' + square + '"]');
+            if (!sqEl) return;
+
+            const el = document.createElement("div");
+            el.className = "analysis-mark";
+            if (mark === "??") el.classList.add("mark-blunder");
+            else if (mark === "?") el.classList.add("mark-mistake");
+            else if (mark === "?!") el.classList.add("mark-inaccuracy");
+            el.textContent = mark;
+            sqEl.appendChild(el);
         }
 
         // Привязка кнопок навигации
