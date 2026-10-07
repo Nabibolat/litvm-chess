@@ -1102,6 +1102,11 @@ function attachSocketListeners() {
         function updateBoardStatus() {
     const status = document.getElementById("boardStatus");
     if (game.game_over()) {
+                    // Показываем кнопку «Analyze» только для партий с ботом
+            if (!currentMatchId && !myColor) {
+                const anBtn = document.getElementById("analyzeBtn");
+                if (anBtn) anBtn.style.display = "inline-block";
+            }
         let resultText = "";
         let resultCode = "";
         
@@ -1458,6 +1463,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
            document.getElementById("chessBoardCard").style.display = "block";
            enterGameMode();
+            document.getElementById("analyzeBtn").style.display = "none";
             document.getElementById("clockRow").style.display = "none";
             const oppPanel = document.getElementById("opponentPanel");
             if (oppPanel) oppPanel.style.display = "flex";
