@@ -1041,7 +1041,8 @@ function attachSocketListeners() {
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
               // ===== Move history (PGN-стиль) =====
-                let pvpMoveHistory = [];   // отдельная история для PvP        function renderAnalysisInHistory() {
+                let pvpMoveHistory = [];   // отдельная история для PvP     
+            function renderAnalysisInHistory() {
             const list = document.getElementById("moveHistoryList");
             if (!list) return;
 
