@@ -1113,9 +1113,12 @@ function attachSocketListeners() {
         }
 
         // Перейти к позиции после хода № ply (0-based)
+                // Текущая позиция в навигации (ply — индекс последнего сыгранного хода)
+        window._currentPly = -1;
+
         function goToPly(ply) {
             const history = window._savedHistory || [];
-            if (ply < 0 || ply >= history.length) return;
+            if (ply < -1 || ply >= history.length) return;
 
             const tempGame = new Chess();
             for (let i = 0; i <= ply; i++) {
@@ -1123,11 +1126,47 @@ function attachSocketListeners() {
             }
             game.load(tempGame.fen());
             board.position(tempGame.fen(), false);
+            window._currentPly = ply;
 
+            // Подсветка активного хода
             const list = document.getElementById("moveHistoryList");
             list.querySelectorAll(".move-link").forEach(el => el.classList.remove("active"));
-            const activeEl = list.querySelector('.move-link[data-ply="' + ply + '"]');
-            if (activeEl) activeEl.classList.add("active");
+            if (ply >= 0) {
+                const activeEl = list.querySelector('.move-link[data-ply="' + ply + '"]');
+                if (activeEl) activeEl.classList.add("active");
+            }
+
+            // Кнопки вкл/выкл
+            const prevBtn = document.getElementById("movePrevBtn");
+            const nextBtn = document.getElementById("moveNextBtn");
+            if (prevBtn) prevBtn.disabled = (ply <= -1);
+            if (nextBtn) nextBtn.disabled = (ply >= history.length - 1);
+        }
+
+        // Привязка кнопок навигации
+        function bindMoveNav() {
+            const prevBtn = document.getElementById("movePrevBtn");
+            const nextBtn = document.getElementById("moveNextBtn");
+            const navRow = document.getElementById("moveNavRow");
+
+            if (navRow) navRow.style.display = "flex";
+
+            if (prevBtn && !prevBtn._bound) {
+                prevBtn._bound = true;
+                prevBtn.addEventListener("click", () => {
+                    const cur = window._currentPly;
+                    if (cur > -1) goToPly(cur - 1);
+                });
+            }
+
+            if (nextBtn && !nextBtn._bound) {
+                nextBtn._bound = true;
+                nextBtn.addEventListener("click", () => {
+                    const cur = window._currentPly;
+                    const history = window._savedHistory || [];
+                    if (cur < history.length - 1) goToPly(cur + 1);
+                });
+            }
         }
 
 
@@ -1491,6 +1530,7 @@ let activePlayerColor = "w";
             console.log("Analysis done:", analysisResults);
                         // Перерисовываем историю ходов с пометками
             renderAnalysisInHistory();
+            bindMoveNav();
         }
 
         // Запрос к analysisStockfish: лучший ход
