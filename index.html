@@ -838,6 +838,12 @@ function attachSocketListeners() {
         board.position(data.fen, false);   // false = без анимации
         updateBoardStatus();
         updateMoveHistory();
+                // Обновляем часы с сервера
+        if (data.clocks && currentMatchId) {
+            whiteTime = Math.floor(data.clocks.white / 1000);
+            blackTime = Math.floor(data.clocks.black / 1000);
+            updateClocks();
+        }
 
         // Если игра окончена — обрабатываем результат
         if (data.isGameOver && currentMatchId && myColor) {
