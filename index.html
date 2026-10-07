@@ -1577,21 +1577,7 @@ let activePlayerColor = "w";
                     if (cpLoss >= 200) mark = "??";
                     else if (cpLoss >= 100) mark = "?";
                     else if (cpLoss >= 50) mark = "?!";
-                    else if (cpLoss === 0) {
-                        // cpLoss=0 — лучший или один из лучших ходов.
-                        // Проверяем: ход СОВПАЛ с лучшим ходом Stockfish?
-                        const playedMove = move.from + move.to;
-                        if (best && best === playedMove) {
-                            // Проверяем жертву материала: было ли взятие в ответ?
-                            // Простая эвристика: фигура, которую мы поставили под бой.
-                            // Считаем !! если позиция стала сильно лучше после хода.
-                            if (evalAfter - evalBefore >= 200) {
-                                mark = "!!";
-                            } else {
-                                mark = "!";
-                            }
-                        }
-                    }
+                    else if (cpLoss === 0) mark = "!";
 
                     analysisResults.push({
                         index: i,
