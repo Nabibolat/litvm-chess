@@ -1041,7 +1041,41 @@ function attachSocketListeners() {
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
               // ===== Move history (PGN-стиль) =====
-                let pvpMoveHistory = [];   // отдельная история для PvP
+                let pvpMoveHistory = [];   // отдельная история для PvP        function renderAnalysisInHistory() {
+            const list = document.getElementById("moveHistoryList");
+            if (!list) return;
+
+            // Если анализа нет — показываем как обычно
+            if (!analysisResults || analysisResults.length === 0) {
+                updateMoveHistory();
+                return;
+            }
+
+            // Берём полную историю партии (SAN)
+            const history = game.history();
+            if (history.length === 0) {
+                list.textContent = "—";
+                return;
+            }
+
+            // Создаём map: индекс хода → пометка
+            const marksMap = {};
+            analysisResults.forEach(r => {
+                marksMap[r.index] = r.mark;
+            });
+
+            const parts = [];
+            for (let i = 0; i < history.length; i += 2) {
+                const num = (i / 2) + 1;
+                const wSan = history[i] || "";
+                const bSan = history[i + 1] || "";
+                const wMark = marksMap[i] || "";
+                const bMark = marksMap[i + 1] || "";
+                parts.push(num + ". " + wSan + wMark + " " + bSan + bMark);
+            }
+            list.textContent = parts.join("  ");
+        }
+
 
         function updateMoveHistory() {
             const list = document.getElementById("moveHistoryList");
@@ -1394,6 +1428,8 @@ let activePlayerColor = "w";
             }
 
             console.log("Analysis done:", analysisResults);
+                        // Перерисовываем историю ходов с пометками
+            renderAnalysisInHistory();
         }
 
         // Запрос к analysisStockfish: лучший ход
