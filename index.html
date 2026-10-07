@@ -123,6 +123,24 @@
         }
         .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
         .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; } 
+                /* Навигация по ходам */
+        .move-link {
+            cursor: pointer;
+            padding: 1px 3px;
+            border-radius: 3px;
+            transition: background 0.15s;
+        }
+        .move-link:hover {
+            background: #2a2e3a;
+        }
+        .move-link.active {
+            background: #ffb84d;
+            color: #0f1117;
+        }
+        .move-num {
+            color: #8a92a6;
+            margin-right: 2px;
+        }
                    /* ===== Click-to-Move подсветка ===== */
         .square-55d63.highlight-selected {
             box-shadow: inset 0 0 0 4px #4CAF50;
@@ -1042,41 +1060,70 @@ function attachSocketListeners() {
 }
               // ===== Move history (PGN-стиль) =====
                 let pvpMoveHistory = [];   // отдельная история для PvP     
-            function renderAnalysisInHistory() {
+                   function renderAnalysisInHistory() {
             const list = document.getElementById("moveHistoryList");
             if (!list) return;
 
-            // Если анализа нет — показываем как обычно
             if (!analysisResults || analysisResults.length === 0) {
                 updateMoveHistory();
                 return;
             }
 
-            // Берём полную историю партии (SAN)
-                const history = (window._savedHistory && window._savedHistory.length > 0)
+            const history = (window._savedHistory && window._savedHistory.length > 0)
                 ? window._savedHistory
                 : game.history();
+
             if (history.length === 0) {
                 list.textContent = "—";
                 return;
             }
 
-            // Создаём map: индекс хода → пометка
             const marksMap = {};
             analysisResults.forEach(r => {
                 marksMap[r.index] = r.mark;
             });
 
-            const parts = [];
+            let html = "";
             for (let i = 0; i < history.length; i += 2) {
                 const num = (i / 2) + 1;
                 const wSan = history[i] || "";
                 const bSan = history[i + 1] || "";
                 const wMark = marksMap[i] || "";
                 const bMark = marksMap[i + 1] || "";
-                parts.push(num + ". " + wSan + wMark + " " + bSan + bMark);
+
+                html += '<span class="move-num">' + num + '.</span> ';
+                html += '<span class="move-link" data-ply="' + i + '">' + wSan + wMark + '</span> ';
+                if (bSan) {
+                    html += '<span class="move-link" data-ply="' + (i + 1) + '">' + bSan + bMark + '</span> ';
+                }
             }
-            list.textContent = parts.join("  ");
+            list.innerHTML = html;
+
+            // Привязываем клики
+            list.querySelectorAll(".move-link").forEach(el => {
+                el.addEventListener("click", () => {
+                    const ply = parseInt(el.getAttribute("data-ply"), 10);
+                    goToPly(ply);
+                });
+            });
+        }
+
+        // Перейти к позиции после хода № ply (0-based)
+        function goToPly(ply) {
+            const history = window._savedHistory || [];
+            if (ply < 0 || ply >= history.length) return;
+
+            const tempGame = new Chess();
+            for (let i = 0; i <= ply; i++) {
+                tempGame.move(history[i]);
+            }
+            game.load(tempGame.fen());
+            board.position(tempGame.fen(), false);
+
+            const list = document.getElementById("moveHistoryList");
+            list.querySelectorAll(".move-link").forEach(el => el.classList.remove("active"));
+            const activeEl = list.querySelector('.move-link[data-ply="' + ply + '"]');
+            if (activeEl) activeEl.classList.add("active");
         }
 
 
