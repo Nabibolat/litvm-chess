@@ -893,6 +893,7 @@ function attachSocketListeners() {
 };
         document.getElementById("createBtn").onclick = createMatch;
         document.getElementById("loadBtn").onclick = loadMatches;
+        document.getElementById("analyzeBtn").onclick = analyzeGame;
         // ===== ШАХМАТНАЯ ДОСКА =====
         let board = null;
         let game = new Chess();
@@ -1318,6 +1319,126 @@ let activePlayerColor = "w";
             startClock(timeControl);
         }
                       // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
+                  // ===== POST-GAME АНАЛИЗ (только для партий с ботом) =====
+        async function analyzeGame() {
+            // Защита: только для бота, только если партия окончена
+            if (currentMatchId || myColor) {
+                console.log("Analysis disabled for PvP");
+                return;
+            }
+            if (!game.game_over()) {
+                console.log("Game not over");
+                return;
+            }
+
+            const btn = document.getElementById("analyzeBtn");
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = "⏳ Analyzing...";
+            }
+
+            const history = game.history({ verbose: true });
+            analysisResults = [];
+
+            // Сохраняем исходную позицию для повторного проигрывания
+            const originalFen = game.fen();
+
+            // Пробегаем по каждому ходу
+            for (let i = 0; i < history.length; i++) {
+                const move = history[i];
+
+                // Позиция ДО хода
+                const tempGame = new Chess();
+                for (let j = 0; j < i; j++) {
+                    tempGame.move(history[j].san);
+                }
+                const fenBefore = tempGame.fen();
+
+                // Что сыграл игрок (или бот — нам нужны только ходы ИГРОКА)
+                // Игрок — всегда БЕЛЫЕ (в партиях с ботом)
+                const isPlayerMove = (i % 2 === 0);
+
+                if (isPlayerMove) {
+                    // Считаем лучший ход через analysisStockfish
+                    const best = await getBestMove(fenBefore, 15);
+                    const evalBefore = await getEval(fenBefore, 15);
+                    const evalAfter = await getEval(tempGame.fen(), 15);
+
+                    // Centipawn loss = разница между лучшим и сыгранным
+                    const cpLoss = Math.max(0, evalBefore - evalAfter);
+
+                    // Пометка
+                    let mark = "";
+                    if (cpLoss >= 200) mark = "??";
+                    else if (cpLoss >= 100) mark = "?";
+                    else if (cpLoss >= 50) mark = "?!";
+
+                    analysisResults.push({
+                        index: i,
+                        san: move.san,
+                        isPlayer: true,
+                        cpLoss: cpLoss,
+                        mark: mark
+                    });
+                }
+            }
+
+            // Восстанавливаем исходную позицию
+            game.load(originalFen);
+            board.position(game.fen(), false);
+
+            // Обновляем кнопку
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "🔍 Analyze game";
+            }
+
+            console.log("Analysis done:", analysisResults);
+        }
+
+        // Запрос к analysisStockfish: лучший ход
+        function getBestMove(fen, depth) {
+            return new Promise((resolve) => {
+                const handler = (e) => {
+                    const line = e.data;
+                    if (typeof line !== "string") return;
+                    if (line.indexOf("bestmove") === 0) {
+                        analysisStockfish.removeEventListener("message", handler);
+                        const best = line.split(" ")[1];
+                        resolve(best || "");
+                    }
+                };
+                analysisStockfish.addEventListener("message", handler);
+                analysisStockfish.postMessage("position fen " + fen);
+                analysisStockfish.postMessage("go depth " + depth);
+            });
+        }
+
+        // Запрос к analysisStockfish: оценка позиции (в сантипешках)
+        function getEval(fen, depth) {
+            return new Promise((resolve) => {
+                let lastScore = 0;
+                const handler = (e) => {
+                    const line = e.data;
+                    if (typeof line !== "string") return;
+                    // Ловим "score cp X" или "score mate X"
+                    const cpMatch = line.match(/score cp (-?\d+)/);
+                    const mateMatch = line.match(/score mate (-?\d+)/);
+                    if (cpMatch) lastScore = parseInt(cpMatch[1], 10);
+                    if (mateMatch) {
+                        const m = parseInt(mateMatch[1], 10);
+                        lastScore = m > 0 ? 10000 : -10000;
+                    }
+                    if (line.indexOf("bestmove") === 0) {
+                        analysisStockfish.removeEventListener("message", handler);
+                        resolve(lastScore);
+                    }
+                };
+                analysisStockfish.addEventListener("message", handler);
+                analysisStockfish.postMessage("position fen " + fen);
+                analysisStockfish.postMessage("go depth " + depth);
+            });
+        }
         
         async function saveMatchToBlockchain(winner, opponentAddress, timeControl) {
                         // Защита от дублей: сохраняем результат только один раз
@@ -1370,6 +1491,8 @@ function startMatchGame(matchId, timeControl) {
 }
      // ===== STOCKFISH BOT =====
   let stockfish = new Worker('stockfish-19-lite-single.js');
+  let analysisStockfish = new Worker('stockfish-19-lite-single.js');
+  let analysisResults = [];
   let botEnabled = false;
   let playerColor = "w"; // игрок всегда играет белыми
 
