@@ -1428,6 +1428,7 @@ let activePlayerColor = "w";
             const originalFen = game.fen();
             const savedHistory = game.history();
             window._savedHistory = savedHistory;
+            window._playerColorForAnalysis = playerColor || "w";
 
             // Пробегаем по каждому ходу
             for (let i = 0; i < history.length; i++) {
@@ -1442,7 +1443,8 @@ let activePlayerColor = "w";
 
                 // Что сыграл игрок (или бот — нам нужны только ходы ИГРОКА)
                 // Игрок — всегда БЕЛЫЕ (в партиях с ботом)
-                const isPlayerMove = (i % 2 === 0);
+                const playerColorForAnalysis = window._playerColorForAnalysis || "w";
+                const isPlayerMove = (playerColorForAnalysis === "w") ? (i % 2 === 0) : (i % 2 === 1);
 
                 if (isPlayerMove) {
                     // Считаем лучший ход через analysisStockfish
@@ -1451,7 +1453,10 @@ let activePlayerColor = "w";
                     const evalAfter = await getEval(tempGame.fen(), 15);
 
                     // Centipawn loss = разница между лучшим и сыгранным
-                    const cpLoss = Math.max(0, evalBefore - evalAfter);
+                    const playerColorForAnalysis = window._playerColorForAnalysis || "w";
+                    const cpLoss = (playerColorForAnalysis === "w")
+                        ? Math.max(0, evalBefore - evalAfter)
+                        : Math.max(0, evalAfter - evalBefore);
 
                     // Пометка
                     let mark = "";
