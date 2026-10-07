@@ -1746,7 +1746,7 @@ function startMatchGame(matchId, timeControl) {
                 "5":  { elo: 1500, depth: 3  },   // Medium
                 "10": { elo: 1800, depth: 6  },   // Hard
                 "15": { elo: 2200, depth: 10 },   // Very Hard
-                "20": { elo: 3190, depth: 18 }    // Master
+                "20": { elo: 3190, depth: 22 }    // Master — полная сила
             };
 
             // Определяем уровень: либо из карточки бота (новая логика), либо из select (fallback)
@@ -1765,8 +1765,13 @@ function startMatchGame(matchId, timeControl) {
                 level = BOT_LEVELS["5"];
             }
 
-            stockfish.postMessage("setoption name UCI_LimitStrength value true");
-            stockfish.postMessage("setoption name UCI_Elo value " + level.elo);
+                        // Master (elo 3190) — полная сила, без ограничения
+            if (level.elo >= 3190) {
+                stockfish.postMessage("setoption name UCI_LimitStrength value false");
+            } else {
+                stockfish.postMessage("setoption name UCI_LimitStrength value true");
+                stockfish.postMessage("setoption name UCI_Elo value " + level.elo);
+            }
             stockfish.postMessage("position fen " + game.fen());
             stockfish.postMessage("go depth " + level.depth);
         }
