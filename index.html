@@ -1563,6 +1563,7 @@ let activePlayerColor = "w";
                     // Считаем лучший ход через analysisStockfish
                     const best = await getBestMove(fenBefore, 15);
                     const evalBefore = await getEval(fenBefore, 15);
+                    tempGame.move(history[i]);  // ← ПРИМЕНЯЕМ ход перед evalAfter
                     const evalAfter = await getEval(tempGame.fen(), 15);
 
                     // Centipawn loss = разница между лучшим и сыгранным
