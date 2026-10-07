@@ -1503,13 +1503,12 @@ let activePlayerColor = "w";
         }
 
         // Запрос к analysisStockfish: оценка позиции (в сантипешках)
-        function getEval(fen, depth) {
+                function getEval(fen, depth) {
             return new Promise((resolve) => {
                 let lastScore = 0;
                 const handler = (e) => {
                     const line = e.data;
                     if (typeof line !== "string") return;
-                    // Ловим "score cp X" или "score mate X"
                     const cpMatch = line.match(/score cp (-?\d+)/);
                     const mateMatch = line.match(/score mate (-?\d+)/);
                     if (cpMatch) lastScore = parseInt(cpMatch[1], 10);
@@ -1519,6 +1518,11 @@ let activePlayerColor = "w";
                     }
                     if (line.indexOf("bestmove") === 0) {
                         analysisStockfish.removeEventListener("message", handler);
+
+                        // Нормализация к БЕЛЫМ: Stockfish оценивает от лица того, чей ход.
+                        const turn = fen.split(" ")[1];
+                        if (turn === "b") lastScore = -lastScore;
+
                         resolve(lastScore);
                     }
                 };
