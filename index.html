@@ -1772,6 +1772,7 @@ function startMatchGame(matchId, timeControl) {
                 stockfish.postMessage("setoption name UCI_LimitStrength value true");
                 stockfish.postMessage("setoption name UCI_Elo value " + level.elo);
             }
+            stockfish.postMessage("ucinewgame");
             stockfish.postMessage("position fen " + game.fen());
             stockfish.postMessage("go depth " + level.depth);
         }
@@ -1786,6 +1787,7 @@ function startMatchGame(matchId, timeControl) {
             const counter = await contract.matchCounter();
             activeMatchId = counter.toNumber();
             initBot();
+            stockfish.postMessage("ucinewgame");
             botEnabled = true;
             game.reset();
                         // Сбрасываем PvP-состояние (мы в партии с ботом)
