@@ -1053,7 +1053,9 @@ function attachSocketListeners() {
             }
 
             // Берём полную историю партии (SAN)
-            const history = game.history();
+                const history = (window._savedHistory && window._savedHistory.length > 0)
+                ? window._savedHistory
+                : game.history();
             if (history.length === 0) {
                 list.textContent = "—";
                 return;
@@ -1377,6 +1379,8 @@ let activePlayerColor = "w";
 
             // Сохраняем исходную позицию для повторного проигрывания
             const originalFen = game.fen();
+            const savedHistory = game.history();
+            window._savedHistory = savedHistory;
 
             // Пробегаем по каждому ходу
             for (let i = 0; i < history.length; i++) {
