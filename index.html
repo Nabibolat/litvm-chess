@@ -122,7 +122,38 @@
             margin: 0 auto;
         }
         .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
-        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; } 
+        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
+                /* Значки анализа на доске */
+        .square-55d63 { position: relative; }
+        .square-55d63 .analysis-mark {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .analysis-mark.mark-inaccuracy {
+            background: #ffd54f;
+            color: #0f1117;
+        }
+        .analysis-mark.mark-mistake {
+            background: #ff9800;
+            color: #fff;
+        }
+        .analysis-mark.mark-blunder {
+            background: #f44336;
+            color: #fff;
+        }
+
                 /* Навигация по ходам */
         .move-link {
             cursor: pointer;
