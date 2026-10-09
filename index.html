@@ -1280,10 +1280,11 @@ function attachSocketListeners() {
             // Рисуем историю ходов
             updateMoveHistory();
 
-            // Показываем кнопку навигации
+                        // Показываем кнопку навигации
             const navRow = document.getElementById("moveNavRow");
             if (navRow) navRow.style.display = "flex";
             window._currentPly = g.moves.length - 1;
+            bindMoveNav();
 
             // Показываем точность (если есть)
             const accRow = document.getElementById("accuracyRow");
