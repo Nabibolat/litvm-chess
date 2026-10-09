@@ -1574,28 +1574,30 @@ let activePlayerColor = "w";
                     const evalAfter = await getEval(tempGame.fen(), 15);
 
                     // Centipawn loss = разница между лучшим и сыгранным
-                    const playerColorForAnalysis = window._playerColorForAnalysis || "w";
-                    let cpLoss = (playerColorForAnalysis === "w")
-                        ? Math.max(0, evalBefore - evalAfter)
-                        : Math.max(0, evalAfter - evalBefore);
-                    // Кап: одна ошибка не должна ломать средний ACPL
-                    cpLoss = Math.min(300, cpLoss);
+                        const playerColorForAnalysis = window._playerColorForAnalysis || "w";
 
-                    // Пометка
-                                        let mark = "";
-                    if (cpLoss >= 200) mark = "??";
-                    else if (cpLoss >= 100) mark = "?";
-                    else if (cpLoss >= 50) mark = "?!";
+                    // Пропускаем ходы, когда позиция уже безнадёжна (|evalBefore| >= 700)
+                    if (Math.abs(evalBefore) < 700) {
+                        let cpLoss = (playerColorForAnalysis === "w")
+                            ? Math.max(0, evalBefore - evalAfter)
+                            : Math.max(0, evalAfter - evalBefore);
+                        // Кап: одна ошибка не должна ломать средний ACPL
+                        cpLoss = Math.min(300, cpLoss);
 
-                    analysisResults.push({
-                        index: i,
-                        san: move.san,
-                        isPlayer: true,
-                        cpLoss: cpLoss,
-                        mark: mark
-                    });
-                }
-            }
+                        // Пометка
+                        let mark = "";
+                        if (cpLoss >= 200) mark = "??";
+                        else if (cpLoss >= 100) mark = "?";
+                        else if (cpLoss >= 50) mark = "?!";
+
+                        analysisResults.push({
+                            index: i,
+                            san: move.san,
+                            isPlayer: true,
+                            cpLoss: cpLoss,
+                            mark: mark
+                        });
+                    }
 
             // Восстанавливаем исходную позицию
             game.load(originalFen);
