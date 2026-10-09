@@ -1299,6 +1299,10 @@ function attachSocketListeners() {
                 game.move(san);
             }
 
+                        // Ориентация доски под цвет игрока
+            const orient = (g.playerColor === "black") ? "black" : "white";
+            board.orientation(orient);
+
             // Показываем на доске финальную позицию
             board.position(game.fen(), false);
 
