@@ -408,6 +408,7 @@
                 <button id="movePrevBtn" class="small">←</button>
                 <button id="moveNextBtn" class="small">→</button>
             </div>
+            <div id="accuracyRow" style="display: none; margin-top: 10px; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; font-size: 13px; color: #e6e6e6;"></div>
         </div>
     </div>
 
@@ -1607,6 +1608,28 @@ let activePlayerColor = "w";
             console.log("Analysis done:", analysisResults);
                         // Перерисовываем историю ходов с пометками
             renderAnalysisInHistory();
+                        // Считаем ACPL и точность (формула Lichess)
+            const playerIsWhite = (window._playerColorForAnalysis || "w") === "w";
+            const playerResults = analysisResults.filter(r => r.isPlayer);
+
+            if (playerResults.length > 0) {
+                const totalCpLoss = playerResults.reduce((sum, r) => sum + (r.cpLoss || 0), 0);
+                const acpl = totalCpLoss / playerResults.length;
+
+                // Формула Lichess: accuracy = 103.1668 * exp(-0.04354 * ACPL) - 3.1669
+                let accuracy = 103.1668 * Math.exp(-0.04354 * acpl) - 3.1669;
+                accuracy = Math.max(0, Math.min(100, accuracy));
+
+                const accRow = document.getElementById("accuracyRow");
+                if (accRow) {
+                    accRow.innerHTML =
+                        `🎯 <b>Точность:</b> ${accuracy.toFixed(1)}% ` +
+                        `<span style="color:#8a92a6; margin-left:12px;">` +
+                        `ACPL: ${acpl.toFixed(1)} cp · Ходов: ${playerResults.length}` +
+                        `</span>`;
+                    accRow.style.display = "block";
+                }
+            }
             bindMoveNav();
         }
 
@@ -1812,6 +1835,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
            document.getElementById("chessBoardCard").style.display = "block";
            enterGameMode();
             document.getElementById("analyzeBtn").style.display = "none";
+            document.getElementById("accuracyRow").style.display = "none";
             document.getElementById("clockRow").style.display = "none";
             const oppPanel = document.getElementById("opponentPanel");
             if (oppPanel) oppPanel.style.display = "flex";
