@@ -1188,6 +1188,117 @@ function attachSocketListeners() {
                 console.error("Update history error:", e);
             }
         }
+                          // ===== РЕНДЕР ИСТОРИИ ПАРТИЙ =====
+        let historyVisibleCount = 10;
+        const HISTORY_PAGE_SIZE = 10;
+
+        function renderGameHistory() {
+            const panel = document.getElementById("gameHistoryPanel");
+            const list = document.getElementById("gameHistoryList");
+            const moreBtn = document.getElementById("gameHistoryMoreBtn");
+            if (!panel || !list) return;
+
+            const history = getGameHistory();
+            if (history.length === 0) {
+                panel.style.display = "none";
+                return;
+            }
+
+            panel.style.display = "block";
+
+            const visible = history.slice(0, historyVisibleCount);
+
+            let html = "";
+            visible.forEach((g, index) => {
+                const dateStr = new Date(g.date).toLocaleString("ru-RU", {
+                    day: "2-digit", month: "2-digit",
+                    hour: "2-digit", minute: "2-digit"
+                });
+
+                let resultColor = "#8a92a6";
+                let resultText = g.result;
+                if (g.result === "win") { resultColor = "#b6f7c4"; resultText = "🏆 Win"; }
+                else if (g.result === "loss") { resultColor = "#f7b6b6"; resultText = "💀 Loss"; }
+                else if (g.result === "draw") { resultColor = "#ffd88a"; resultText = "🤝 Draw"; }
+
+                const accText = g.accuracy ? `Acc: ${g.accuracy}%` : "";
+                const acplText = g.acpl ? `ACPL: ${g.acpl}` : "";
+
+                html += `<div class="history-entry" data-idx="${index}" style="padding: 8px 0; border-bottom: 1px solid #1a1d26; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                    <img src="${g.opponentAvatar || ''}" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #0f1117;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; color: #e6e6e6;">
+                            vs <b>${g.opponent || "Unknown"}</b>
+                            ${g.opponentElo ? `<span style="color: #8a92a6; font-size: 11px;">(${g.opponentElo})</span>` : ""}
+                        </div>
+                        <div style="font-size: 11px; color: #8a92a6; margin-top: 2px;">
+                            ${dateStr} · ${g.moves.length} plies
+                            ${accText ? ` · ${accText}` : ""}
+                            ${acplText ? ` · ${acplText}` : ""}
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; font-weight: 600; color: ${resultColor};">${resultText}</div>
+                </div>`;
+            });
+
+            list.innerHTML = html;
+
+            // Клик по записи → загрузка партии
+            list.querySelectorAll(".history-entry").forEach(el => {
+                el.addEventListener("click", () => {
+                    const idx = parseInt(el.getAttribute("data-idx"), 10);
+                    loadGameFromHistory(idx);
+                });
+            });
+
+            // Кнопка «Show more»
+            if (moreBtn) {
+                if (history.length > historyVisibleCount) {
+                    moreBtn.style.display = "block";
+                    moreBtn.textContent = `Show more (${history.length - historyVisibleCount})`;
+                } else {
+                    moreBtn.style.display = "none";
+                }
+            }
+        }
+
+        function loadGameFromHistory(index) {
+            const history = getGameHistory();
+            const g = history[index];
+            if (!g || !g.moves) return;
+
+            // Загружаем партию в game
+            game.reset();
+            for (const san of g.moves) {
+                game.move(san);
+            }
+
+            // Показываем на доске финальную позицию
+            board.position(game.fen(), false);
+
+            // Запоминаем ходы для навигации
+            window._savedHistory = [...g.moves];
+            window._playerColorForAnalysis = (g.playerColor === "white") ? "w" : "b";
+
+            // Рисуем историю ходов
+            updateMoveHistory();
+
+            // Показываем кнопку навигации
+            const navRow = document.getElementById("moveNavRow");
+            if (navRow) navRow.style.display = "flex";
+            window._currentPly = g.moves.length - 1;
+
+            // Показываем точность (если есть)
+            const accRow = document.getElementById("accuracyRow");
+            if (accRow && g.accuracy && g.acpl) {
+                accRow.innerHTML =
+                    `🎯 <b>Accuracy:</b> ${g.accuracy}% ` +
+                    `<span style="color:#8a92a6; margin-left:12px;">ACPL: ${g.acpl} cp</span>`;
+                accRow.style.display = "block";
+            }
+
+            console.log("Loaded game from history:", g.id);
+        }
                    function renderAnalysisInHistory() {
             const list = document.getElementById("moveHistoryList");
             if (!list) return;
