@@ -1307,11 +1307,9 @@ function attachSocketListeners() {
         function updateBoardStatus() {
     const status = document.getElementById("boardStatus");
     if (game.game_over()) {
-                    // Показываем кнопку «Analyze» только для партий с ботом
-            if (!currentMatchId && !myColor) {
-                const anBtn = document.getElementById("analyzeBtn");
-                if (anBtn) anBtn.style.display = "inline-block";
-            }
+                     // Показываем кнопку «Analyze» — и для бота, и для PvP
+            const anBtn = document.getElementById("analyzeBtn");
+            if (anBtn) anBtn.style.display = "inline-block";
         let resultText = "";
         let resultCode = "";
         
