@@ -1552,6 +1552,7 @@ let activePlayerColor = "w";
                 replayGame.move(san);
             }
             const history = replayGame.history({ verbose: true });
+            const originalFen = replayGame.fen();
 
             // Пробегаем по каждому ходу
             for (let i = 0; i < history.length; i++) {
