@@ -1575,9 +1575,11 @@ let activePlayerColor = "w";
 
                     // Centipawn loss = разница между лучшим и сыгранным
                     const playerColorForAnalysis = window._playerColorForAnalysis || "w";
-                    const cpLoss = (playerColorForAnalysis === "w")
+                    let cpLoss = (playerColorForAnalysis === "w")
                         ? Math.max(0, evalBefore - evalAfter)
                         : Math.max(0, evalAfter - evalBefore);
+                    // Кап: одна ошибка не должна ломать средний ACPL
+                    cpLoss = Math.min(300, cpLoss);
 
                     // Пометка
                                         let mark = "";
