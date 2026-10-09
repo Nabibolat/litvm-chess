@@ -1621,6 +1621,7 @@ let activePlayerColor = "w";
                 const acplCapped = Math.min(100, acpl);
                 let accuracy = 103.1668 * Math.exp(-0.04354 * acplCapped) - 3.1669;
                 accuracy = Math.max(0, Math.min(100, accuracy));
+                                console.log("DEBUG accuracy:", accuracy, "acpl:", acpl, "capped:", acplCapped, "playerResults:", playerResults.length);
 
                 const accRow = document.getElementById("accuracyRow");
                 if (accRow) {
