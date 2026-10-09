@@ -332,10 +332,15 @@
         <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
     </div>
 </div>
-    <div class="card">
+        <div class="card" style="display: none;">
        <h3>My Games</h3>
        <button id="loadBtn" disabled>Load Games</button>
         <div id="matchesList"></div>
+    </div>
+            <div class="card">
+        <h3>📜 Game History</h3>
+        <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
+        <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
     </div>
         <div class="card">
         <h3>Play vs Bot</h3>
@@ -409,11 +414,6 @@
                 <button id="moveNextBtn" class="small">→</button>
             </div>
             <div id="accuracyRow" style="display: none; margin-top: 10px; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; font-size: 13px; color: #e6e6e6;"></div>
-                <div id="gameHistoryPanel" style="display: none; margin-top: 16px;">
-                <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Game history</div>
-                <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 300px; overflow-y: auto;"></div>
-                <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
-            </div>
         </div>
     </div>
 
@@ -1192,19 +1192,16 @@ function attachSocketListeners() {
         let historyVisibleCount = 10;
         const HISTORY_PAGE_SIZE = 10;
 
-        function renderGameHistory() {
-            const panel = document.getElementById("gameHistoryPanel");
+                function renderGameHistory() {
             const list = document.getElementById("gameHistoryList");
             const moreBtn = document.getElementById("gameHistoryMoreBtn");
-            if (!panel || !list) return;
+            if (!list) return;
 
             const history = getGameHistory();
             if (history.length === 0) {
-                panel.style.display = "none";
+                list.textContent = "No games yet. Play your first!";
                 return;
             }
-
-            panel.style.display = "block";
 
             const visible = history.slice(0, historyVisibleCount);
 
@@ -1659,6 +1656,7 @@ function markOccupiedSquares() {
             }
         }
         window.addEventListener("load", initBoard);
+        window.addEventListener("load", renderGameHistory);
         document.getElementById("gameModeWrap").style.display = "block";
         window.addEventListener("load", async () => {
     // Если вернулись с Lichess OAuth — обрабатываем callback
