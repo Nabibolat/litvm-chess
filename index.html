@@ -1170,6 +1170,7 @@ function attachSocketListeners() {
 
                 localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
                 console.log("Game saved to history:", entry.id);
+                updateStatsFromHistory();
             } catch (e) {
                 console.error("Save history error:", e);
             }
@@ -1191,6 +1192,27 @@ function attachSocketListeners() {
                           // ===== РЕНДЕР ИСТОРИИ ПАРТИЙ =====
         let historyVisibleCount = 10;
         const HISTORY_PAGE_SIZE = 10;
+                  function updateStatsFromHistory() {
+            const history = getGameHistory();
+
+            const games = history.length;
+            let wins = 0, losses = 0, draws = 0;
+
+            history.forEach(g => {
+                if (g.result === "win") wins++;
+                else if (g.result === "loss") losses++;
+                else if (g.result === "draw") draws++;
+            });
+
+            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+
+            const el = id => document.getElementById(id);
+            if (el("statGames")) el("statGames").textContent = games;
+            if (el("statWins")) el("statWins").textContent = wins;
+            if (el("statLosses")) el("statLosses").textContent = losses;
+            if (el("statDraws")) el("statDraws").textContent = draws;
+            if (el("statWinRate")) el("statWinRate").textContent = winRate + "%";
+        }
 
                 function renderGameHistory() {
             const list = document.getElementById("gameHistoryList");
@@ -1667,7 +1689,10 @@ function markOccupiedSquares() {
             }
         }
         window.addEventListener("load", initBoard);
-        window.addEventListener("load", renderGameHistory);
+        window.addEventListener("load", () => {
+    renderGameHistory();
+    updateStatsFromHistory();
+});
         document.getElementById("gameModeWrap").style.display = "block";
         window.addEventListener("load", async () => {
     // Если вернулись с Lichess OAuth — обрабатываем callback
