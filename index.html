@@ -1618,10 +1618,9 @@ let activePlayerColor = "w";
 
                     // Формула Lichess: accuracy = 103.1668 * exp(-0.04354 * ACPL) - 3.1669
                 // Кап ACPL до 100, чтобы формула не уходила в минус
-                const acplCapped = Math.min(100, acpl);
+                const acplCapped = Math.min(75, acpl);
                 let accuracy = 103.1668 * Math.exp(-0.04354 * acplCapped) - 3.1669;
                 accuracy = Math.max(0, Math.min(100, accuracy));
-                                console.log("DEBUG accuracy:", accuracy, "acpl:", acpl, "capped:", acplCapped, "playerResults:", playerResults.length);
 
                 const accRow = document.getElementById("accuracyRow");
                 if (accRow) {
