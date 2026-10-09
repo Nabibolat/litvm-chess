@@ -1534,14 +1534,24 @@ let activePlayerColor = "w";
                 btn.textContent = "⏳ Analyzing...";
             }
 
-            const history = game.history({ verbose: true });
+                        // Берём историю: в PvP — из pvpMoveHistory, в боте — из game.history()
             analysisResults = [];
 
-            // Сохраняем исходную позицию для повторного проигрывания
-            const originalFen = game.fen();
-            const savedHistory = game.history();
+            const savedHistory = (currentMatchId && pvpMoveHistory.length > 0)
+                ? [...pvpMoveHistory]
+                : game.history();
+
             window._savedHistory = savedHistory;
-            window._playerColorForAnalysis = playerColor || "w";
+            window._playerColorForAnalysis = (currentMatchId && myColor)
+                ? (myColor === "white" ? "w" : "b")
+                : (playerColor || "w");
+
+            // Восстанавливаем verbose-историю из SAN через временный Chess()
+            const replayGame = new Chess();
+            for (const san of savedHistory) {
+                replayGame.move(san);
+            }
+            const history = replayGame.history({ verbose: true });
 
             // Пробегаем по каждому ходу
             for (let i = 0; i < history.length; i++) {
