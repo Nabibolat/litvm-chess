@@ -1580,8 +1580,8 @@ let activePlayerColor = "w";
                     // Centipawn loss = разница между лучшим и сыгранным
                         const playerColorForAnalysis = window._playerColorForAnalysis || "w";
 
-                    // Пропускаем ходы, когда позиция уже безнадёжна (|evalBefore| >= 700)
-                    if (Math.abs(evalBefore) < 700) {
+                        // Пропускаем ходы, где позиция уже безнадёжна или ведёт к мату
+                    if (Math.abs(evalBefore) < 700 && Math.abs(evalAfter) < 700) {
                         let cpLoss = (playerColorForAnalysis === "w")
                             ? Math.max(0, evalBefore - evalAfter)
                             : Math.max(0, evalAfter - evalBefore);
