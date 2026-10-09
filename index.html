@@ -2085,19 +2085,33 @@ function startMatchGame(matchId, timeControl) {
             const tx = await contract.createMatch(BOT_ADDRESS, BOT_TIME_CONTROL);
             document.getElementById("botStatus").textContent = "Waiting for confirmation...";
             await tx.wait();
-            const counter = await contract.matchCounter();
+                        const counter = await contract.matchCounter();
             activeMatchId = counter.toNumber();
             initBot();
             stockfish.postMessage("ucinewgame");
             botEnabled = true;
             game.reset();
-                        // Сбрасываем PvP-состояние (мы в партии с ботом)
+            // Сбрасываем PvP-состояние (мы в партии с ботом)
             currentMatchId = null;
             myColor = null;
             pvpMoveHistory = [];
+
+            // Применяем выбранный цвет игрока
+            const chosen = window._playerChosenColor || "white";
+            const myBotColor = (chosen === "random")
+                ? (Math.random() < 0.5 ? "white" : "black")
+                : chosen;
+            playerColor = (myBotColor === "white") ? "w" : "b";
+            window._playerColorForAnalysis = playerColor;
+            board.orientation(myBotColor);
+
             updateMoveHistory();
             board.position("start");
             updateBoardStatus();
+                        // Если игрок чёрный — бот (белые) ходит первым
+            if (myBotColor === "black") {
+                setTimeout(requestBotMove, 500);
+            }
             const botNamesMap = { "0":"Easy", "5":"Medium", "10":"Hard", "15":"Very Hard", "20":"Master" };
 const selectedKey = document.querySelector("#botGrid .bot-card.selected")?.dataset.bot;
 const difficulty = botNamesMap[selectedKey] || "Bot";
