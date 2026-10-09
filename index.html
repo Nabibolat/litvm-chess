@@ -1135,10 +1135,10 @@ function attachSocketListeners() {
 
                 if (moves.length < 4) return;  // слишком короткая партия
 
-                // Определяем цвет игрока и результат
+                                // Определяем цвет игрока и результат
                 const playerColor = (currentMatchId && myColor)
                     ? myColor
-                    : "white";
+                    : (window._playerColorForAnalysis === "b" ? "black" : "white");
                 const iAmWhite = (playerColor === "white");
 
                 let result = "unknown";
