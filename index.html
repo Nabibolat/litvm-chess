@@ -2128,6 +2128,37 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
 
                 // ===== Сетка ботов: клик по карточке = старт =====
         window.currentBotLevel = null;
+                  // ===== ВЫБОР ЦВЕТА =====
+        window._playerChosenColor = "white";  // по умолчанию
+
+        function setPlayerColor(color) {
+            window._playerChosenColor = color;
+            ["colorWhiteBtn", "colorBlackBtn", "colorRandomBtn"].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                btn.style.background = "";  // сброс
+                btn.style.opacity = "0.6";
+            });
+            const activeId = color === "white" ? "colorWhiteBtn"
+                           : color === "black" ? "colorBlackBtn"
+                           : "colorRandomBtn";
+            const active = document.getElementById(activeId);
+            if (active) {
+                active.style.opacity = "1";
+                active.style.background = "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)";
+            }
+        }
+
+        // Привязка кнопок
+        document.addEventListener("DOMContentLoaded", () => {
+            const w = document.getElementById("colorWhiteBtn");
+            const b = document.getElementById("colorBlackBtn");
+            const r = document.getElementById("colorRandomBtn");
+            if (w) w.addEventListener("click", () => setPlayerColor("white"));
+            if (b) b.addEventListener("click", () => setPlayerColor("black"));
+            if (r) r.addEventListener("click", () => setPlayerColor("random"));
+            setPlayerColor("white");  // по умолчанию активна White
+        });
 
         document.querySelectorAll("#botGrid .bot-card").forEach(card => {
             card.addEventListener("click", () => {
