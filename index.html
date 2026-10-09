@@ -1293,6 +1293,16 @@ function attachSocketListeners() {
                     `<span style="color:#8a92a6; margin-left:12px;">ACPL: ${g.acpl} cp</span>`;
                 accRow.style.display = "block";
             }
+                        // Показываем игровой экран
+            document.getElementById("chessBoardCard").style.display = "block";
+            enterGameMode();
+
+            // Размер доски — после показа
+            setTimeout(() => { if (board && board.resize) board.resize(); }, 50);
+
+            // Скрываем панель истории (она в меню)
+            const histPanel = document.getElementById("gameHistoryList");
+            if (histPanel && histPanel.parentElement) histPanel.parentElement.style.display = "none";
 
             console.log("Loaded game from history:", g.id);
         }
