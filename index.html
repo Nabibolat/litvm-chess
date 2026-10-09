@@ -1101,7 +1101,88 @@ function attachSocketListeners() {
     if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
 }
               // ===== Move history (PGN-стиль) =====
-                let pvpMoveHistory = [];   // отдельная история для PvP     
+                let pvpMoveHistory = [];   // отдельная история для PvP
+                  // ===== ИСТОРИЯ ПАРТИЙ (localStorage) =====
+        const GAME_HISTORY_KEY = "litvm_chess_history";
+        const GAME_HISTORY_MAX = 50;
+
+        function getGameHistory() {
+            try {
+                const raw = localStorage.getItem(GAME_HISTORY_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.error("History parse error:", e);
+                return [];
+            }
+        }
+
+        function saveGameToHistory() {
+            try {
+                // Собираем ходы
+                const moves = (currentMatchId && pvpMoveHistory.length > 0)
+                    ? [...pvpMoveHistory]
+                    : game.history();
+
+                if (moves.length < 4) return;  // слишком короткая партия
+
+                // Определяем цвет игрока и результат
+                const playerColor = (currentMatchId && myColor)
+                    ? myColor
+                    : "white";
+                const iAmWhite = (playerColor === "white");
+
+                let result = "unknown";
+                if (game.in_checkmate()) {
+                    const loser = game.turn();
+                    const winner = loser === "w" ? "black" : "white";
+                    result = (winner === playerColor) ? "win" : "loss";
+                } else if (game.in_draw()) {
+                    result = "draw";
+                }
+
+                // Соперник
+                const opponentName = document.getElementById("opponentName")?.textContent || "Unknown";
+                const opponentElo = document.getElementById("opponentElo")?.textContent || "";
+                const opponentAvatar = document.getElementById("opponentAvatar")?.src || "";
+
+                const entry = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    mode: currentMatchId ? "pvp" : "bot",
+                    playerColor: playerColor,
+                    result: result,
+                    opponent: opponentName,
+                    opponentElo: opponentElo,
+                    opponentAvatar: opponentAvatar,
+                    moves: moves,
+                    accuracy: null,
+                    acpl: null
+                };
+
+                const history = getGameHistory();
+                history.unshift(entry);  // новая партия — в начало
+                if (history.length > GAME_HISTORY_MAX) history.pop();
+
+                localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
+                console.log("Game saved to history:", entry.id);
+            } catch (e) {
+                console.error("Save history error:", e);
+            }
+        }
+
+        function updateGameHistoryEntry(accuracy, acpl) {
+            try {
+                const history = getGameHistory();
+                if (history.length === 0) return;
+                // Обновляем самую свежую запись (последнюю добавленную)
+                history[0].accuracy = accuracy;
+                history[0].acpl = acpl;
+                localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
+                console.log("History entry updated with ACPL:", acpl);
+            } catch (e) {
+                console.error("Update history error:", e);
+            }
+        }
                    function renderAnalysisInHistory() {
             const list = document.getElementById("moveHistoryList");
             if (!list) return;
@@ -1310,6 +1391,8 @@ function attachSocketListeners() {
                      // Показываем кнопку «Analyze» — и для бота, и для PvP
             const anBtn = document.getElementById("analyzeBtn");
             if (anBtn) anBtn.style.display = "inline-block";
+                        // Сохраняем партию в историю
+            saveGameToHistory();
         let resultText = "";
         let resultCode = "";
         
@@ -1629,6 +1712,7 @@ let activePlayerColor = "w";
                                     // Линейная формула (Chess.com-стиль):
                 // ACPL 0 → 100%, ACPL 50 → 75%, ACPL 100 → 50%, ACPL 200 → 0%
                 let accuracy = Math.max(0, Math.min(100, 100 - acpl * 0.5));
+                updateGameHistoryEntry(accuracy.toFixed(1), acpl.toFixed(1));
 
                 const accRow = document.getElementById("accuracyRow");
                 if (accRow) {
