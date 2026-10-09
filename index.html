@@ -1176,15 +1176,22 @@ function attachSocketListeners() {
             }
         }
 
-        function updateGameHistoryEntry(accuracy, acpl) {
+                function updateGameHistoryEntry(accuracy, acpl) {
             try {
                 const history = getGameHistory();
                 if (history.length === 0) return;
+
                 // Обновляем самую свежую запись (последнюю добавленную)
                 history[0].accuracy = accuracy;
                 history[0].acpl = acpl;
+
+                // Сохраняем пометки (mark) для каждого хода
+                history[0].marks = (analysisResults || [])
+                    .filter(r => r.isPlayer)
+                    .map(r => ({ index: r.index, mark: r.mark }));
+
                 localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
-                console.log("History entry updated with ACPL:", acpl);
+                console.log("History entry updated with ACPL and marks:", acpl);
             } catch (e) {
                 console.error("Update history error:", e);
             }
@@ -1301,6 +1308,17 @@ function attachSocketListeners() {
 
             // Рисуем историю ходов
             updateMoveHistory();
+                        // Восстанавливаем пометки из записи
+            if (g.marks && g.marks.length > 0) {
+                analysisResults = g.marks.map(m => ({
+                    index: m.index,
+                    mark: m.mark,
+                    isPlayer: true,
+                    cpLoss: 0,
+                    san: ""
+                }));
+                renderAnalysisInHistory();
+            }
 
                         // Показываем кнопку навигации
             const navRow = document.getElementById("moveNavRow");
