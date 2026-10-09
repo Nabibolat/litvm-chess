@@ -1620,11 +1620,9 @@ let activePlayerColor = "w";
                 const totalCpLoss = playerResults.reduce((sum, r) => sum + (r.cpLoss || 0), 0);
                 const acpl = totalCpLoss / playerResults.length;
 
-                    // Формула Lichess: accuracy = 103.1668 * exp(-0.04354 * ACPL) - 3.1669
-                // Кап ACPL до 100, чтобы формула не уходила в минус
-                const acplCapped = Math.min(75, acpl);
-                let accuracy = 103.1668 * Math.exp(-0.04354 * acplCapped) - 3.1669;
-                accuracy = Math.max(0, Math.min(100, accuracy));
+                                    // Линейная формула (Chess.com-стиль):
+                // ACPL 0 → 100%, ACPL 50 → 75%, ACPL 100 → 50%, ACPL 200 → 0%
+                let accuracy = Math.max(0, Math.min(100, 100 - acpl * 0.5));
 
                 const accRow = document.getElementById("accuracyRow");
                 if (accRow) {
