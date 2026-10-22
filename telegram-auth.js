@@ -1,6 +1,6 @@
 // telegram-auth.js
 const RELAY_URL = "https://litvm-chess-relay.onrender.com";
-const CHESS_ACCOUNT = "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50"; // Твой актуальный контракт
+const CHESS_ACCOUNT = "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50";
 
 window.tgSession = {
     isTelegram: false,
