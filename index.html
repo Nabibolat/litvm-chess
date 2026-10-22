@@ -458,63 +458,60 @@ async function submitResultViaRelay(matchId, resultString) {
 
     const RELAY_API = "https://litvm-chess-relay.onrender.com";
     const CHESS_ACCOUNT = window.tgSession.chessAccount;
-    const REGISTRY_ADDR = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8";
+    const wallet = window.tgSession.sessionKey;
 
     try {
-        document.getElementById("boardStatus").textContent = "⏳ Сохранение результата...";
+        document.getElementById("boardStatus").textContent = "⏳ Подпись...";
+        
+        // 1. Получаем текущий nonce аккаунта (чтобы избежать повторов)
+        const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
+        const accountContract = new ethers.Contract(CHESS_ACCOUNT, ["function nonce() view returns (uint256)"], rpcProvider);
+        const currentNonce = await accountContract.nonce();
 
-        if (!matchId) {
-            // Если это игра с ботом (matchId = null), создаем матч и пишем результат одним запросом
-            const response = await fetch(`${RELAY_API}/create-and-record`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    opponent: "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e", // BOT_ADDRESS
-                    timeControl: 300, // BOT_TIME_CONTROL
-                    result: resultString
-                })
-            });
-            const txData = await response.json();
-            if (!response.ok) throw new Error(txData.error || "Relay error");
-            console.log("✅ Создано и записано (бот):", txData.txHash);
-        } else {
-            // Если это PvP (matchId есть), просто пишем результат через execute
-            const abi = ["function submitResult(uint256 _matchId, string _result)"];
-            const iface = new ethers.utils.Interface(abi);
-            const data = iface.encodeFunctionData("submitResult", [matchId, resultString]);
+        // 2. Формируем EIP-712 подпись (как в контракте)
+        // Наш контракт использует: "SubmitResult(uint256 matchId,string result,uint256 nonce)"
+        const domain = {
+            name: "LitVM Chess",
+            version: "1",
+            chainId: 4441,
+            verifyingContract: CHESS_ACCOUNT
+        };
+        const types = {
+            SubmitResult: [
+                { name: "matchId", type: "uint256" },
+                { name: "result", type: "string" },
+                { name: "nonce", type: "uint256" }
+            ]
+        };
+        const value = {
+            matchId: matchId,
+            result: resultString,
+            nonce: currentNonce
+        };
 
-            const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
-            const chessAccountContract = new ethers.Contract(CHESS_ACCOUNT, [
-                "function nonces(address) view returns (uint256)"
-            ], rpcProvider);
-            
-            const relayerAddress = "0xffeC5CDCeeE6AD000FFBa120Cfc5c690692D09F8";
-            const currentNonce = await chessAccountContract.nonces(relayerAddress);
+        // Подписываем (используем ethers v5, который у тебя на странице)
+        const signature = await wallet._signTypedData(domain, types, value);
+        
+        document.getElementById("boardStatus").textContent = "📤 Отправка в сеть...";
 
-            const abiCoder = new ethers.utils.AbiCoder();
-            const encoded = abiCoder.encode(
-                ["address", "uint256", "bytes", "uint256"],
-                [REGISTRY_ADDR, 0, data, currentNonce]
-            );
-            const hash = ethers.utils.keccak256(encoded);
-            const signature = await window.tgSession.sessionKey.signMessage(ethers.utils.arrayify(hash));
+        // 3. Отправляем на сервер
+        const response = await fetch(`${RELAY_API}/relay`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                account: CHESS_ACCOUNT,
+                action: "submitResult",
+                params: { matchId: matchId, result: resultString },
+                signature: signature
+            })
+        });
 
-            const response = await fetch(`${RELAY_API}/relay`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    account: CHESS_ACCOUNT,
-                    target: REGISTRY_ADDR,
-                    data: data,
-                    signature: signature
-                })
-            });
-            const txData = await response.json();
-            if (!response.ok) throw new Error(txData.error || "Relay error");
-            console.log("✅ Записано (PvP):", txData.txHash);
-        }
+        const txData = await response.json();
+        if (!response.ok) throw new Error(txData.error || "Relay error");
 
+        console.log("✅ Записано:", txData.txHash);
         document.getElementById("boardStatus").textContent = "✅ Результат записан в блокчейн!";
+        
         if (typeof loadMatches === "function") loadMatches();
 
     } catch (e) {
