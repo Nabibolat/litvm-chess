@@ -451,7 +451,7 @@
         let provider, signer, contract, userAddress;
           const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2"; // Твой кошелек
 const GAME_REGISTRY = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8"; // Контракт игры
-const RELAY_URL = "https://litvm-chess-relay.onrender.com";
+const RELAY_API = "https://litvm-chess-relay.onrender.com";
 
 async function submitResultViaRelay(matchId, resultString) {
     if (!window.tgSession || !window.tgSession.sessionKey) {
