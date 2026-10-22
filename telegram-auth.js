@@ -3,7 +3,7 @@ const RELAY_URL = "https://litvm-chess-relay.onrender.com";
 // Адрес твоего кошелька, которым ты деплоил (0x5Ab2...)
 const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2";
 // Адрес твоего нового контракта ChessAccount (заменишь после деплоя)
-const CHESS_ACCOUNT = "0x46ff67E925f8Ce238B7F0f9943e645D38A0C573b"; // <-- ЗАМЕНИШЬ ПОСЛЕ ДЕПЛОЯ
+const chessAccount: "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50"
 
 window.tgSession = {
     isTelegram: false,
