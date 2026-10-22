@@ -459,7 +459,7 @@ async function submitResultViaRelay(matchId, resultString) {
         return;
     }
 
-    const CHESS_ACCOUNT = window.tgSession.chessAccount; 
+    const CHESS_ACCOUNT = window.tgSession.chessAccount;
 
     try {
         document.getElementById("boardStatus").textContent = "⏳ Подпись...";
@@ -470,22 +470,24 @@ async function submitResultViaRelay(matchId, resultString) {
 
         const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
         const chessAccountContract = new ethers.Contract(CHESS_ACCOUNT, [
-            "function nonce() view returns (uint256)"
+            "function nonces(address) view returns (uint256)"
         ], rpcProvider);
-        const currentNonce = await chessAccountContract.nonce();
+        
+        const relayerAddress = "0xffeC5CDCeeE6AD000FFBa120Cfc5c690692D09F8";
+        const currentNonce = await chessAccountContract.nonces(relayerAddress);
 
         const abiCoder = new ethers.utils.AbiCoder();
         const encoded = abiCoder.encode(
             ["address", "uint256", "bytes", "uint256"],
-            [GAME_REGISTRY, 0, data, currentNonce]
+            [GAME_REGISTRY, 0, data, currentNonce] // Используем GAME_REGISTRY сверху
         );
         const hash = ethers.utils.keccak256(encoded);
         
         const signature = await window.tgSession.sessionKey.signMessage(ethers.utils.arrayify(hash));
 
-        document.getElementById("boardStatus").textContent = "📤 Отправка...";
+        document.getElementById("boardStatus").textContent = "📤 Отправка в сеть...";
 
-        const response = await fetch(`${RELAY_API}/relay`, {
+        const response = await fetch(`${RELAY_API}/relay`, { // Используем RELAY_API сверху
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -499,14 +501,14 @@ async function submitResultViaRelay(matchId, resultString) {
         const txData = await response.json();
         if (!response.ok) throw new Error(txData.error || "Relay error");
 
-        console.log("✅ Записано:", txData.txHash);
-        document.getElementById("boardStatus").textContent = "✅ Результат в блокчейне!";
+        console.log("✅ Успешно записано:", txData.txHash);
+        document.getElementById("boardStatus").textContent = "✅ Результат записан в блокчейн!";
         
         if (typeof loadMatches === "function") loadMatches();
 
     } catch (e) {
         console.error("❌ Ошибка релейера:", e);
-        document.getElementById("boardStatus").textContent = "❌ Ошибка: " + e.message;
+        document.getElementById("boardStatus").textContent = "❌ Ошибка записи: " + e.message;
     }
 }
         
@@ -820,9 +822,12 @@ function connectSocket() {
             return sec + " сек";
         }
 
-        async function submitResult(matchId, result) {
-            try {
-                await initContract();
+             async function submitResult(matchId, result) {
+         if (window.tgSession && window.tgSession.isTelegram) {
+             return submitResultViaRelay(matchId, result);
+         }
+         try {
+             await initContract();
                 const tx = await contract.submitResult(matchId, result);
                 alert("Транзакция отправлена: " + tx.hash);
                 await tx.wait();
@@ -1659,7 +1664,13 @@ async function autoFinishMatch(resultCode) {
     const matchId = activeMatchId;
     activeMatchId = null;  // сбрасываем сразу, чтобы не вызвалось дважды
     
-    try {
+        try {
+        if (window.tgSession && window.tgSession.isTelegram) {
+            await submitResultViaRelay(matchId, resultCode);
+            botEnabled = false;
+            return; // Выходим из функции, чтобы не вызывать MetaMask
+        }
+
         await initContract();
         const tx = await contract.submitResult(matchId, resultCode);
         document.getElementById("boardStatus").textContent += 
@@ -2034,6 +2045,10 @@ let activePlayerColor = "w";
                 const matchId = counter.toNumber();
                 
                 // 3. Записываем результат
+                if (window.tgSession && window.tgSession.isTelegram) {
+                await submitResultViaRelay(matchId, winner);
+                 return;
+                }
                 const tx2 = await contract.submitResult(matchId, winner);
                 await tx2.wait();
                 
