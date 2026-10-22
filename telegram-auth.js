@@ -1,15 +1,12 @@
 // telegram-auth.js
 const RELAY_URL = "https://litvm-chess-relay.onrender.com";
-// Адрес твоего кошелька, которым ты деплоил (0x5Ab2...)
-const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2";
-// Адрес твоего нового контракта ChessAccount (заменишь после деплоя)
-const chessAccount: "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50"
+const CHESS_ACCOUNT = "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50"; // Твой актуальный контракт
 
 window.tgSession = {
     isTelegram: false,
     user: null,
     sessionKey: null,
-    chessAccount: CHESS_ACCOUNT 
+    chessAccount: CHESS_ACCOUNT
 };
 
 async function initTelegramAuth() {
@@ -25,7 +22,6 @@ async function initTelegramAuth() {
     const initData = window.Telegram.WebApp.initData;
     
     try {
-        // 1. Проверка initData на релейере
         console.log("🔐 Проверка Telegram initData...");
         const res = await fetch(`${RELAY_URL}/auth/telegram`, {
             method: "POST",
@@ -39,7 +35,6 @@ async function initTelegramAuth() {
         console.log("✅ Telegram Auth OK:", data.username || data.telegramId);
         window.tgSession.user = data;
 
-        // 2. Session Key
         const { ethers } = window; 
         let savedKey = localStorage.getItem("tg_session_key");
         if (!savedKey) {
@@ -54,7 +49,6 @@ async function initTelegramAuth() {
         
         window.tgSession.sessionKey = new ethers.Wallet(savedKey);
 
-        // 3. UI
         const connectBtn = document.getElementById("connectBtn");
         if (connectBtn) connectBtn.style.display = "none";
         
