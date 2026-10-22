@@ -1,75 +1,54 @@
-// telegram-auth.js
 const RELAY_URL = "https://litvm-chess-relay.onrender.com";
 const CHESS_ACCOUNT = "0xe7dbd69DB5B3F0e55f2485FacA307fB7F48c1C50";
 
-window.tgSession = {
-    isTelegram: false,
-    user: null,
-    sessionKey: null,
-    chessAccount: CHESS_ACCOUNT
-};
+window.tgSession = { isTelegram: false, chessAccount: CHESS_ACCOUNT, sessionKey: null };
 
 async function initTelegramAuth() {
-    // 1. Проверка на Telegram
-    if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData) {
-        console.log("⚠️ Не в Telegram. Игра работает в обычном браузере.");
-        return;
-    }
-
+    if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData) return;
+    
     window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
     window.tgSession.isTelegram = true;
-
-    const initData = window.Telegram.WebApp.initData;
     
     try {
-        console.log("🔐 Проверка Telegram initData...");
+        // 1. Проверка в Telegram
         const res = await fetch(`${RELAY_URL}/auth/telegram`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ initData })
+            body: JSON.stringify({ initData: window.Telegram.WebApp.initData })
         });
-
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "Auth failed");
+        if (!data.ok) throw new Error(data.error);
 
-        console.log("✅ Telegram Auth OK:", data.username || data.telegramId);
-        window.tgSession.user = data;
-
-        // 2. Генерация или загрузка Session Key (без ethers!)
+        // 2. Ключ (используем ethers, который уже есть на странице)
+        const { ethers } = window; 
         let savedKey = localStorage.getItem("tg_session_key");
         if (!savedKey) {
-            // Генерируем 32 случайных байта (приватный ключ) через crypto API
-            const array = new Uint8Array(32);
-            window.crypto.getRandomValues(array);
-            savedKey = "0x" + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+            const wallet = ethers.Wallet.createRandom();
+            savedKey = wallet.privateKey;
             localStorage.setItem("tg_session_key", savedKey);
-            console.log("🔑 Создан новый Session Key (hex):", savedKey.slice(0, 10) + "...");
-        } else {
-            console.log("🔑 Загружен существующий Session Key (hex):", savedKey.slice(0, 10) + "...");
         }
         
-        // Сохраняем ключ в сессию
-        window.tgSession.sessionKey = savedKey;
+        const wallet = new ethers.Wallet(savedKey);
+        window.tgSession.sessionKey = wallet;
+        const pubKey = wallet.address;
+        console.log("🔑 Публичный адрес ключа:", pubKey);
 
-        // 3. Обновление UI
+        // 3. Скрываем MetaMask
         const connectBtn = document.getElementById("connectBtn");
         if (connectBtn) connectBtn.style.display = "none";
-        
-        const walletStatus = document.getElementById("walletStatus");
-        if (walletStatus) {
-            walletStatus.innerHTML = `✅ Вход через Telegram: <b>@${data.username || 'player'}</b>`;
-            walletStatus.style.color = "#b6f7c4";
-        }
+        document.getElementById("walletStatus").innerHTML = `✅ Вход через Telegram: <b>@${data.username || 'player'}</b>`;
 
-        document.getElementById("createBtn").disabled = false;
-        document.getElementById("loadBtn").disabled = false;
-        document.getElementById("findMatchBtn").disabled = false;
+        // 4. ОТПРАВЛЯЕМ ЗАПРОС НА ВЫДАЧУ ПРАВ (createSessionKey)
+        // Релейер сам вызовет это от имени твоего кошелька 0x5Ab2...
+        console.log("Разрешаем ключ в контракте...");
+        await fetch(`${RELAY_URL}/setup-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ account: CHESS_ACCOUNT, sessionKey: pubKey })
+        });
 
     } catch (e) {
-        console.error("❌ Telegram Auth Error:", e);
-        alert("Ошибка входа: " + e.message);
+        console.error("Auth Error:", e);
     }
 }
-
 window.addEventListener("DOMContentLoaded", initTelegramAuth);
