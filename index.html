@@ -463,10 +463,18 @@ async function submitResultViaRelay(matchId, resultString) {
     try {
         document.getElementById("boardStatus").textContent = "⏳ Подпись...";
         
-        // 1. Получаем текущий nonce аккаунта (чтобы избежать повторов)
+         // 1. Получаем текущий nonce аккаунта (защита от повторов)
         const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
         const accountContract = new ethers.Contract(CHESS_ACCOUNT, ["function nonce() view returns (uint256)"], rpcProvider);
-        const currentNonce = await accountContract.nonce();
+        
+        let currentNonce = 0;
+        try {
+            const nonceBN = await accountContract.nonce();
+            // В ethers v5 это BigNumber, приводим к числу
+            currentNonce = nonceBN.toNumber(); 
+        } catch (e) {
+            console.log("⚠️ Не удалось прочитать nonce, используем 0");
+        }   
 
         // 2. Формируем EIP-712 подпись (как в контракте)
         // Наш контракт использует: "SubmitResult(uint256 matchId,string result,uint256 nonce)"
