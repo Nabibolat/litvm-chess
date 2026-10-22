@@ -1,12 +1,15 @@
 // telegram-auth.js
 const RELAY_URL = "https://litvm-chess-relay.onrender.com";
+// Адрес твоего кошелька, которым ты деплоил (0x5Ab2...)
+const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2";
+// Адрес твоего нового контракта ChessAccount (заменишь после деплоя)
+const CHESS_ACCOUNT = "0x46ff67E925f8Ce238B7F0f9943e645D38A0C573b"; // <-- ЗАМЕНИШЬ ПОСЛЕ ДЕПЛОЯ
 
-// Глобальные переменные для сессии
 window.tgSession = {
     isTelegram: false,
     user: null,
-    sessionKey: null, // Приватный ключ, который будет подписывать
-    chessAccount: "0x46ff67E925f8Ce238B7F0f9943e645D38A0C573b" // Пока берем твой тестовый
+    sessionKey: null,
+    chessAccount: CHESS_ACCOUNT 
 };
 
 async function initTelegramAuth() {
@@ -22,7 +25,7 @@ async function initTelegramAuth() {
     const initData = window.Telegram.WebApp.initData;
     
     try {
-        // 1. Отправляем initData на релейер для проверки
+        // 1. Проверка initData на релейере
         console.log("🔐 Проверка Telegram initData...");
         const res = await fetch(`${RELAY_URL}/auth/telegram`, {
             method: "POST",
@@ -36,11 +39,8 @@ async function initTelegramAuth() {
         console.log("✅ Telegram Auth OK:", data.username || data.telegramId);
         window.tgSession.user = data;
 
-        // 2. Генерируем Session Key (пока сохраняем в localStorage для теста)
-        // В идеале нужно вызывать createSessionKey в контракте, но для этого нужен Privy.
-        // Пока пропустим этот шаг и просто создадим ключ.
-        const { ethers } = window; // У тебя подключен ethers.js v5 в index.html
-        
+        // 2. Session Key
+        const { ethers } = window; 
         let savedKey = localStorage.getItem("tg_session_key");
         if (!savedKey) {
             const wallet = ethers.Wallet.createRandom();
@@ -54,7 +54,7 @@ async function initTelegramAuth() {
         
         window.tgSession.sessionKey = new ethers.Wallet(savedKey);
 
-        // 3. Скрываем кнопку MetaMask, раз мы в Telegram
+        // 3. UI
         const connectBtn = document.getElementById("connectBtn");
         if (connectBtn) connectBtn.style.display = "none";
         
@@ -64,16 +64,14 @@ async function initTelegramAuth() {
             walletStatus.style.color = "#b6f7c4";
         }
 
-        // Разблокируем кнопки (эмулируем успешный connect)
         document.getElementById("createBtn").disabled = false;
         document.getElementById("loadBtn").disabled = false;
         document.getElementById("findMatchBtn").disabled = false;
 
     } catch (e) {
         console.error("❌ Telegram Auth Error:", e);
-        alert("Ошибка входа через Telegram: " + e.message);
+        alert("Ошибка входа: " + e.message);
     }
 }
 
-// Запускаем при загрузке страницы
 window.addEventListener("DOMContentLoaded", initTelegramAuth);
