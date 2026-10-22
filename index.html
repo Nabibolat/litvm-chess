@@ -454,56 +454,67 @@ const GAME_REGISTRY = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8"; // Конт�
 const RELAY_API = "https://litvm-chess-relay.onrender.com";
 
 async function submitResultViaRelay(matchId, resultString) {
-    if (!window.tgSession || !window.tgSession.sessionKey) {
-        alert("Ошибка: нет Session Key");
-        return;
-    }
+    if (!window.tgSession || !window.tgSession.isTelegram) return;
 
+    const RELAY_API = "https://litvm-chess-relay.onrender.com";
     const CHESS_ACCOUNT = window.tgSession.chessAccount;
+    const REGISTRY_ADDR = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8";
 
     try {
-        document.getElementById("boardStatus").textContent = "⏳ Подпись...";
-        
-        const abi = ["function submitResult(uint256 _matchId, string _result)"];
-        const iface = new ethers.utils.Interface(abi);
-        const data = iface.encodeFunctionData("submitResult", [matchId, resultString]);
+        document.getElementById("boardStatus").textContent = "⏳ Сохранение результата...";
 
-        const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
-        const chessAccountContract = new ethers.Contract(CHESS_ACCOUNT, [
-            "function nonces(address) view returns (uint256)"
-        ], rpcProvider);
-        
-        const relayerAddress = "0xffeC5CDCeeE6AD000FFBa120Cfc5c690692D09F8";
-        const currentNonce = await chessAccountContract.nonces(relayerAddress);
+        if (!matchId) {
+            // Если это игра с ботом (matchId = null), создаем матч и пишем результат одним запросом
+            const response = await fetch(`${RELAY_API}/create-and-record`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    opponent: "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e", // BOT_ADDRESS
+                    timeControl: 300, // BOT_TIME_CONTROL
+                    result: resultString
+                })
+            });
+            const txData = await response.json();
+            if (!response.ok) throw new Error(txData.error || "Relay error");
+            console.log("✅ Создано и записано (бот):", txData.txHash);
+        } else {
+            // Если это PvP (matchId есть), просто пишем результат через execute
+            const abi = ["function submitResult(uint256 _matchId, string _result)"];
+            const iface = new ethers.utils.Interface(abi);
+            const data = iface.encodeFunctionData("submitResult", [matchId, resultString]);
 
-        const abiCoder = new ethers.utils.AbiCoder();
-        const encoded = abiCoder.encode(
-            ["address", "uint256", "bytes", "uint256"],
-            [GAME_REGISTRY, 0, data, currentNonce] // Используем GAME_REGISTRY сверху
-        );
-        const hash = ethers.utils.keccak256(encoded);
-        
-        const signature = await window.tgSession.sessionKey.signMessage(ethers.utils.arrayify(hash));
+            const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
+            const chessAccountContract = new ethers.Contract(CHESS_ACCOUNT, [
+                "function nonces(address) view returns (uint256)"
+            ], rpcProvider);
+            
+            const relayerAddress = "0xffeC5CDCeeE6AD000FFBa120Cfc5c690692D09F8";
+            const currentNonce = await chessAccountContract.nonces(relayerAddress);
 
-        document.getElementById("boardStatus").textContent = "📤 Отправка в сеть...";
+            const abiCoder = new ethers.utils.AbiCoder();
+            const encoded = abiCoder.encode(
+                ["address", "uint256", "bytes", "uint256"],
+                [REGISTRY_ADDR, 0, data, currentNonce]
+            );
+            const hash = ethers.utils.keccak256(encoded);
+            const signature = await window.tgSession.sessionKey.signMessage(ethers.utils.arrayify(hash));
 
-        const response = await fetch(`${RELAY_API}/relay`, { // Используем RELAY_API сверху
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                account: CHESS_ACCOUNT,
-                target: GAME_REGISTRY,
-                data: data,
-                signature: signature
-            })
-        });
+            const response = await fetch(`${RELAY_API}/relay`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    account: CHESS_ACCOUNT,
+                    target: REGISTRY_ADDR,
+                    data: data,
+                    signature: signature
+                })
+            });
+            const txData = await response.json();
+            if (!response.ok) throw new Error(txData.error || "Relay error");
+            console.log("✅ Записано (PvP):", txData.txHash);
+        }
 
-        const txData = await response.json();
-        if (!response.ok) throw new Error(txData.error || "Relay error");
-
-        console.log("✅ Успешно записано:", txData.txHash);
         document.getElementById("boardStatus").textContent = "✅ Результат записан в блокчейн!";
-        
         if (typeof loadMatches === "function") loadMatches();
 
     } catch (e) {
@@ -2156,13 +2167,18 @@ function startMatchGame(matchId, timeControl) {
 
     async function startBotGame() {
         try {
-            await initContract();
-            document.getElementById("botStatus").textContent = "Creating match on blockchain...";
-            const tx = await contract.createMatch(BOT_ADDRESS, BOT_TIME_CONTROL);
-            document.getElementById("botStatus").textContent = "Waiting for confirmation...";
-            await tx.wait();
-                        const counter = await contract.matchCounter();
-            activeMatchId = counter.toNumber();
+                        if (window.tgSession && window.tgSession.isTelegram) {
+                activeMatchId = null;
+                document.getElementById("botStatus").textContent = "Starting game...";
+            } else {
+                await initContract();
+                document.getElementById("botStatus").textContent = "Creating match on blockchain...";
+                const tx = await contract.createMatch(BOT_ADDRESS, BOT_TIME_CONTROL);
+                document.getElementById("botStatus").textContent = "Waiting for confirmation...";
+                await tx.wait();
+                const counter = await contract.matchCounter();
+                activeMatchId = counter.toNumber();
+            }
             initBot();
             stockfish.postMessage("ucinewgame");
             botEnabled = true;
