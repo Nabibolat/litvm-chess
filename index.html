@@ -1662,9 +1662,9 @@ function attachSocketListeners() {
         status.textContent = resultText;
         
         // Автоматически завершаем партию в блокчейне
-        if (activeMatchId !== null && resultCode !== "") {
-            autoFinishMatch(resultCode);
-        }
+        if (resultCode !== "") {
+    autoFinishMatch(resultCode);
+    }
     } else {
         status.textContent = "Turn: " + (game.turn() === "w" ? "White" : "Black")
             + (game.in_check() ? " (check!)" : "");
