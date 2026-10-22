@@ -485,7 +485,7 @@ async function submitResultViaRelay(matchId, resultString) {
 
         document.getElementById("boardStatus").textContent = "📤 Отправка...";
 
-        const response = await fetch(`${RELAY_URL}/relay`, {
+        const response = await fetch(`${RELAY_API}/relay`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
