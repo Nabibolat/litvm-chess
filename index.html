@@ -449,6 +449,66 @@
         ];
 
         let provider, signer, contract, userAddress;
+          const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2"; // Твой кошелек
+const GAME_REGISTRY = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8"; // Контракт игры
+const RELAY_URL = "https://litvm-chess-relay.onrender.com";
+
+async function submitResultViaRelay(matchId, resultString) {
+    if (!window.tgSession || !window.tgSession.sessionKey) {
+        alert("Ошибка: нет Session Key");
+        return;
+    }
+
+    const CHESS_ACCOUNT = window.tgSession.chessAccount; 
+
+    try {
+        document.getElementById("boardStatus").textContent = "⏳ Подпись...";
+        
+        const abi = ["function submitResult(uint256 _matchId, string _result)"];
+        const iface = new ethers.utils.Interface(abi);
+        const data = iface.encodeFunctionData("submitResult", [matchId, resultString]);
+
+        const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
+        const chessAccountContract = new ethers.Contract(CHESS_ACCOUNT, [
+            "function nonce() view returns (uint256)"
+        ], rpcProvider);
+        const currentNonce = await chessAccountContract.nonce();
+
+        const abiCoder = new ethers.utils.AbiCoder();
+        const encoded = abiCoder.encode(
+            ["address", "uint256", "bytes", "uint256"],
+            [GAME_REGISTRY, 0, data, currentNonce]
+        );
+        const hash = ethers.utils.keccak256(encoded);
+        
+        const signature = await window.tgSession.sessionKey.signMessage(ethers.utils.arrayify(hash));
+
+        document.getElementById("boardStatus").textContent = "📤 Отправка...";
+
+        const response = await fetch(`${RELAY_URL}/relay`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                account: CHESS_ACCOUNT,
+                target: GAME_REGISTRY,
+                data: data,
+                signature: signature
+            })
+        });
+
+        const txData = await response.json();
+        if (!response.ok) throw new Error(txData.error || "Relay error");
+
+        console.log("✅ Записано:", txData.txHash);
+        document.getElementById("boardStatus").textContent = "✅ Результат в блокчейне!";
+        
+        if (typeof loadMatches === "function") loadMatches();
+
+    } catch (e) {
+        console.error("❌ Ошибка релейера:", e);
+        document.getElementById("boardStatus").textContent = "❌ Ошибка: " + e.message;
+    }
+}
         
         // ===== LICHESS OAUTH (PKCE) — Шаг 2 =====
         const LICHESS_CLIENT_ID = "litvm-chess";
