@@ -10,6 +10,7 @@ window.tgSession = {
 };
 
 async function initTelegramAuth() {
+    // 1. Проверка на Telegram
     if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData) {
         console.log("⚠️ Не в Telegram. Игра работает в обычном браузере.");
         return;
@@ -35,20 +36,23 @@ async function initTelegramAuth() {
         console.log("✅ Telegram Auth OK:", data.username || data.telegramId);
         window.tgSession.user = data;
 
-        const { ethers } = window; 
+        // 2. Генерация или загрузка Session Key (без ethers!)
         let savedKey = localStorage.getItem("tg_session_key");
         if (!savedKey) {
-            const wallet = ethers.Wallet.createRandom();
-            savedKey = wallet.privateKey;
+            // Генерируем 32 случайных байта (приватный ключ) через crypto API
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            savedKey = "0x" + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
             localStorage.setItem("tg_session_key", savedKey);
-            console.log("🔑 Создан новый Session Key:", wallet.address);
+            console.log("🔑 Создан новый Session Key (hex):", savedKey.slice(0, 10) + "...");
         } else {
-            const wallet = new ethers.Wallet(savedKey);
-            console.log("🔑 Загружен Session Key:", wallet.address);
+            console.log("🔑 Загружен существующий Session Key (hex):", savedKey.slice(0, 10) + "...");
         }
         
-        window.tgSession.sessionKey = new ethers.Wallet(savedKey);
+        // Сохраняем ключ в сессию
+        window.tgSession.sessionKey = savedKey;
 
+        // 3. Обновление UI
         const connectBtn = document.getElementById("connectBtn");
         if (connectBtn) connectBtn.style.display = "none";
         
