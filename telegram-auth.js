@@ -64,6 +64,15 @@ async function initTelegramAuth() {
             walletStatus.innerHTML = `✅ Вход через Telegram: <b>@${data.username || 'player'}</b>`;
             walletStatus.style.color = "#b6f7c4";
         }
+                // Разблокируем кнопки для игры
+        const findMatchBtn = document.getElementById("findMatchBtn");
+        if (findMatchBtn) findMatchBtn.disabled = false;
+        
+        const loadBtn = document.getElementById("loadBtn");
+        if (loadBtn) loadBtn.disabled = false;
+        
+        const createBtn = document.getElementById("createBtn");
+        if (createBtn) createBtn.disabled = false;
 
     } catch (e) {
         console.error("Auth Error:", e);
