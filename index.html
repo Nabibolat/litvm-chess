@@ -1832,37 +1832,56 @@ let activeMatchId = null;
 let activePlayerColor = "w";        
    // ===== PVP GAME (Matchmaking) =====
         
-        function startPvPGame(roomId, color, opponentAddress, timeControl) {
+                function startPvPGame(roomId, color, opponentAddress, timeControl) {
+            console.log("[PvP] startPvPGame called", { roomId, color, opponentAddress, timeControl });
+            
+            const boardCard = document.getElementById("chessBoardCard");
+            console.log("[PvP] board card BEFORE:", {
+                exists: !!boardCard,
+                display: boardCard?.style.display,
+                className: boardCard?.className,
+                parentDisplay: boardCard?.parentElement?.style.display
+            });
+
             window._resultSaved = false;
-            window.opponentAddress = opponentAddress;        // ← ДОБАВИТЬ
-            window.currentTimeControl = timeControl;         // ← ДОБАВИТЬ
-            // Останавливаем бота (если был запущен)
+            window.opponentAddress = opponentAddress;
+            window.currentTimeControl = timeControl;
+            
             botEnabled = false;
             stopBotGame();
             
-            // Запоминаем параметры PvP
             currentMatchId = roomId;
-            myColor = color;              // "white" или "black"
+            myColor = color;
             playerColor = color === "white" ? "w" : "b";
             
-            // Сброс доски
             game.reset();
             pvpMoveHistory = [];
             board.position("start");
             board.orientation(color);
             updateBoardStatus();
             
-            // Показываем информацию
             document.getElementById("botStatus").textContent = 
                 "🆚 PvP: You play " + color.toUpperCase() + 
                 " vs " + opponentAddress.substring(0, 6) + "..." + opponentAddress.substring(38);
             
             document.getElementById("matchStatus").textContent = 
                 "✅ Match started! Color: " + color.toUpperCase();
-             document.getElementById("chessBoardCard").style.display = "block";
-             enterGameMode();
+            
+            // Показываем доску
+            boardCard.style.display = "block";
+            enterGameMode();
             document.getElementById("clockRow").style.display = "flex";
             
+            // Принудительно перерисовываем доску (на случай, если контейнер был скрыт)
+            setTimeout(() => {
+                if (board && board.resize) board.resize();
+            }, 100);
+
+            console.log("[PvP] board card AFTER:", {
+                display: boardCard.style.display,
+                computedDisplay: window.getComputedStyle(boardCard).display,
+                visibility: window.getComputedStyle(boardCard).visibility
+            });
             // Запускаем таймер
             startClock(timeControl);
         }
@@ -2484,6 +2503,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=15"></script>
+<script src="telegram-auth.js?v=16"></script>
 </body>
 </html>
