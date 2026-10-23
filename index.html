@@ -2367,38 +2367,48 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 // ===== MATCHMAKING (FIND MATCH) =====
         
         async function findMatch() {
-            if (!socket || !socket.connected) {
-                document.getElementById("matchStatus").textContent = "❌ Not connected to server";
-                return;
-            }
-            
-            const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
-            document.getElementById("matchStatus").textContent = "🔍 Searching for opponent...";
-            document.getElementById("findMatchBtn").disabled = true;
-            document.getElementById("cancelMatchBtn").disabled = false;
-            
-            // Отправляем запрос на сервер
-                        // Достаём Lichess-данные из localStorage (если игрок вошёл)
-            let lichessUsername = null;
-            let lichessElo = null;
-            if (userAddress) {
-                const saved = localStorage.getItem("lichess_" + userAddress.toLowerCase());
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        lichessUsername = parsed.username || null;
-                        lichessElo = parsed.rapidRating || null;
-                    } catch (e) { /* ignore */ }
-                }
-            }
-
-            socket.emit("findMatch", {
-                userAddress: userAddress,
-                timeControl: tc,
-                lichessUsername: lichessUsername,
-                lichessElo: lichessElo
-            });
+    if (!socket || !socket.connected) {
+        document.getElementById("matchStatus").textContent = "❌ Not connected to server";
+        return;
+    }
+    
+    const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
+    document.getElementById("matchStatus").textContent = "🔍 Searching for opponent...";
+    document.getElementById("findMatchBtn").disabled = true;
+    document.getElementById("cancelMatchBtn").disabled = false;
+    
+    // 1. Логика Lichess (остается без изменений)
+    let lichessUsername = null;
+    let lichessElo = null;
+    if (userAddress) {
+        const saved = localStorage.getItem("lichess_" + userAddress.toLowerCase());
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                lichessUsername = parsed.username || null;
+                lichessElo = parsed.rapidRating || null;
+            } catch (e) { /* ignore */ }
         }
+    }
+
+    // 2. Логика Telegram (новое)
+    const myAddress = window.tgSession && window.tgSession.telegramId 
+        ? `telegram:${window.tgSession.telegramId}` 
+        : userAddress;
+
+    // 3. Диагностика
+    console.log("[MATCHMAKING] identity:", myAddress);
+    console.log("[MATCHMAKING] timeControl:", tc);
+    console.log("[MATCHMAKING] socket.connected:", socket?.connected);
+
+    // 4. Отправка
+    socket.emit("findMatch", {
+        userAddress: myAddress, // Отправляем Telegram ID (или старый кошелек как fallback)
+        timeControl: tc,
+        lichessUsername: lichessUsername,
+        lichessElo: lichessElo
+    });
+}
         
         function cancelMatch() {
             if (socket && socket.connected) {
@@ -2474,6 +2484,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=14"></script>
+<script src="telegram-auth.js?v=15"></script>
 </body>
 </html>
