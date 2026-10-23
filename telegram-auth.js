@@ -25,6 +25,8 @@ async function initTelegramAuth() {
         if (!data.ok) throw new Error(data.error);
 
         window.tgSession.chessAccount = data.chessAccount;
+        window.tgSession.telegramId = data.telegramId;
+        window.tgSession.username = data.username;
         console.log("✅ Аккаунт получен:", data.chessAccount);
 
         // Генерируем Session Key на клиенте (в браузере)
