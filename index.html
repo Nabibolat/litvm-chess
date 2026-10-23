@@ -456,6 +456,13 @@ const RELAY_API = "https://litvm-chess-relay.onrender.com";
 async function submitResultViaRelay(matchId, resultString) {
     if (!window.tgSession || !window.tgSession.isTelegram) return;
 
+    // Если matchId нет (null или 0), значит это игра с ботом без блокчейна
+    if (matchId == null || !/^[1-9]\d*$/.test(String(matchId))) {
+        console.warn("On-chain матч отсутствует. Результат остается в локальной истории.");
+        document.getElementById("boardStatus").textContent = "✅ Партия завершена (локально)";
+        return;
+    }
+
     const RELAY_API = "https://litvm-chess-relay.onrender.com";
     const CHESS_ACCOUNT = window.tgSession.chessAccount;
     const wallet = window.tgSession.sessionKey;
@@ -463,21 +470,12 @@ async function submitResultViaRelay(matchId, resultString) {
     try {
         document.getElementById("boardStatus").textContent = "⏳ Подпись...";
         
-         // 1. Получаем текущий nonce аккаунта (защита от повторов)
         const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
         const accountContract = new ethers.Contract(CHESS_ACCOUNT, ["function nonce() view returns (uint256)"], rpcProvider);
         
-        let currentNonce = 0;
-        try {
-            const nonceBN = await accountContract.nonce();
-            // В ethers v5 это BigNumber, приводим к числу
-            currentNonce = nonceBN.toNumber(); 
-        } catch (e) {
-            console.log("⚠️ Не удалось прочитать nonce, используем 0");
-        }   
+        const nonceBN = await accountContract.nonce();
+        const currentNonce = nonceBN.toString();
 
-        // 2. Формируем EIP-712 подпись (как в контракте)
-        // Наш контракт использует: "SubmitResult(uint256 matchId,string result,uint256 nonce)"
         const domain = {
             name: "LitVM Chess",
             version: "1",
@@ -492,17 +490,17 @@ async function submitResultViaRelay(matchId, resultString) {
             ]
         };
         const value = {
-            matchId: matchId,
+            matchId: String(matchId),
             result: resultString,
             nonce: currentNonce
         };
 
-        // Подписываем (используем ethers v5, который у тебя на странице)
+        console.log("EIP-712 параметры для подписи (PvP):", value);
+
         const signature = await wallet._signTypedData(domain, types, value);
         
         document.getElementById("boardStatus").textContent = "📤 Отправка в сеть...";
 
-        // 3. Отправляем на сервер
         const response = await fetch(`${RELAY_API}/relay`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -517,7 +515,7 @@ async function submitResultViaRelay(matchId, resultString) {
         const txData = await response.json();
         if (!response.ok) throw new Error(txData.error || "Relay error");
 
-        console.log("✅ Записано:", txData.txHash);
+        console.log("✅ Записано (PvP):", txData.txHash);
         document.getElementById("boardStatus").textContent = "✅ Результат записан в блокчейн!";
         
         if (typeof loadMatches === "function") loadMatches();
@@ -2476,6 +2474,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=9"></script>
+<script src="telegram-auth.js?v=13"></script>
 </body>
 </html>
