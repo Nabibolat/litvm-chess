@@ -1766,8 +1766,11 @@ async function autoFinishMatch(resultCode) {
 }
 
               function initBoard() {
+    // На устройствах с основным сенсорным вводом используем tap-to-move,
+    // чтобы chessboard.js не перехватывал первое касание для перетаскивания.
+    const touchOnly = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
     board = Chessboard("board", {
-        draggable: true,
+        draggable: !touchOnly,
         position: "start",
         orientation: "white",
         onDragStart: onDragStart,
@@ -1794,14 +1797,29 @@ function attachSquareClickHandlers() {
     const boardEl = document.getElementById("board");
     if (!boardEl) return;
 
-    // Делегирование: один обработчик на весь #board
+    // Компьютер: обычный клик мышью.
     boardEl.addEventListener("mousedown", (e) => {
-        // Ищем клетку под курсором через elementsFromPoint (включая элементы за фигурой)
+        // На сенсорных устройствах не обрабатываем синтетический mousedown.
+        if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) return;
         const els = document.elementsFromPoint(e.clientX, e.clientY);
         const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
         if (!sq) return;
         onSquareClick.call(sq, { currentTarget: sq, target: e.target });
     });
+
+    // Телефон/планшет: тап по фигуре, затем тап по клетке назначения.
+    boardEl.addEventListener("touchstart", (e) => {
+        const touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) return;
+        const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+        const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
+        if (!sq) return;
+
+        // Не даём браузеру сгенерировать второй mouse event для того же тапа.
+        e.preventDefault();
+        onSquareClick.call(sq, { currentTarget: sq, target: e.target });
+    }, { passive: false });
+
     markOccupiedSquares();
 }
 
