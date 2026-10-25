@@ -1044,35 +1044,33 @@ function attachSocketListeners() {
             });
         });
 
-        ```javascript
-function handleGameOver(data) {
-    const winner = data.isCheckmate
-        ? data.winner
-        : (data.isDraw ? "draw" : null);
+                function handleGameOver(data) {
+            const winner = data.isCheckmate
+                ? data.winner
+                : (data.isDraw ? "draw" : null);
 
-    if (!winner) return;
+            if (!winner) return;
 
-    const isDraw = winner === "draw";
-    const iAmWinner = winner === myColor;
-    const iAmWhite = myColor === "white";
+            const isDraw = winner === "draw";
+            const iAmWinner = winner === myColor;
+            const iAmWhite = myColor === "white";
 
-    // Результат PvP уже записывает сервер через релейер.
-    // Клиент не должен отправлять его повторно через MetaMask.
-    if (window.currentMatchId != null || activeMatchId != null) {
-        console.log("🏁 Результат партии обрабатывается сервером через релейер.");
-        return;
-    }
+            // Результат PvP уже записывает сервер через релейер.
+            if (window.currentMatchId != null || activeMatchId != null) {
+                console.log("🏁 Результат партии обрабатывается сервером через релейер.");
+                return;
+            }
 
-    // Старый путь оставляем только для случаев вне on-chain PvP.
-    if (iAmWinner || (isDraw && iAmWhite)) {
-        console.log("🏆 Сохранение результата вне серверного PvP");
-        saveMatchToBlockchain(
-            winner,
-            window.opponentAddress,
-            window.currentTimeControl
-        );
-    }
-}
+            // Старый путь оставляем только для случаев вне on-chain PvP.
+            if (iAmWinner || (isDraw && iAmWhite)) {
+                console.log("🏆 Сохранение результата вне серверного PvP");
+                saveMatchToBlockchain(
+                    winner,
+                    window.opponentAddress,
+                    window.currentTimeControl
+                );
+            }
+        }
 
         document.getElementById("connectBtn").onclick = connect;
         document.getElementById("switchNetworkBtn").onclick = async function() {
@@ -2586,6 +2584,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=20"></script>
+<script src="telegram-auth.js?v=21"></script>
 </body>
 </html>
