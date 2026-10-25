@@ -1044,24 +1044,33 @@ function attachSocketListeners() {
             });
         });
 
-        function handleGameOver(data) {
-    const winner = data.isCheckmate ? data.winner : (data.isDraw ? "draw" : null);
+        ```javascript
+function handleGameOver(data) {
+    const winner = data.isCheckmate
+        ? data.winner
+        : (data.isDraw ? "draw" : null);
+
     if (!winner) return;
 
-    const iAmWinner = (winner === myColor);
-    const isDraw = (winner === "draw");
-    const iAmWhite = (myColor === "white");
+    const isDraw = winner === "draw";
+    const iAmWinner = winner === myColor;
+    const iAmWhite = myColor === "white";
 
-    // Пишет: победитель. Если ничья — белый.
+    // Результат PvP уже записывает сервер через релейер.
+    // Клиент не должен отправлять его повторно через MetaMask.
+    if (window.currentMatchId != null || activeMatchId != null) {
+        console.log("🏁 Результат партии обрабатывается сервером через релейер.");
+        return;
+    }
+
+    // Старый путь оставляем только для случаев вне on-chain PvP.
     if (iAmWinner || (isDraw && iAmWhite)) {
-        console.log("🏆 I will save the result to blockchain");
+        console.log("🏆 Сохранение результата вне серверного PvP");
         saveMatchToBlockchain(
             winner,
             window.opponentAddress,
             window.currentTimeControl
         );
-    } else {
-        console.log("⏳ Winner will save the result. Waiting...");
     }
 }
 
@@ -2577,6 +2586,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=19"></script>
+<script src="telegram-auth.js?v=20"></script>
 </body>
 </html>
