@@ -2465,8 +2465,8 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
     }
 
     // 2. Логика Telegram (новое)
-    const myAddress = window.tgSession && window.tgSession.telegramId 
-        ? `telegram:${window.tgSession.telegramId}` 
+        const myAddress = window.tgSession && window.tgSession.chessAccount
+        ? window.tgSession.chessAccount
         : userAddress;
 
     // 3. Диагностика
@@ -2557,6 +2557,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=17"></script>
+<script src="telegram-auth.js?v=18"></script>
 </body>
 </html>
