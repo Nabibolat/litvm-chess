@@ -2492,7 +2492,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             document.getElementById("cancelMatchBtn").disabled = true;
         }
         
-        // Обработчики событий от сервера
+                // Обработчики событий от сервера
         function setupMatchmakingListeners() {
             if (!socket) return;
             
@@ -2501,7 +2501,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                     "⏳ Waiting for opponent... (don't close the page)";
             });
             
-                        socket.on("matchFound", (data) => {
+            socket.on("matchFound", (data) => {
                 console.log("Match found:", data);
                 document.getElementById("matchStatus").textContent = 
                     "✅ Match found! Color: " + data.color.toUpperCase();
@@ -2527,6 +2527,26 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 if (oppElo) oppElo.textContent = elo;
                 if (oppAvatar) oppAvatar.src = "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(seed);
             });
+
+            // НОВЫЙ ОБРАБОТЧИК: Когда сервер создал матч в блокчейне
+            socket.on("onChainMatchCreated", (data) => {
+                console.log("✅ Матч создан в блокчейне! ID:", data.matchId);
+                window.currentMatchId = data.matchId;
+                
+                const boardStatus = document.getElementById("boardStatus");
+                if (boardStatus) {
+                    boardStatus.textContent = "✅ Матч создан в блокчейне (ID: " + data.matchId + "). Играйте!";
+                }
+            });
+
+            // Обработчик ошибки создания матча
+            socket.on("onChainCreationFailed", (data) => {
+                console.warn("❌ Не удалось создать матч в блокчейне:", data.message);
+                const boardStatus = document.getElementById("boardStatus");
+                if (boardStatus) {
+                    boardStatus.textContent = "⚠️ Матч не записан в блокчейн (игра продолжается).";
+                }
+            });
             
             socket.on("searchCancelled", () => {
                 document.getElementById("matchStatus").textContent = "Search cancelled";
@@ -2539,24 +2559,24 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             });
             
             socket.on("opponentForfeit", (data) => {
-    console.log("🏆 Opponent forfeit:", data);
-    alert("🏆 You win by forfeit! " + data.reason);
-    
-    // Записываем результат в блокчейн
-    if (window.opponentAddress) {
-        saveMatchToBlockchain(
-            data.winner,  // "white" или "black"
-            window.opponentAddress,
-            window.currentTimeControl
-        );
-    }
-});
+                console.log("🏆 Opponent forfeit:", data);
+                alert("🏆 You win by forfeit! " + data.reason);
+                
+                // Записываем результат в блокчейн
+                if (window.opponentAddress) {
+                    saveMatchToBlockchain(
+                        data.winner,
+                        window.opponentAddress,
+                        window.currentTimeControl
+                    );
+                }
+            });
         }
-        
+          
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=18"></script>
+<script src="telegram-auth.js?v=19"></script>
 </body>
 </html>
