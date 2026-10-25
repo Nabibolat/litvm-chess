@@ -1736,6 +1736,11 @@ function attachSocketListeners() {
 }
 
 async function autoFinishMatch(resultCode) {
+        // В PvP результат обрабатывает сервер.
+    if (window.currentMatchId != null) {
+        console.log("🏁 PvP: клиентскую запись результата пропускаем.");
+        return;
+    }
     const matchId = activeMatchId;
     activeMatchId = null;  // сбрасываем сразу, чтобы не вызвалось дважды
     
@@ -2584,6 +2589,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=21"></script>
+<script src="telegram-auth.js?v=22"></script>
 </body>
 </html>
