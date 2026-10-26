@@ -2581,13 +2581,15 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             
             socket.on("privateRoomCreated", (data) => {
                 const link = "https://t.me/Litchess_bot/game?room=" + encodeURIComponent(data.roomId);
-                document.getElementById("matchStatus").textContent = "Private room created. Share the invite link with your friend.";
-                if (navigator.clipboard?.writeText) {
-                    navigator.clipboard.writeText(link).then(
-                        () => alert("Invite link copied! Send it to your friend:\n\n" + link),
-                        () => prompt("Copy this invite link and send it to your friend:", link)
-                    );
-                } else prompt("Copy this invite link and send it to your friend:", link);
+                document.getElementById("matchStatus").textContent = "Choose a Telegram chat to send your invite.";
+
+                if (window.Telegram?.WebApp?.openTelegramLink) {
+                    const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(link)
+                        + "&text=" + encodeURIComponent("Join my chess game on LitVM!");
+                    window.Telegram.WebApp.openTelegramLink(shareUrl);
+                } else {
+                    alert("Copy this link and send it to your friend:\n\n" + link);
+                }
             });
             socket.on("privateRoomError", (data) => {
                 document.getElementById("matchStatus").textContent = "❌ " + (data?.message || "Private room error");
@@ -2681,6 +2683,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
     </div>
-<script src="telegram-auth.js?v=40"></script>
+<script src="telegram-auth.js?v=41"></script>
 </body>
 </html>
