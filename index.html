@@ -324,6 +324,7 @@
     </select>
     <button id="findMatchBtn" disabled>🔍 Find Match</button>
     <button id="cancelMatchBtn" disabled style="background:linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color:#fff;">✖ Cancel Search</button>
+    <button id="inviteFriendBtn" style="background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff; margin-top: 8px;">🔗 Invite Friend</button>
     <div class="status" id="matchStatus"></div>
 </div>
         <div class="card">
@@ -712,6 +713,7 @@ function connectSocket() {
     
     socket.on("connect", () => {
         console.log("✅ Socket connected:", socket.id);
+        setTimeout(() => handlePrivateRoomLink(), 800);
         
         // Пытаемся восстановить игру при подключении
         const savedToken = localStorage.getItem("resumeToken");
@@ -2533,6 +2535,36 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         tgPhoto: tgPhoto
     });
 }
+ 
+        async function inviteFriend() {
+            if (!socket || !socket.connected) return alert("Not connected to server");
+            const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
+            const playerAddress = window.tgSession?.chessAccount || userAddress;
+            if (!playerAddress) return alert("Please login first");
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const tgSession = window.tgSession || {};
+            const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName].filter(Boolean).join(" ").trim()
+                || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
+            socket.emit("createPrivateRoom", { userAddress: playerAddress, timeControl: tc, tgName, tgPhoto: tgUser?.photo_url || tgSession.photoUrl || null });
+            document.getElementById("matchStatus").textContent = "Creating private room...";
+        }
+
+        function handlePrivateRoomLink() {
+            const roomId = new URLSearchParams(window.location.search).get("room");
+            if (!roomId || !socket) return;
+            const playerAddress = window.tgSession?.chessAccount || userAddress;
+            if (!playerAddress) {
+                document.getElementById("matchStatus").textContent = "Please open this invite inside Telegram after login.";
+                return;
+            }
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const tgSession = window.tgSession || {};
+            const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName].filter(Boolean).join(" ").trim()
+                || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
+            socket.emit("joinPrivateRoom", { roomId, userAddress: playerAddress, tgName, tgPhoto: tgUser?.photo_url || tgSession.photoUrl || null });
+            document.getElementById("matchStatus").textContent = "Joining private room...";
+        }
+
         
         function cancelMatch() {
             if (socket && socket.connected) {
@@ -2547,6 +2579,20 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         function setupMatchmakingListeners() {
             if (!socket) return;
             
+            socket.on("privateRoomCreated", (data) => {
+                const link = "https://t.me/Litchess_bot/game?room=" + encodeURIComponent(data.roomId);
+                document.getElementById("matchStatus").textContent = "Private room created. Share the invite link with your friend.";
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(link).then(
+                        () => alert("Invite link copied! Send it to your friend:\n\n" + link),
+                        () => prompt("Copy this invite link and send it to your friend:", link)
+                    );
+                } else prompt("Copy this invite link and send it to your friend:", link);
+            });
+            socket.on("privateRoomError", (data) => {
+                document.getElementById("matchStatus").textContent = "❌ " + (data?.message || "Private room error");
+            });
+
             socket.on("waitingForOpponent", () => {
                 document.getElementById("matchStatus").textContent = 
                     "⏳ Waiting for opponent... (don't close the page)";
@@ -2632,8 +2678,9 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
           
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
+        document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
     </div>
-<script src="telegram-auth.js?v=39"></script>
+<script src="telegram-auth.js?v=40"></script>
 </body>
 </html>
