@@ -2505,11 +2505,17 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
     console.log("[MATCHMAKING] socket.connected:", socket?.connected);
 
     // 4. Отправка
+    const tgSession = window.tgSession || {};
+    const tgName = [tgSession.firstName, tgSession.lastName].filter(Boolean).join(" ").trim()
+        || (tgSession.username ? "@" + tgSession.username : "Player");
+
     socket.emit("findMatch", {
         userAddress: myAddress, // Отправляем Telegram ID (или старый кошелек как fallback)
         timeControl: tc,
         lichessUsername: lichessUsername,
-        lichessElo: lichessElo
+        lichessElo: lichessElo,
+        tgName: tgName,
+        tgPhoto: tgSession.photoUrl || null
     });
 }
         
@@ -2549,13 +2555,19 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 const oppElo = document.getElementById("opponentElo");
                 const oppAvatar = document.getElementById("opponentAvatar");
 
-                const name = data.opponentLichess || "Anonymous";
+                const name = data.opponentName || data.opponentLichess || "Anonymous";
                 const elo = data.opponentElo ? (data.opponentElo + " Elo") : "— Elo";
-                const seed = data.opponentLichess || data.opponentAddress || "Opponent";
+                const avatarUrl = data.opponentPhoto || "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(name);
 
                 if (oppName) oppName.textContent = name;
                 if (oppElo) oppElo.textContent = elo;
-                if (oppAvatar) oppAvatar.src = "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(seed);
+                if (oppAvatar) {
+                    oppAvatar.onerror = () => {
+                        oppAvatar.onerror = null;
+                        oppAvatar.src = "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(name);
+                    };
+                    oppAvatar.src = avatarUrl;
+                }
             });
 
             // НОВЫЙ ОБРАБОТЧИК: Когда сервер создал матч в блокчейне
@@ -2607,6 +2619,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=22"></script>
+<script src="telegram-auth.js?v=38"></script>
 </body>
 </html>
