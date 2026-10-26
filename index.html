@@ -2506,8 +2506,19 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
 
     // 4. Отправка
     const tgSession = window.tgSession || {};
-    const tgName = [tgSession.firstName, tgSession.lastName].filter(Boolean).join(" ").trim()
-        || (tgSession.username ? "@" + tgSession.username : "Player");
+    // Read the Telegram profile again at click time, in case auth initialized it later.
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName]
+        .filter(Boolean).join(" ").trim()
+        || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
+    const tgPhoto = tgUser?.photo_url || tgSession.photoUrl || null;
+
+    console.log("[MATCHMAKING] profile:", {
+        name: tgName,
+        hasTelegramPhoto: Boolean(tgUser?.photo_url),
+        hasSessionPhoto: Boolean(tgSession.photoUrl),
+        sendingPhoto: Boolean(tgPhoto)
+    });
 
     socket.emit("findMatch", {
         userAddress: myAddress, // Отправляем Telegram ID (или старый кошелек как fallback)
@@ -2515,7 +2526,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         lichessUsername: lichessUsername,
         lichessElo: lichessElo,
         tgName: tgName,
-        tgPhoto: tgSession.photoUrl || null
+        tgPhoto: tgPhoto
     });
 }
         
