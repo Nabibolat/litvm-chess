@@ -68,13 +68,28 @@ async function initTelegramAuth() {
         if (!regData.ok) throw new Error(regData.error);
         console.log("✅ Ключ зарегистрирован в смарт-аккаунте!");
 
-        // Обновляем UI
+        // Показываем компактный профиль Telegram: аватар + имя/ник.
+        const profileCard = document.getElementById("telegramProfileCard");
+        const profileAvatar = document.getElementById("tgProfileAvatar");
+        const profileName = document.getElementById("tgProfileName");
         const connectBtn = document.getElementById("connectBtn");
         if (connectBtn) connectBtn.style.display = "none";
-        const walletStatus = document.getElementById("walletStatus");
-        if (walletStatus) {
-            walletStatus.innerHTML = `✅ Вход через Telegram: <b>@${data.username || 'player'}</b>`;
-            walletStatus.style.color = "#b6f7c4";
+
+        if (profileCard && profileAvatar && profileName) {
+            profileCard.style.display = "flex";
+
+            const displayName = [window.tgSession.firstName, window.tgSession.lastName]
+                .filter(Boolean).join(" ").trim()
+                || (window.tgSession.username ? "@" + window.tgSession.username : "Player");
+            profileName.textContent = displayName;
+
+            const fallbackAvatar = "https://api.dicebear.com/9.x/avataaars/svg?seed="
+                + encodeURIComponent(window.tgSession.username || displayName || "Player");
+            profileAvatar.onerror = () => {
+                profileAvatar.onerror = null;
+                profileAvatar.src = fallbackAvatar;
+            };
+            profileAvatar.src = window.tgSession.photoUrl || fallbackAvatar;
         }
                 // Разблокируем кнопки для игры
         const findMatchBtn = document.getElementById("findMatchBtn");
