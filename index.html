@@ -285,7 +285,11 @@
     <h1>♟ LitVM Chess</h1>
     <div id="menuWrap">
 
-    <div class="card">
+    <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
+    <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
+    <div style="font-size: 16px; font-weight: 600; color: #e6e6e6;" id="tgProfileName"></div>
+</div>
+<div class="card">
     <button id="connectBtn" style="display: none;">Connect MetaMask</button>
     <button id="switchNetworkBtn" style="display: none;">Switch to LitVM</button>
     <div class="status" id="walletStatus"></div>
@@ -2630,6 +2634,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
     </script>
     </div>
-<script src="telegram-auth.js?v=38"></script>
+<script src="telegram-auth.js?v=39"></script>
 </body>
 </html>
