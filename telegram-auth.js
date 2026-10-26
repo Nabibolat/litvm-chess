@@ -27,6 +27,16 @@ async function initTelegramAuth() {
         window.tgSession.chessAccount = data.chessAccount;
         window.tgSession.telegramId = data.telegramId;
         window.tgSession.username = data.username;
+
+        // Сохраняем доступные данные профиля Telegram Mini App.
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        if (tgUser) {
+            window.tgSession.firstName = tgUser.first_name || "Player";
+            window.tgSession.lastName = tgUser.last_name || "";
+            window.tgSession.photoUrl = tgUser.photo_url || null;
+            if (tgUser.username) window.tgSession.username = tgUser.username;
+        }
+
         console.log("✅ Аккаунт получен:", data.chessAccount);
 
         // Генерируем Session Key на клиенте (в браузере)
