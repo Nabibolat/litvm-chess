@@ -283,7 +283,15 @@
   <body>
     <div id="gameModeWrap" style="display: none;">
     <h1>♟ LitVM Chess</h1>
-    <div id="menuWrap">
+    <div id="menuWrap">\n
+    <div class="card" id="languageCard" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
+        <label for="languageSelect" id="languageLabel" style="font-weight:600; white-space:nowrap;">🌐 Language / Язык</label>
+        <select id="languageSelect" aria-label="Language" style="margin:0; max-width:190px;">
+            <option value="en">🇬🇧 English</option>
+            <option value="ru">🇷🇺 Русский</option>
+        </select>
+    </div>
+
 
     <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
     <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
@@ -295,7 +303,7 @@
     <div class="status" id="walletStatus"></div>
 </div>
     <div class="card">
-    <h3>♟ Lichess Account</h3>
+    <h3 id="lichessTitle">♟ Lichess Account</h3>
     <div class="status" id="lichessStatus">Not connected</div>
     <button id="lichessLoginBtn" style="margin-top: 10px;">Login with Lichess</button>
     <button id="lichessLogoutBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 10px;">Logout Lichess</button>
@@ -314,7 +322,7 @@
         <div class="status" id="createStatus"></div>
     </div>
 <div class="card">
-    <h3>🌐 Play Online</h3>
+    <h3 id="onlineTitle">🌐 Play Online</h3>
     <p class="status">Find an opponent automatically. Random color.</p>
     <select id="onlineTimeControl">
         <option value="60">1 minute</option>
@@ -328,7 +336,7 @@
     <div class="status" id="matchStatus"></div>
 </div>
         <div class="card">
-    <h3>Your Stats</h3>
+    <h3 id="statsTitle">Your Stats</h3>
     <div id="statsBlock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
         <div>🎮 Games: <b id="statGames">-</b></div>
         <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
@@ -343,13 +351,13 @@
         <div id="matchesList"></div>
     </div>
             <div class="card">
-        <h3>📜 Game History</h3>
+        <h3 id="gameHistoryTitle">📜 Game History</h3>
         <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
         <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
     </div>
         <div class="card">
-        <h3>Play vs Bot</h3>
-        <p class="status">Pick a bot — the game starts immediately.</p>
+        <h3 id="botTitle">Play vs Bot</h3>
+        <p class="status" id="botHint">Pick a bot — the game starts immediately.</p>
 
                 <div id="colorChoiceRow" style="display: flex; gap: 8px; margin-bottom: 12px;">
             <button id="colorWhiteBtn" class="small" style="flex: 1;">⚪ I play White</button>
@@ -397,7 +405,7 @@
                 <div id="opponentElo" style="font-size: 13px; color: #ffb84d;">—</div>
             </div>
         </div>
-        <h3>Chess Board</h3>
+        <h3 id="chessBoardTitle">Chess Board</h3>
         <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
         <div id="clockRow" style="display: flex; justify-content: space-around; margin: 10px 0;">
             <div>⚪ White: <span id="whiteTimer">--:--</span></div>
@@ -406,7 +414,7 @@
         <div id="board" style="width: 400px; margin: 20px auto;"></div>
                 <div id="moveHistoryPanel" style="margin-top: 16px;">
             <button id="analyzeBtn" style="display: none; margin-bottom: 10px;">🔍 Analyze game</button>
-            <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
+            <div id="moveHistoryTitle" style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
             <div id="moveHistoryList" style="
                 background: #0f1117;
                 border: 1px solid #2a2e3a;
@@ -436,7 +444,95 @@
      <script src="ethers.umd.min.js"></script>
      <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
       <script>
-        // ==== НАСТРОЙКИ ====
+
+        // ===== LANGUAGE SETTINGS (English / Russian) =====
+        const uiTranslations = {
+            en: {
+                languageLabel: "🌐 Language",
+                lichessTitle: "♟ Lichess Account",
+                loginLichess: "Login with Lichess", logoutLichess: "Logout Lichess",
+                playOnline: "🌐 Play Online", findOpponent: "Find an opponent automatically. Random color.",
+                findMatch: "🔍 Find Match", cancelSearch: "✖ Cancel Search", inviteFriend: "🔗 Invite Friend",
+                yourStats: "Your Stats", games: "🎮 Games:", wins: "🏆 Wins:", losses: "💀 Losses:",
+                draws: "🤝 Draws:", winRate: "📊 Win rate:", gameHistory: "📜 Game History",
+                showMore: "Show more", playBot: "Play vs Bot", botHint: "Pick a bot — the game starts immediately.",
+                playWhite: "⚪ I play White", playBlack: "⚫ I play Black", randomColor: "🎲 Random",
+                surrender: "Surrender", back: "← Back", chessBoard: "Chess Board", moveHistory: "Move history",
+                analyzeGame: "🔍 Analyze game"
+            },
+            ru: {
+                languageLabel: "🌐 Язык",
+                lichessTitle: "♟ Аккаунт Lichess",
+                loginLichess: "Войти через Lichess", logoutLichess: "Выйти из Lichess",
+                playOnline: "🌐 Играть онлайн", findOpponent: "Автоматически найти соперника. Цвет случайный.",
+                findMatch: "🔍 Найти соперника", cancelSearch: "✖ Отменить поиск", inviteFriend: "🔗 Пригласить друга",
+                yourStats: "Ваша статистика", games: "🎮 Игры:", wins: "🏆 Победы:", losses: "💀 Поражения:",
+                draws: "🤝 Ничьи:", winRate: "📊 Процент побед:", gameHistory: "📜 История игр",
+                showMore: "Показать ещё", playBot: "Играть с ботом", botHint: "Выберите бота — игра начнётся сразу.",
+                playWhite: "⚪ Я играю белыми", playBlack: "⚫ Я играю чёрными", randomColor: "🎲 Случайно",
+                surrender: "Сдаться", back: "← Назад", chessBoard: "Шахматная доска", moveHistory: "История ходов",
+                analyzeGame: "🔍 Анализ партии"
+            }
+        };
+        function applyUiLanguage(lang) {
+            const selected = uiTranslations[lang] ? lang : "en";
+            const dict = uiTranslations[selected];
+            document.documentElement.lang = selected;
+            const setText = (id, key) => {
+                const el = document.getElementById(id);
+                if (el && dict[key]) el.textContent = dict[key];
+            };
+            setText("languageLabel", "languageLabel");
+            setText("lichessTitle", "lichessTitle");
+            setText("lichessLoginBtn", "loginLichess");
+            setText("lichessLogoutBtn", "logoutLichess");
+            setText("onlineTitle", "playOnline");
+            setText("findMatchBtn", "findMatch");
+            setText("cancelMatchBtn", "cancelSearch");
+            setText("inviteFriendBtn", "inviteFriend");
+            setText("statsTitle", "yourStats");
+            setText("gameHistoryTitle", "gameHistory");
+            setText("gameHistoryMoreBtn", "showMore");
+            setText("botTitle", "playBot");
+            setText("botHint", "botHint");
+            setText("colorWhiteBtn", "playWhite");
+            setText("colorBlackBtn", "playBlack");
+            setText("colorRandomBtn", "randomColor");
+            setText("stopBotBtn", "surrender");
+            setText("backToMenuBtn", "back");
+            setText("chessBoardTitle", "chessBoard");
+            setText("moveHistoryTitle", "moveHistory");
+            setText("analyzeBtn", "analyzeGame");
+            const onlineCard = document.getElementById("onlineTitle")?.closest(".card");
+            const hint = onlineCard?.querySelector("p.status");
+            if (hint) hint.textContent = dict.findOpponent;
+            const statLabels = {
+                statGames: dict.games, statWins: dict.wins, statLosses: dict.losses,
+                statDraws: dict.draws, statWinRate: dict.winRate
+            };
+            Object.entries(statLabels).forEach(([id, label]) => {
+                const value = document.getElementById(id);
+                if (value?.parentElement) {
+                    const parent = value.parentElement;
+                    if (!parent.dataset.originalLabel) parent.dataset.originalLabel = parent.firstChild.textContent;
+                    parent.firstChild.textContent = label + " ";
+                }
+            });
+            localStorage.setItem("litvm-language", selected);
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.value = selected;
+        }
+        (function initUiLanguage() {
+            const saved = localStorage.getItem("litvm-language");
+            const telegramLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+            const browserLang = (navigator.language || "en").split("-")[0].toLowerCase();
+            const initial = saved || (uiTranslations[telegramLang] ? telegramLang : null)
+                || (uiTranslations[browserLang] ? browserLang : "en");
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.addEventListener("change", () => applyUiLanguage(selector.value));
+            applyUiLanguage(initial);
+        })();
+\n        // ==== НАСТРОЙКИ ====
         const CONTRACT_ADDRESS = "0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8";
         const LITVM_CHAIN_ID = "0x1159"; // 4441
 
@@ -2683,6 +2779,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
     </div>
-<script src="telegram-auth.js?v=41"></script>
+<script src="telegram-auth.js?v=42"></script>
 </body>
 </html>
