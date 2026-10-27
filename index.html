@@ -249,10 +249,10 @@
             <div class="card">
                 <h3 id="botTitle">Play vs Bot</h3>
                 <p class="status" id="botHint">Pick a bot — the game starts immediately.</p>
-                <div id="colorChoiceRow" style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <button id="colorWhiteBtn" class="small" style="flex: 1;">⚪ I play White</button>
-                    <button id="colorBlackBtn" class="small" style="flex: 1;">⚫ I play Black</button>
-                    <button id="colorRandomBtn" class="small" style="flex: 1;">🎲 Random</button>
+                <div id="colorChoiceRow">
+                   <button id="colorWhiteBtn" class="small">⚪ White</button>
+                   <button id="colorRandomBtn" class="small">🎲 Random</button>
+                   <button id="colorBlackBtn" class="small">⚫ Black</button>
                 </div>
                 <div class="bot-grid" id="botGrid">
                     <div class="bot-card" data-bot="0">
@@ -2473,25 +2473,24 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 // ===== Сетка ботов: клик по карточке = старт =====
         window.currentBotLevel = null;
                   // ===== ВЫБОР ЦВЕТА =====
-        window._playerChosenColor = "white";  // по умолчанию
+        window._playerChosenColor = "random";
 
         function setPlayerColor(color) {
-            window._playerChosenColor = color;
-            ["colorWhiteBtn", "colorBlackBtn", "colorRandomBtn"].forEach(id => {
-                const btn = document.getElementById(id);
-                if (!btn) return;
-                btn.style.background = "";  // сброс
-                btn.style.opacity = "0.6";
-            });
-            const activeId = color === "white" ? "colorWhiteBtn"
-                           : color === "black" ? "colorBlackBtn"
-                           : "colorRandomBtn";
-            const active = document.getElementById(activeId);
-            if (active) {
-                active.style.opacity = "1";
-                active.style.background = "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)";
-            }
-        }
+              window._playerChosenColor = color;
+    
+              // Сбрасываем активный класс у всех кнопок
+              ["colorWhiteBtn", "colorBlackBtn", "colorRandomBtn"].forEach(id => {
+                 const btn = document.getElementById(id);
+                 if (btn) btn.classList.remove("active");
+              });
+    
+              // Добавляем активный класс нужной кнопке
+              const activeId = color === "white" ? "colorWhiteBtn"
+                   : color === "black" ? "colorBlackBtn"
+                   : "colorRandomBtn";
+              const active = document.getElementById(activeId);
+              if (active) active.classList.add("active");
+         }
 
         // Привязка кнопок
         document.addEventListener("DOMContentLoaded", () => {
@@ -2501,7 +2500,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             if (w) w.addEventListener("click", () => setPlayerColor("white"));
             if (b) b.addEventListener("click", () => setPlayerColor("black"));
             if (r) r.addEventListener("click", () => setPlayerColor("random"));
-            setPlayerColor("white");  // по умолчанию активна White
+            setPlayerColor("random"); // по умолчанию активна Random
         });
 
         document.querySelectorAll("#botGrid .bot-card").forEach(card => {
@@ -2807,7 +2806,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
 
-    <script src="telegram-auth.js?v=58"></script>
+    <script src="telegram-auth.js?v=59"></script>
     <div style="display: none;">
     <button id="connectBtn"></button>
     <button id="switchNetworkBtn"></button>
