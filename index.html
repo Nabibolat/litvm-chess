@@ -4,23 +4,17 @@
     <meta charset="UTF-8">
     <title>LitVM Chess</title>
     <style>
-                * { box-sizing: border-box; }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             max-width: 780px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 30px 20px 120px 20px;
             background: linear-gradient(180deg, #0a0d14 0%, #0f1117 100%);
             color: #e6e6e6;
             min-height: 100vh;
         }
-        h1 {
-            color: #ffb84d;
-            text-align: center;
-            font-size: 28px;
-            margin: 0 0 24px 0;
-            letter-spacing: 0.5px;
-        }
+        h1 { color: #ffb84d; text-align: center; font-size: 28px; margin: 0 0 24px 0; }
         h3 { margin: 0 0 12px 0; font-size: 17px; color: #ffb84d; }
         .card {
             background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
@@ -28,10 +22,7 @@
             padding: 20px;
             margin-bottom: 16px;
             border: 1px solid #2a2e3a;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-            transition: border-color 0.2s;
         }
-        .card:hover { border-color: #3a3e4a; }
         input, select, button {
             font-size: 15px;
             padding: 11px 14px;
@@ -44,11 +35,6 @@
             color: #e6e6e6;
             width: 100%;
             margin-bottom: 10px;
-            transition: border-color 0.2s;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #ffb84d;
         }
         button {
             background: linear-gradient(180deg, #ffc670 0%, #ffb84d 100%);
@@ -56,386 +42,378 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
-            transition: transform 0.1s, box-shadow 0.2s;
-            box-shadow: 0 2px 6px rgba(255,184,77,0.2);
         }
-        button:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255,184,77,0.35);
-        }
-        button:active:not(:disabled) { transform: translateY(0); }
-        button:disabled {
-            background: #2a2e3a;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        button.small {
-            font-size: 13px;
-            padding: 6px 11px;
-            margin-right: 5px;
-            margin-top: 6px;
-        }
-        button.white-win { background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%); }
-        button.black-win { background: linear-gradient(180deg, #3a3a3a 0%, #222 100%); color: #fff; }
-        button.draw { background: linear-gradient(180deg, #8a92a6 0%, #6a7286 100%); color: #fff; }
-        .status {
-            font-size: 13px;
-            color: #8a92a6;
-            margin-top: 8px;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-        .match {
-            border-left: 3px solid #ffb84d;
-            padding: 12px 14px;
-            margin: 10px 0;
-            background: linear-gradient(90deg, #1a1d26 0%, #161922 100%);
-            border-radius: 8px;
-            transition: transform 0.15s;
-        }
-        .match:hover { transform: translateX(2px); }
-        .match.finished { border-left-color: #1e5c2b; }
-        .match small { color: #8a92a6; display: block; margin-top: 2px; }
-        .net-badge {
-            display: inline-block;
-            padding: 3px 9px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-left: 6px;
-            font-weight: 600;
-        }
-        .net-ok { background: #1e5c2b; color: #b6f7c4; }
-        .net-bad { background: #5c1e1e; color: #f7b6b6; }
-        .timer {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            background: #2a2e3a;
-            font-size: 12px;
-            margin-left: 6px;
-        }
-        #board {
-            border: 4px solid #ffb84d;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(255,184,77,0.15);
-            margin: 0 auto;
-        }
+        button:disabled { background: #2a2e3a; color: #666; cursor: not-allowed; }
+        .status { font-size: 13px; color: #8a92a6; margin-top: 8px; word-break: break-all; line-height: 1.5; }
+        #board { border: 4px solid #ffb84d; border-radius: 10px; margin: 0 auto; }
         .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
         .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
-                /* Значки анализа на доске */
         .square-55d63 { position: relative; }
-        .square-55d63 .analysis-mark {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            pointer-events: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-        .analysis-mark.mark-inaccuracy {
-            background: #ffd54f;
-            color: #0f1117;
-        }
-        .analysis-mark.mark-mistake {
-            background: #ff9800;
-            color: #fff;
-        }
-        .analysis-mark.mark-blunder {
-            background: #f44336;
-            color: #fff;
-        }
-
-                /* Навигация по ходам */
-        .move-link {
-            cursor: pointer;
-            padding: 1px 3px;
-            border-radius: 3px;
-            transition: background 0.15s;
-        }
-        .move-link:hover {
-            background: #2a2e3a;
-        }
-        .move-link.active {
-            background: #ffb84d;
-            color: #0f1117;
-        }
-        .move-num {
-            color: #8a92a6;
-            margin-right: 2px;
-        }
-                   /* ===== Click-to-Move подсветка ===== */
-        .square-55d63.highlight-selected {
-            box-shadow: inset 0 0 0 4px #4CAF50;
-        }
+        .square-55d63.highlight-selected { box-shadow: inset 0 0 0 4px #4CAF50; }
         .square-55d63.highlight-legal::after {
-            content: "";
-            position: absolute;
-            width: 30%;
-            height: 30%;
-            background: rgba(76, 175, 80, 0.7);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-        .square-55d63.highlight-legal.occupied::after {
-            /* Если на клетке фигура — рисуем кольцо вместо точки */
-            width: 90%;
-            height: 90%;
-            background: transparent;
-            border: 4px solid rgba(76, 175, 80, 0.7);
-            box-sizing: border-box;
+            content: ""; position: absolute; width: 30%; height: 30%;
+            background: rgba(76, 175, 80, 0.7); border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
         }
 
-                 /* ===== Сетка ботов ===== */
-                 /* ===== Игровой режим ===== */
-        body.game-mode #menuWrap { display: none; }
-        body.game-mode #chessBoardCard { display: block !important; }
-                #opponentPanel {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
-            border: 1px solid #2a2e3a;
-            border-radius: 10px;
-            margin-bottom: 14px;
+        /* Нижняя навигация */
+        #bottomNav {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
+            padding: 8px 10px calc(6px + env(safe-area-inset-bottom));
+            background: rgba(22, 25, 34, 0.97);
+            border-top: 1px solid #34343a;
+            box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.35);
         }
-        .bot-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
+        #mainPlayBtn {
+            display: block; width: 100%; max-width: 560px; min-height: 48px;
+            margin: 0 auto 7px; border: 0; border-radius: 10px; color: #fff;
+            font-size: 22px; font-weight: 800;
+            background: linear-gradient(180deg, #8bc34a, #5d9f35);
         }
-        .bot-card {
-            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
-            border: 1px solid #2a2e3a;
-            border-radius: 10px;
-            padding: 10px 6px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
-            user-select: none;
+        #bottomNav .nav-icons { display: flex; width: 100%; justify-content: space-around; gap: 2px; }
+        #bottomNav .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 2px; padding: 3px 0; border: 0; background: transparent;
+            color: #aaa; font-size: 10px; cursor: pointer;
         }
-        .bot-card:hover {
-            transform: translateY(-2px);
-            border-color: #ffb84d;
-            box-shadow: 0 4px 12px rgba(255,184,77,0.25);
-        }
-        .bot-card.selected {
-            border-color: #ffb84d;
-            background: linear-gradient(180deg, #2a2418 0%, #1f1a10 100%);
-        }
-        .bot-avatar {
-            width: 100%;
-            max-width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #0f1117;
-            display: block;
-            margin: 0 auto 6px;
-        }
-        .bot-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #e6e6e6;
-            margin-bottom: 3px;
-        }
-        .bot-elo {
-            font-size: 12px;
-            color: #ffb84d;
-            font-weight: 600;
-        }
+        #bottomNav .nav-item.active { color: #fff; }
+        #bottomNav .nav-icon { font-size: 21px; line-height: 1.1; }
 
-        /* Мобильные: 5 в ряд станут тесными → 3 в ряд + перенос */
-        @media (max-width: 600px) {
-            .bot-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .bot-avatar {
-                max-width: 44px;
-                height: 44px;
-            }
-            .bot-name { font-size: 12px; }
-            .bot-elo  { font-size: 11px; }
+        /* Экран новой игры */
+        #newGameScreen {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            overflow: auto; padding: 20px; background: #292725;
+            flex-direction: column;
         }
-
-        /* Адаптивность для мобильных */
-        @media (max-width: 600px) {
-            body { padding: 16px 12px; }
-            h1 { font-size: 22px; }
-            .card { padding: 16px; border-radius: 12px; }
-            #board { width: 100% !important; max-width: 100% !important; }
-            .clock-row { font-size: 14px; }
+        #newGameHeader { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+        #newGameBack { background: transparent; border: 0; color: #fff; font-size: 34px; cursor: pointer; }
+        #newGameTitle { margin: 0; color: #fff; font-size: 27px; }
+        #newGameTimeControl {
+            width: 100%; min-height: 62px; margin-bottom: 14px; text-align: center;
+            font-size: 20px; font-weight: 700; color: #fff; background: #393735;
+            border: 1px solid #484542; border-radius: 12px;
+        }
+        #startNewGameBtn {
+            width: 100%; min-height: 76px; margin-bottom: 26px; border: 0;
+            border-radius: 12px; color: #fff; font-size: 24px; font-weight: 800;
+            background: linear-gradient(180deg, #8bc34a, #5d9f35); cursor: pointer;
+        }
+        .new-game-option {
+            width: 100%; min-height: 62px; margin-bottom: 10px; border: 1px solid #45423f;
+            border-radius: 12px; color: #eee; background: #393735;
+            font-size: 19px; font-weight: 700; cursor: pointer; text-align: left; padding: 0 20px;
         }
     </style>
-  </head>
-  <body>
+</head>
+<body>
+
     <div id="gameModeWrap" style="display: none;">
-    <h1>♟ LitVM Chess</h1>
-    <div id="menuWrap">
+        <h1>♟ LitVM Chess</h1>
 
-    <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
-    <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
-    <div style="font-size: 16px; font-weight: 600; color: #e6e6e6;" id="tgProfileName"></div>
-</div>
-<div class="card">
-    <button id="connectBtn" style="display: none;">Connect MetaMask</button>
-    <button id="switchNetworkBtn" style="display: none;">Switch to LitVM</button>
-    <div class="status" id="walletStatus"></div>
-</div>
-    <div class="card">
-    <h3>♟ Lichess Account</h3>
-    <div class="status" id="lichessStatus">Not connected</div>
-    <button id="lichessLoginBtn" style="margin-top: 10px;">Login with Lichess</button>
-    <button id="lichessLogoutBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 10px;">Logout Lichess</button>
-</div>
+        <div id="menuWrap">
+            <!-- Переключатель языков -->
+            <div class="card" id="languageCard" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
+                <label for="languageSelect" id="languageLabel" style="font-weight:600; white-space:nowrap;">🌐 Language / Язык</label>
+                <select id="languageSelect" aria-label="Language" style="margin:0; max-width:190px;">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ru">🇷🇺 Русский</option>
+                </select>
+            </div>
 
-        <div class="card" style="display: none;">
-        <h3>Create a Game</h3>
-        <input id="opponentInput" placeholder="Opponent address (0x...)" />
-        <select id="timeControlSelect">
-            <option value="60">1 minute</option>
-            <option value="300" selected>5 minutes</option>
-            <option value="900">15 minutes</option>
-            <option value="1800">30 minutes</option>
-        </select>
-        <button id="createBtn" disabled>Create Game</button>
-        <div class="status" id="createStatus"></div>
-    </div>
-<div class="card">
-    <h3>🌐 Play Online</h3>
-    <p class="status">Find an opponent automatically. Random color.</p>
-    <select id="onlineTimeControl">
-        <option value="60">1 minute</option>
-        <option value="300" selected>5 minutes</option>
-        <option value="900">15 minutes</option>
-        <option value="1800">30 minutes</option>
-    </select>
-    <button id="findMatchBtn" disabled>🔍 Find Match</button>
-    <button id="cancelMatchBtn" disabled style="background:linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color:#fff;">✖ Cancel Search</button>
-    <button id="inviteFriendBtn" style="background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff; margin-top: 8px;">🔗 Invite Friend</button>
-    <div class="status" id="matchStatus"></div>
-</div>
-        <div class="card">
-    <h3>Your Stats</h3>
-    <div id="statsBlock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
-        <div>🎮 Games: <b id="statGames">-</b></div>
-        <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
-        <div>💀 Losses: <b id="statLosses" style="color: #f7b6b6;">-</b></div>
-        <div>🤝 Draws: <b id="statDraws" style="color: #ffd88a;">-</b></div>
-        <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
-    </div>
-</div>
-        <div class="card" style="display: none;">
-       <h3>My Games</h3>
-       <button id="loadBtn" disabled>Load Games</button>
-        <div id="matchesList"></div>
-    </div>
+            <!-- Профиль Telegram -->
+            <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
+                <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
+                <div style="font-size: 16px; font-weight: 600; color: #e6e6e6;" id="tgProfileName"></div>
+            </div>
+
+            <!-- Lichess -->
             <div class="card">
-        <h3>📜 Game History</h3>
-        <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
-        <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
-    </div>
-        <div class="card">
-        <h3>Play vs Bot</h3>
-        <p class="status">Pick a bot — the game starts immediately.</p>
+                <h3 id="lichessTitle">♟ Lichess Account</h3>
+                <div class="status" id="lichessStatus">Not connected</div>
+                <button id="lichessLoginBtn" style="margin-top: 10px;">Login with Lichess</button>
+                <button id="lichessLogoutBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 10px;">Logout Lichess</button>
+            </div>
 
+            <!-- Play Online -->
+            <div class="card">
+                <h3 id="onlineTitle">🌐 Play Online</h3>
+                <p class="status">Find an opponent automatically. Random color.</p>
+                <select id="onlineTimeControl">
+                    <option value="60">1 minute</option>
+                    <option value="300" selected>5 minutes</option>
+                    <option value="900">15 minutes</option>
+                    <option value="1800">30 minutes</option>
+                </select>
+                <button id="findMatchBtn" disabled>🔍 Find Match</button>
+                <button id="cancelMatchBtn" disabled style="background:linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color:#fff;">✖ Cancel Search</button>
+                <button id="inviteFriendBtn" style="background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff; margin-top: 8px;">🔗 Invite Friend</button>
+                <div class="status" id="matchStatus"></div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="card">
+                <h3 id="statsTitle">Your Stats</h3>
+                <div id="statsBlock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                    <div>🎮 Games: <b id="statGames">-</b></div>
+                    <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
+                    <div>💀 Losses: <b id="statLosses" style="color: #f7b6b6;">-</b></div>
+                    <div>🤝 Draws: <b id="statDraws" style="color: #ffd88a;">-</b></div>
+                    <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
+                </div>
+            </div>
+
+            <!-- История -->
+            <div class="card">
+                <h3 id="gameHistoryTitle">📜 Game History</h3>
+                <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
+                <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
+            </div>
+
+            <!-- Бот -->
+            <div class="card">
+                <h3 id="botTitle">Play vs Bot</h3>
+                <p class="status" id="botHint">Pick a bot — the game starts immediately.</p>
                 <div id="colorChoiceRow" style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <button id="colorWhiteBtn" class="small" style="flex: 1;">⚪ I play White</button>
-            <button id="colorBlackBtn" class="small" style="flex: 1;">⚫ I play Black</button>
-            <button id="colorRandomBtn" class="small" style="flex: 1;">🎲 Random</button>
-        </div>
-        <div class="bot-grid" id="botGrid">
-            <div class="bot-card" data-bot="0">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Easy&facialHairProbability=0&accessoriesProbability=0&top=shortRound&hairColor=4a312c" alt="Easy">
-                <div class="bot-name">Easy</div>
-                <div class="bot-elo">1320</div>
-            </div>
-            <div class="bot-card" data-bot="5">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Medium&facialHair=moustacheMagnum&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shortFlat" alt="Medium">
-                <div class="bot-name">Medium</div>
-                <div class="bot-elo">1500</div>
-            </div>
-            <div class="bot-card" data-bot="10">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Hard&facialHair=beardMajestic&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shaggy" alt="Hard">
-                <div class="bot-name">Hard</div>
-                <div class="bot-elo">1800</div>
-            </div>
-            <div class="bot-card" data-bot="15">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=VeryHard&top=hat&facialHairProbability=0&accessoriesProbability=0" alt="Very Hard">
-                <div class="bot-name">Very Hard</div>
-                <div class="bot-elo">2200</div>
-            </div>
-            <div class="bot-card" data-bot="20">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Master&top=shortFlat&hairColor=transparent&accessories=prescription02&accessoriesProbability=100&facialHairProbability=0" alt="Master">
-                <div class="bot-name">Master</div>
-                <div class="bot-elo">3190</div>
+                    <button id="colorWhiteBtn" class="small" style="flex: 1;">⚪ I play White</button>
+                    <button id="colorBlackBtn" class="small" style="flex: 1;">⚫ I play Black</button>
+                    <button id="colorRandomBtn" class="small" style="flex: 1;">🎲 Random</button>
+                </div>
+                <div class="bot-grid" id="botGrid">
+                    <div class="bot-card" data-bot="0">
+                        <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Easy" alt="Easy">
+                        <div class="bot-name">Easy</div>
+                        <div class="bot-elo">1320</div>
+                    </div>
+                    <div class="bot-card" data-bot="5">
+                        <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Medium" alt="Medium">
+                        <div class="bot-name">Medium</div>
+                        <div class="bot-elo">1500</div>
+                    </div>
+                    <div class="bot-card" data-bot="10">
+                        <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Hard" alt="Hard">
+                        <div class="bot-name">Hard</div>
+                        <div class="bot-elo">1800</div>
+                    </div>
+                    <div class="bot-card" data-bot="15">
+                        <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=VeryHard" alt="Very Hard">
+                        <div class="bot-name">Very Hard</div>
+                        <div class="bot-elo">2200</div>
+                    </div>
+                    <div class="bot-card" data-bot="20">
+                        <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Master" alt="Master">
+                        <div class="bot-name">Master</div>
+                        <div class="bot-elo">3190</div>
+                    </div>
+                </div>
+                <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
+                <p class="status" id="botStatus"></p>
             </div>
         </div>
 
-        <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
-        <p class="status" id="botStatus"></p>
-    </div>
-   </div>
-             <div class="card" id="chessBoardCard" style="display: none;">
-             <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Back</button>
-             <div id="opponentPanel" style="display: none;">
-            <img id="opponentAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Opponent" alt="" style="width: 48px; height: 48px; border-radius: 50%; background: #0f1117;">
-            <div style="margin-left: 10px;">
-                <div id="opponentName" style="font-weight: 600; color: #e6e6e6;">—</div>
-                <div id="opponentElo" style="font-size: 13px; color: #ffb84d;">—</div>
+        <!-- Доска -->
+        <div class="card" id="chessBoardCard" style="display: none;">
+            <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Back</button>
+            <div id="opponentPanel" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <img id="opponentAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; background: #0f1117;">
+                <div>
+                    <div id="opponentName" style="font-weight: 600; color: #e6e6e6;">—</div>
+                    <div id="opponentElo" style="font-size: 13px; color: #ffb84d;">—</div>
+                </div>
             </div>
-        </div>
-        <h3>Chess Board</h3>
-        <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
-        <div id="clockRow" style="display: flex; justify-content: space-around; margin: 10px 0;">
-            <div>⚪ White: <span id="whiteTimer">--:--</span></div>
-            <div>⚫ Black: <span id="blackTimer">--:--</span></div>
-        </div>
-        <div id="board" style="width: 400px; margin: 20px auto;"></div>
-                <div id="moveHistoryPanel" style="margin-top: 16px;">
-            <button id="analyzeBtn" style="display: none; margin-bottom: 10px;">🔍 Analyze game</button>
-            <div style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
-            <div id="moveHistoryList" style="
-                background: #0f1117;
-                border: 1px solid #2a2e3a;
-                border-radius: 8px;
-                padding: 8px 10px;
-                font-family: 'Courier New', monospace;
-                font-size: 13px;
-                color: #e6e6e6;
-                white-space: nowrap;
-                overflow-x: auto;
-                line-height: 1.6;
-            ">—</div>
-                                <div id="moveNavRow" style="display: none; justify-content: center; gap: 8px; margin-top: 8px;">
-                <button id="movePrevBtn" class="small">←</button>
-                <button id="moveNextBtn" class="small">→</button>
+            <h3 id="chessBoardTitle">Chess Board</h3>
+            <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
+            <div id="clockRow" style="display: flex; justify-content: space-around; margin: 10px 0;">
+                <div>⚪ White: <span id="whiteTimer">--:--</span></div>
+                <div>⚫ Black: <span id="blackTimer">--:--</span></div>
             </div>
-            <div id="accuracyRow" style="display: none; margin-top: 10px; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; font-size: 13px; color: #e6e6e6;"></div>
+            <div id="board" style="width: 400px; margin: 20px auto;"></div>
+            <div id="moveHistoryPanel" style="margin-top: 16px;">
+                <button id="analyzeBtn" style="display: none; margin-bottom: 10px;">🔍 Analyze game</button>
+                <div id="moveHistoryTitle" style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
+                <div id="moveHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; font-family: 'Courier New', monospace; font-size: 13px; color: #e6e6e6; white-space: nowrap; overflow-x: auto; line-height: 1.6;">—</div>
+            </div>
         </div>
     </div>
 
-         <!-- ===== ПОДКЛЮЧЕНИЕ БИБЛИОТЕК ===== -->
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-     <script src="jquery.min.js"></script>
-     <script src="chessboard.min.js"></script>
-     <script src="chess.min.js"></script>
-     <script src="ethers.umd.min.js"></script>
-     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-      <script>
+    <!-- Новая навигация -->
+    <div id="bottomNav">
+        <button id="mainPlayBtn">Играть</button>
+        <div class="nav-icons">
+            <div class="nav-item active" onclick="switchTab('home')">
+                <span class="nav-icon">🏠</span><span class="nav-label">Главная</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('puzzles')">
+                <span class="nav-icon">🧩</span><span class="nav-label">Задачи</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('learn')">
+                <span class="nav-icon">📚</span><span class="nav-label">Учеба</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('watch')">
+                <span class="nav-icon">👁️</span><span class="nav-label">Смотреть</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('more')">
+                <span class="nav-icon">☰</span><span class="nav-label">Еще</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран новой игры -->
+    <div id="newGameScreen">
+        <div id="newGameHeader">
+            <button id="newGameBack">←</button>
+            <h2 id="newGameTitle">Новая партия</h2>
+        </div>
+        <select id="newGameTimeControl">
+            <option value="60">⏱️ 1 минута</option>
+            <option value="300" selected>⏱️ 5 минут</option>
+            <option value="900">⏱️ 15 минут</option>
+            <option value="1800">⏱️ 30 минут</option>
+        </select>
+        <button id="startNewGameBtn">Начать партию</button>
+        <button class="new-game-option" id="newGameTournaments">🏆 Турниры</button>
+        <button class="new-game-option" id="newGameFriend">👥 Играть с другом</button>
+        <button class="new-game-option" id="newGameBots">💻 Играть с ботами</button>
+    </div>
+
+    <!-- Библиотеки -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="chessboard.min.js"></script>
+    <script src="chess.min.js"></script>
+    <script src="ethers.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+
+    <script>
+        // ===== ПЕРЕВОДЫ =====
+        const uiTranslations = {
+            en: {
+                languageLabel: "🌐 Language",
+                lichessTitle: "♟ Lichess Account",
+                loginLichess: "Login with Lichess", logoutLichess: "Logout Lichess",
+                playOnline: "🌐 Play Online", findOpponent: "Find an opponent automatically. Random color.",
+                findMatch: "🔍 Find Match", cancelSearch: "✖ Cancel Search", inviteFriend: "🔗 Invite Friend",
+                yourStats: "Your Stats", games: "🎮 Games:", wins: "🏆 Wins:", losses: "💀 Losses:",
+                draws: "🤝 Draws:", winRate: "📊 Win rate:", gameHistory: "📜 Game History",
+                showMore: "Show more", playBot: "Play vs Bot", botHint: "Pick a bot — the game starts immediately.",
+                playWhite: "⚪ I play White", playBlack: "⚫ I play Black", randomColor: "🎲 Random",
+                surrender: "Surrender", back: "← Back", chessBoard: "Chess Board", moveHistory: "Move history",
+                analyzeGame: "🔍 Analyze game"
+            },
+            ru: {
+                languageLabel: "🌐 Язык",
+                lichessTitle: "♟ Аккаунт Lichess",
+                loginLichess: "Войти через Lichess", logoutLichess: "Выйти из Lichess",
+                playOnline: "🌐 Играть онлайн", findOpponent: "Автоматически найти соперника. Цвет случайный.",
+                findMatch: "🔍 Найти соперника", cancelSearch: "✖ Отменить поиск", inviteFriend: "🔗 Пригласить друга",
+                yourStats: "Ваша статистика", games: "🎮 Игры:", wins: "🏆 Победы:", losses: "💀 Поражения:",
+                draws: "🤝 Ничьи:", winRate: "📊 Процент побед:", gameHistory: "📜 История игр",
+                showMore: "Показать ещё", playBot: "Играть с ботом", botHint: "Выберите бота — игра начнётся сразу.",
+                playWhite: "⚪ Я играю белыми", playBlack: "⚫ Я играю чёрными", randomColor: "🎲 Случайно",
+                surrender: "Сдаться", back: "← Назад", chessBoard: "Шахматная доска", moveHistory: "История ходов",
+                analyzeGame: "🔍 Анализ партии"
+            }
+        };
+
+        function applyUiLanguage(lang) {
+            const selected = uiTranslations[lang] ? lang : "en";
+            const dict = uiTranslations[selected];
+            document.documentElement.lang = selected;
+            const setText = (id, key) => {
+                const el = document.getElementById(id);
+                if (el && dict[key]) el.textContent = dict[key];
+            };
+            setText("languageLabel", "languageLabel");
+            setText("lichessTitle", "lichessTitle");
+            setText("lichessLoginBtn", "loginLichess");
+            setText("lichessLogoutBtn", "logoutLichess");
+            setText("onlineTitle", "playOnline");
+            setText("findMatchBtn", "findMatch");
+            setText("cancelMatchBtn", "cancelSearch");
+            setText("inviteFriendBtn", "inviteFriend");
+            setText("statsTitle", "yourStats");
+            setText("gameHistoryTitle", "gameHistory");
+            setText("gameHistoryMoreBtn", "showMore");
+            setText("botTitle", "playBot");
+            setText("botHint", "botHint");
+            setText("colorWhiteBtn", "playWhite");
+            setText("colorBlackBtn", "playBlack");
+            setText("colorRandomBtn", "randomColor");
+            setText("stopBotBtn", "surrender");
+            setText("backToMenuBtn", "back");
+            setText("chessBoardTitle", "chessBoard");
+            setText("moveHistoryTitle", "moveHistory");
+            setText("analyzeBtn", "analyzeGame");
+            const onlineCard = document.getElementById("onlineTitle")?.closest(".card");
+            const hint = onlineCard?.querySelector("p.status");
+            if (hint) hint.textContent = dict.findOpponent;
+            const statLabels = {
+                statGames: dict.games, statWins: dict.wins, statLosses: dict.losses,
+                statDraws: dict.draws, statWinRate: dict.winRate
+            };
+            Object.entries(statLabels).forEach(([id, label]) => {
+                const value = document.getElementById(id);
+                if (value?.parentElement) {
+                    const parent = value.parentElement;
+                    if (!parent.dataset.originalLabel) parent.dataset.originalLabel = parent.firstChild.textContent;
+                    parent.firstChild.textContent = label + " ";
+                }
+            });
+            localStorage.setItem("litvm-language", selected);
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.value = selected;
+        }
+
+        (function initUiLanguage() {
+            const saved = localStorage.getItem("litvm-language");
+            const telegramLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+            const browserLang = (navigator.language || "en").split("-")[0].toLowerCase();
+            const initial = saved || (uiTranslations[telegramLang] ? telegramLang : null)
+                || (uiTranslations[browserLang] ? browserLang : "en");
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.addEventListener("change", () => applyUiLanguage(selector.value));
+            applyUiLanguage(initial);
+        })();
+
+        // ===== НАВИГАЦИЯ =====
+        const screen = document.getElementById("newGameScreen");
+        const nav = document.getElementById("bottomNav");
+
+        function openNewGameScreen() {
+            screen.style.display = "flex";
+            nav.style.display = "none";
+        }
+        function closeNewGameScreen() {
+            screen.style.display = "none";
+            nav.style.display = "block";
+        }
+
+        document.getElementById("mainPlayBtn").onclick = openNewGameScreen;
+        document.getElementById("newGameBack").onclick = closeNewGameScreen;
+        document.getElementById("startNewGameBtn").onclick = () => {
+            const tc = parseInt(document.getElementById("newGameTimeControl").value, 10);
+            document.getElementById("onlineTimeControl").value = tc;
+            closeNewGameScreen();
+            findMatch();
+        };
+        document.getElementById("newGameFriend").onclick = () => {
+            closeNewGameScreen();
+            inviteFriend();
+        };
+        document.getElementById("newGameBots").onclick = () => {
+            closeNewGameScreen();
+            // Прокручиваем к блоку с ботами
+            document.getElementById("botGrid")?.scrollIntoView({behavior: "smooth"});
+        };
+        document.getElementById("newGameTournaments").onclick = () => {
+            alert("Tournaments coming soon!");
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
         // ==== НАСТРОЙКИ ====
         const CONTRACT_ADDRESS = "0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8";
         const LITVM_CHAIN_ID = "0x1159"; // 4441
@@ -2680,7 +2658,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
-    </div>
-<script src="telegram-auth.js?v=40"></script>
+
+    <script src="telegram-auth.js?v=50"></script>
 </body>
 </html>
