@@ -104,6 +104,55 @@
             border-radius: 12px; color: #eee; background: #393735;
             font-size: 19px; font-weight: 700; cursor: pointer; text-align: left; padding: 0 20px;
         }
+                   /* ===== Сетка ботов (5 в ряд) ===== */
+        .bot-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .bot-card {
+            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
+            border: 1px solid #2a2e3a;
+            border-radius: 12px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.2s;
+            user-select: none;
+        }
+        .bot-card:active {
+            transform: scale(0.95);
+        }
+        .bot-card.selected {
+            border-color: #ffb84d;
+            background: linear-gradient(180deg, #2a2418 0%, #1f1a10 100%);
+        }
+        .bot-avatar {
+            width: 100%;
+            max-width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #0f1117;
+            display: block;
+            margin: 0 auto 6px;
+        }
+        .bot-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #e6e6e6;
+            margin-bottom: 2px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bot-elo {
+            font-size: 10px;
+            color: #ffb84d;
+            font-weight: 600;
+            line-height: 1.1;
+        }
     </style>
 </head>
 <body>
@@ -208,55 +257,6 @@
                 <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
                 <p class="status" id="botStatus"></p>
             </div>
-                    /* ===== Сетка ботов (5 в ряд) ===== */
-        .bot-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            margin-bottom: 16px;
-        }
-        .bot-card {
-            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
-            border: 1px solid #2a2e3a;
-            border-radius: 12px;
-            padding: 8px 4px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.2s;
-            user-select: none;
-        }
-        .bot-card:active {
-            transform: scale(0.95);
-        }
-        .bot-card.selected {
-            border-color: #ffb84d;
-            background: linear-gradient(180deg, #2a2418 0%, #1f1a10 100%);
-        }
-        .bot-avatar {
-            width: 100%;
-            max-width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #0f1117;
-            display: block;
-            margin: 0 auto 6px;
-        }
-        .bot-name {
-            font-size: 11px;
-            font-weight: 600;
-            color: #e6e6e6;
-            margin-bottom: 2px;
-            line-height: 1.1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .bot-elo {
-            font-size: 10px;
-            color: #ffb84d;
-            font-weight: 600;
-            line-height: 1.1;
-        }
         </div>
 
         <!-- Доска -->
@@ -2780,7 +2780,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
 
-    <script src="telegram-auth.js?v=57"></script>
+    <script src="telegram-auth.js?v=58"></script>
     <div style="display: none;">
     <button id="connectBtn"></button>
     <button id="switchNetworkBtn"></button>
