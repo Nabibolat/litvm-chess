@@ -4,23 +4,17 @@
     <meta charset="UTF-8">
     <title>LitVM Chess</title>
     <style>
-                * { box-sizing: border-box; }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             max-width: 780px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 30px 20px 120px 20px;
             background: linear-gradient(180deg, #0a0d14 0%, #0f1117 100%);
             color: #e6e6e6;
             min-height: 100vh;
         }
-        h1 {
-            color: #ffb84d;
-            text-align: center;
-            font-size: 28px;
-            margin: 0 0 24px 0;
-            letter-spacing: 0.5px;
-        }
+        h1 { color: #ffb84d; text-align: center; font-size: 28px; margin: 0 0 24px 0; }
         h3 { margin: 0 0 12px 0; font-size: 17px; color: #ffb84d; }
         .card {
             background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
@@ -28,27 +22,6 @@
             padding: 20px;
             margin-bottom: 16px;
             border: 1px solid #2a2e3a;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-            transition: border-color 0.2s;
-        }
-        .card:hover { border-color: #3a3e4a; }
-        input, select, button {
-            font-size: 15px;
-            padding: 11px 14px;
-            border-radius: 9px;
-            border: 1px solid #2a2e3a;
-            font-family: inherit;
-        }
-        input, select {
-            background: #0f1117;
-            color: #e6e6e6;
-            width: 100%;
-            margin-bottom: 10px;
-            transition: border-color 0.2s;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #ffb84d;
         }
         button {
             background: linear-gradient(180deg, #ffc670 0%, #ffb84d 100%);
@@ -56,1266 +29,336 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
-            transition: transform 0.1s, box-shadow 0.2s;
-            box-shadow: 0 2px 6px rgba(255,184,77,0.2);
+            padding: 11px 14px;
+            border-radius: 9px;
+            font-size: 15px;
         }
-        button:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255,184,77,0.35);
+        button:disabled { background: #2a2e3a; color: #666; cursor: not-allowed; }
+        .status { font-size: 13px; color: #8a92a6; margin-top: 8px; }
+        #board { border: 4px solid #ffb84d; border-radius: 10px; margin: 0 auto; }
+        
+        /* Нижняя навигация */
+        #bottomNav {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998;
+            padding: 8px 10px calc(6px + env(safe-area-inset-bottom));
+            background: rgba(22, 25, 34, 0.97);
+            border-top: 1px solid #34343a;
+            box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.35);
         }
-        button:active:not(:disabled) { transform: translateY(0); }
-        button:disabled {
-            background: #2a2e3a;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
+        #mainPlayBtn {
+            display: block; width: 100%; max-width: 560px; min-height: 48px;
+            margin: 0 auto 7px; border: 0; border-radius: 10px; color: #fff;
+            font-size: 22px; font-weight: 800;
+            background: linear-gradient(180deg, #8bc34a, #5d9f35);
         }
-        button.small {
-            font-size: 13px;
-            padding: 6px 11px;
-            margin-right: 5px;
-            margin-top: 6px;
+        #bottomNav .nav-icons { display: flex; width: 100%; justify-content: space-around; gap: 2px; }
+        #bottomNav .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 2px; padding: 3px 0; border: 0; background: transparent;
+            color: #aaa; font-size: 10px; cursor: pointer;
         }
-        button.white-win { background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%); }
-        button.black-win { background: linear-gradient(180deg, #3a3a3a 0%, #222 100%); color: #fff; }
-        button.draw { background: linear-gradient(180deg, #8a92a6 0%, #6a7286 100%); color: #fff; }
-        .status {
-            font-size: 13px;
-            color: #8a92a6;
-            margin-top: 8px;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-        .match {
-            border-left: 3px solid #ffb84d;
-            padding: 12px 14px;
-            margin: 10px 0;
-            background: linear-gradient(90deg, #1a1d26 0%, #161922 100%);
-            border-radius: 8px;
-            transition: transform 0.15s;
-        }
-        .match:hover { transform: translateX(2px); }
-        .match.finished { border-left-color: #1e5c2b; }
-        .match small { color: #8a92a6; display: block; margin-top: 2px; }
-        .net-badge {
-            display: inline-block;
-            padding: 3px 9px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-left: 6px;
-            font-weight: 600;
-        }
-        .net-ok { background: #1e5c2b; color: #b6f7c4; }
-        .net-bad { background: #5c1e1e; color: #f7b6b6; }
-        .timer {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            background: #2a2e3a;
-            font-size: 12px;
-            margin-left: 6px;
-        }
-        #board {
-            border: 4px solid #ffb84d;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(255,184,77,0.15);
-            margin: 0 auto;
-        }
-        .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863 !important; }
-        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5 !important; }
-                /* Значки анализа на доске */
-        .square-55d63 { position: relative; }
-        .square-55d63 .analysis-mark {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            pointer-events: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-        .analysis-mark.mark-inaccuracy {
-            background: #ffd54f;
-            color: #0f1117;
-        }
-        .analysis-mark.mark-mistake {
-            background: #ff9800;
-            color: #fff;
-        }
-        .analysis-mark.mark-blunder {
-            background: #f44336;
-            color: #fff;
-        }
+        #bottomNav .nav-item.active { color: #fff; }
+        #bottomNav .nav-icon { font-size: 21px; line-height: 1.1; }
 
-                /* Навигация по ходам */
-        .move-link {
-            cursor: pointer;
-            padding: 1px 3px;
-            border-radius: 3px;
-            transition: background 0.15s;
+        /* Экран новой игры */
+        #newGameScreen {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            overflow: auto; padding: 20px; background: #292725;
+            flex-direction: column;
         }
-        .move-link:hover {
-            background: #2a2e3a;
+        #newGameHeader { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+        #newGameBack { background: transparent; border: 0; color: #fff; font-size: 34px; cursor: pointer; }
+        #newGameTitle { margin: 0; color: #fff; font-size: 27px; }
+        #newGameTimeControl {
+            width: 100%; min-height: 62px; margin-bottom: 14px; text-align: center;
+            font-size: 20px; font-weight: 700; color: #fff; background: #393735;
+            border: 1px solid #484542; border-radius: 12px;
         }
-        .move-link.active {
-            background: #ffb84d;
-            color: #0f1117;
+        #startNewGameBtn {
+            width: 100%; min-height: 76px; margin-bottom: 26px; border: 0;
+            border-radius: 12px; color: #fff; font-size: 24px; font-weight: 800;
+            background: linear-gradient(180deg, #8bc34a, #5d9f35); cursor: pointer;
         }
-        .move-num {
-            color: #8a92a6;
-            margin-right: 2px;
+        .new-game-option {
+            width: 100%; min-height: 62px; margin-bottom: 10px; border: 1px solid #45423f;
+            border-radius: 12px; color: #eee; background: #393735;
+            font-size: 19px; font-weight: 700; cursor: pointer; text-align: left; padding: 0 20px;
         }
-                   /* ===== Click-to-Move подсветка ===== */
-        .square-55d63.highlight-selected {
-            box-shadow: inset 0 0 0 4px #4CAF50;
-        }
-        .square-55d63.highlight-legal::after {
-            content: "";
-            position: absolute;
-            width: 30%;
-            height: 30%;
-            background: rgba(76, 175, 80, 0.7);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-        .square-55d63.highlight-legal.occupied::after {
-            /* Если на клетке фигура — рисуем кольцо вместо точки */
-            width: 90%;
-            height: 90%;
-            background: transparent;
-            border: 4px solid rgba(76, 175, 80, 0.7);
-            box-sizing: border-box;
-        }
+    </style>
+</head>
+<body>
 
-                 /* ===== Сетка ботов ===== */
-                 /* ===== Игровой режим ===== */
-        body.game-mode #menuWrap { display: none; }
-        body.game-mode #chessBoardCard { display: block !important; }
-                #opponentPanel {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
-            border: 1px solid #2a2e3a;
-            border-radius: 10px;
-            margin-bottom: 14px;
-        }
-        .bot-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        .bot-card {
-            background: linear-gradient(180deg, #1a1d26 0%, #161922 100%);
-            border: 1px solid #2a2e3a;
-            border-radius: 10px;
-            padding: 10px 6px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
-            user-select: none;
-        }
-        .bot-card:hover {
-            transform: translateY(-2px);
-            border-color: #ffb84d;
-            box-shadow: 0 4px 12px rgba(255,184,77,0.25);
-        }
-        .bot-card.selected {
-            border-color: #ffb84d;
-            background: linear-gradient(180deg, #2a2418 0%, #1f1a10 100%);
-        }
-        .bot-avatar {
-            width: 100%;
-            max-width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #0f1117;
-            display: block;
-            margin: 0 auto 6px;
-        }
-        .bot-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #e6e6e6;
-            margin-bottom: 3px;
-        }
-        .bot-elo {
-            font-size: 12px;
-            color: #ffb84d;
-            font-weight: 600;
-        }
+    <div id="gameModeWrap">
+        <h1>♟ LitVM Chess</h1>
 
-        /* Мобильные: 5 в ряд станут тесными → 3 в ряд + перенос */
-        @media (max-width: 600px) {
-            .bot-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .bot-avatar {
-                max-width: 44px;
-                height: 44px;
-            }
-            .bot-name { font-size: 12px; }
-            .bot-elo  { font-size: 11px; }
-        }
+        <div id="menuWrap">
+            <!-- Профиль Telegram -->
+            <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
+                <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
+                <div style="font-size: 16px; font-weight: 600; color: #e6e6e6;" id="tgProfileName"></div>
+            </div>
 
-        /* Адаптивность для мобильных */
-        @media (max-width: 600px) {
-            body { padding: 16px 12px; }
-            h1 { font-size: 22px; }
-            .card { padding: 16px; border-radius: 12px; }
-            #board { width: 100% !important; max-width: 100% !important; }
-            .clock-row { font-size: 14px; }
-        }
-    
-/* Bottom navigation overlay; leaves the original game UI in place */
-body { padding-bottom: 118px !important; }
-#bottomNav { position:fixed; left:0; right:0; bottom:0; z-index:9998; padding:8px 10px calc(6px + env(safe-area-inset-bottom)); background:rgba(22,25,34,.97); border-top:1px solid #34343a; box-shadow:0 -3px 14px rgba(0,0,0,.35); }
-#mainPlayBtn { display:block; width:100%; max-width:560px; min-height:48px; margin:0 auto 7px; border:0; border-radius:10px; color:#fff; font-size:22px; font-weight:800; background:linear-gradient(180deg,#8bc34a,#5d9f35); }
-#bottomNav .nav-icons { display:flex; width:100%; justify-content:space-around; gap:2px; }
-#bottomNav .nav-item { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px; padding:3px 0; border:0; background:transparent; box-shadow:none; color:#aaa; font-size:10px; }
-#bottomNav .nav-item.active { color:#fff; }
-#bottomNav .nav-icon { font-size:21px; line-height:1.1; }
-#newGameScreen { display:none; position:fixed; inset:0; z-index:10000; overflow:auto; box-sizing:border-box; padding:calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom)); background:#292725; flex-direction:column; }
-#newGameHeader { display:flex; align-items:center; gap:14px; margin-bottom:32px; }
-#newGameBack { padding:0 8px; background:transparent; border:0; box-shadow:none; color:#fff; font-size:34px; }
-#newGameTitle { margin:0; color:#fff; font-size:27px; }
-#newGameTimeControl { width:100%; min-height:62px; margin-bottom:14px; text-align:center; font-size:20px; font-weight:700; color:#fff; background:#393735; border:1px solid #484542; border-radius:12px; }
-#startNewGameBtn { width:100%; min-height:76px; margin-bottom:26px; border:0; border-radius:12px; color:#fff; font-size:24px; font-weight:800; background:linear-gradient(180deg,#8bc34a,#5d9f35); }
-#newGameScreen .new-game-option { width:100%; min-height:62px; margin-bottom:10px; border:1px solid #45423f; border-radius:12px; color:#eee; background:#393735; font-size:19px; font-weight:700; }
-
-</style>
-  </head>
-  <body>
-    <div id="gameModeWrap" style="display: none;">
-    <h1>♟ LitVM Chess</h1>
-    <div id="menuWrap">
-    <div class="card" id="languageCard" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
-        <label for="languageSelect" id="languageLabel" style="font-weight:600; white-space:nowrap;">🌐 Language / Язык</label>
-        <select id="languageSelect" aria-label="Language" style="margin:0; max-width:190px;">
-            <option value="en">🇬🇧 English</option>
-            <option value="ru">🇷🇺 Русский</option>
-        </select>
-    </div>
-
-
-    <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
-    <img id="tgProfileAvatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #0f1117;">
-    <div style="font-size: 16px; font-weight: 600; color: #e6e6e6;" id="tgProfileName"></div>
-</div>
-<div class="card">
-    <button id="connectBtn" style="display: none;">Connect MetaMask</button>
-    <button id="switchNetworkBtn" style="display: none;">Switch to LitVM</button>
-    <div class="status" id="walletStatus"></div>
-</div>
-    <div class="card">
-    <h3 id="lichessTitle">♟ Lichess Account</h3>
-    <div class="status" id="lichessStatus">Not connected</div>
-    <button id="lichessLoginBtn" style="margin-top: 10px;">Login with Lichess</button>
-    <button id="lichessLogoutBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 10px;">Logout Lichess</button>
-</div>
-
-        <div class="card" style="display: none;">
-        <h3>Create a Game</h3>
-        <input id="opponentInput" placeholder="Opponent address (0x...)" />
-        <select id="timeControlSelect">
-            <option value="60">1 minute</option>
-            <option value="300" selected>5 minutes</option>
-            <option value="900">15 minutes</option>
-            <option value="1800">30 minutes</option>
-        </select>
-        <button id="createBtn" disabled>Create Game</button>
-        <div class="status" id="createStatus"></div>
-    </div>
-<div class="card">
-    <h3 id="onlineTitle">🌐 Play Online</h3>
-    <p class="status">Find an opponent automatically. Random color.</p>
-    <select id="onlineTimeControl">
-        <option value="60">1 minute</option>
-        <option value="300" selected>5 minutes</option>
-        <option value="900">15 minutes</option>
-        <option value="1800">30 minutes</option>
-    </select>
-    <button id="findMatchBtn" disabled>🔍 Find Match</button>
-    <button id="cancelMatchBtn" disabled style="background:linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color:#fff;">✖ Cancel Search</button>
-    <button id="inviteFriendBtn" style="background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff; margin-top: 8px;">🔗 Invite Friend</button>
-    <div class="status" id="matchStatus"></div>
-</div>
-        <div class="card">
-    <h3 id="statsTitle">Your Stats</h3>
-    <div id="statsBlock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
-        <div>🎮 Games: <b id="statGames">-</b></div>
-        <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
-        <div>💀 Losses: <b id="statLosses" style="color: #f7b6b6;">-</b></div>
-        <div>🤝 Draws: <b id="statDraws" style="color: #ffd88a;">-</b></div>
-        <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
-    </div>
-</div>
-        <div class="card" style="display: none;">
-       <h3>My Games</h3>
-       <button id="loadBtn" disabled>Load Games</button>
-        <div id="matchesList"></div>
-    </div>
+            <!-- Статистика -->
             <div class="card">
-        <h3 id="gameHistoryTitle">📜 Game History</h3>
-        <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
-        <button id="gameHistoryMoreBtn" style="display: none; margin-top: 8px;">Show more</button>
-    </div>
-        <div class="card">
-        <h3 id="botTitle">Play vs Bot</h3>
-        <p class="status" id="botHint">Pick a bot — the game starts immediately.</p>
+                <h3>Your Stats</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                    <div>🎮 Games: <b id="statGames">-</b></div>
+                    <div>🏆 Wins: <b id="statWins" style="color: #b6f7c4;">-</b></div>
+                    <div>💀 Losses: <b id="statLosses" style="color: #f7b6b6;">-</b></div>
+                    <div>🤝 Draws: <b id="statDraws" style="color: #ffd88a;">-</b></div>
+                    <div style="grid-column: span 2;">📊 Win rate: <b id="statWinRate">-</b></div>
+                </div>
+            </div>
 
-                <div id="colorChoiceRow" style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <button id="colorWhiteBtn" class="small" style="flex: 1;">⚪ I play White</button>
-            <button id="colorBlackBtn" class="small" style="flex: 1;">⚫ I play Black</button>
-            <button id="colorRandomBtn" class="small" style="flex: 1;">🎲 Random</button>
-        </div>
-        <div class="bot-grid" id="botGrid">
-            <div class="bot-card" data-bot="0">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Easy&facialHairProbability=0&accessoriesProbability=0&top=shortRound&hairColor=4a312c" alt="Easy">
-                <div class="bot-name">Easy</div>
-                <div class="bot-elo">1320</div>
-            </div>
-            <div class="bot-card" data-bot="5">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Medium&facialHair=moustacheMagnum&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shortFlat" alt="Medium">
-                <div class="bot-name">Medium</div>
-                <div class="bot-elo">1500</div>
-            </div>
-            <div class="bot-card" data-bot="10">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Hard&facialHair=beardMajestic&facialHairProbability=100&facialHairColor=2c1b18&accessoriesProbability=0&top=shaggy" alt="Hard">
-                <div class="bot-name">Hard</div>
-                <div class="bot-elo">1800</div>
-            </div>
-            <div class="bot-card" data-bot="15">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=VeryHard&top=hat&facialHairProbability=0&accessoriesProbability=0" alt="Very Hard">
-                <div class="bot-name">Very Hard</div>
-                <div class="bot-elo">2200</div>
-            </div>
-            <div class="bot-card" data-bot="20">
-                <img class="bot-avatar" src="https://api.dicebear.com/9.x/avataaars/svg?seed=Master&top=shortFlat&hairColor=transparent&accessories=prescription02&accessoriesProbability=100&facialHairProbability=0" alt="Master">
-                <div class="bot-name">Master</div>
-                <div class="bot-elo">3190</div>
+            <!-- История -->
+            <div class="card">
+                <h3>📜 Game History</h3>
+                <div id="gameHistoryList" style="background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; padding: 8px 10px; max-height: 400px; overflow-y: auto;">Loading...</div>
             </div>
         </div>
 
-        <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
-        <p class="status" id="botStatus"></p>
-    </div>
-   </div>
-             <div class="card" id="chessBoardCard" style="display: none;">
-             <button id="backToMenuBtn" class="small" style="margin-bottom: 12px;">← Back</button>
-             <div id="opponentPanel" style="display: none;">
-            <img id="opponentAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Opponent" alt="" style="width: 48px; height: 48px; border-radius: 50%; background: #0f1117;">
-            <div style="margin-left: 10px;">
-                <div id="opponentName" style="font-weight: 600; color: #e6e6e6;">—</div>
-                <div id="opponentElo" style="font-size: 13px; color: #ffb84d;">—</div>
+        <!-- Доска -->
+        <div class="card" id="chessBoardCard" style="display: none;">
+            <button id="backToMenuBtn" style="margin-bottom: 12px;">← Back</button>
+            <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
+            <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+                <div>⚪ White: <span id="whiteTimer">--:--</span></div>
+                <div>⚫ Black: <span id="blackTimer">--:--</span></div>
             </div>
-        </div>
-        <h3 id="chessBoardTitle">Chess Board</h3>
-        <div class="status" id="boardStatus" style="font-size: 15px; color: #ffb84d; font-weight: 600; margin-bottom: 12px;">No game selected.</div>
-        <div id="clockRow" style="display: flex; justify-content: space-around; margin: 10px 0;">
-            <div>⚪ White: <span id="whiteTimer">--:--</span></div>
-            <div>⚫ Black: <span id="blackTimer">--:--</span></div>
-        </div>
-        <div id="board" style="width: 400px; margin: 20px auto;"></div>
-                <div id="moveHistoryPanel" style="margin-top: 16px;">
-            <button id="analyzeBtn" style="display: none; margin-bottom: 10px;">🔍 Analyze game</button>
-            <div id="moveHistoryTitle" style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
-            <div id="moveHistoryList" style="
-                background: #0f1117;
-                border: 1px solid #2a2e3a;
-                border-radius: 8px;
-                padding: 8px 10px;
-                font-family: 'Courier New', monospace;
-                font-size: 13px;
-                color: #e6e6e6;
-                white-space: nowrap;
-                overflow-x: auto;
-                line-height: 1.6;
-            ">—</div>
-                                <div id="moveNavRow" style="display: none; justify-content: center; gap: 8px; margin-top: 8px;">
-                <button id="movePrevBtn" class="small">←</button>
-                <button id="moveNextBtn" class="small">→</button>
-            </div>
-            <div id="accuracyRow" style="display: none; margin-top: 10px; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2e3a; border-radius: 8px; font-size: 13px; color: #e6e6e6;"></div>
+            <div id="board" style="width: 400px; margin: 20px auto;"></div>
         </div>
     </div>
 
-         <!-- ===== ПОДКЛЮЧЕНИЕ БИБЛИОТЕК ===== -->
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-     <script src="jquery.min.js"></script>
-     <script src="chessboard.min.js"></script>
-     <script src="chess.min.js"></script>
-     <script src="ethers.umd.min.js"></script>
-     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-      <script>
-
-        // ===== LANGUAGE SETTINGS (English / Russian) =====
-        const uiTranslations = {
-            en: {
-                languageLabel: "🌐 Language",
-                lichessTitle: "♟ Lichess Account",
-                loginLichess: "Login with Lichess", logoutLichess: "Logout Lichess",
-                playOnline: "🌐 Play Online", findOpponent: "Find an opponent automatically. Random color.",
-                findMatch: "🔍 Find Match", cancelSearch: "✖ Cancel Search", inviteFriend: "🔗 Invite Friend",
-                yourStats: "Your Stats", games: "🎮 Games:", wins: "🏆 Wins:", losses: "💀 Losses:",
-                draws: "🤝 Draws:", winRate: "📊 Win rate:", gameHistory: "📜 Game History",
-                showMore: "Show more", playBot: "Play vs Bot", botHint: "Pick a bot — the game starts immediately.",
-                playWhite: "⚪ I play White", playBlack: "⚫ I play Black", randomColor: "🎲 Random",
-                surrender: "Surrender", back: "← Back", chessBoard: "Chess Board", moveHistory: "Move history",
-                analyzeGame: "🔍 Analyze game"
-            },
-            ru: {
-                languageLabel: "🌐 Язык",
-                lichessTitle: "♟ Аккаунт Lichess",
-                loginLichess: "Войти через Lichess", logoutLichess: "Выйти из Lichess",
-                playOnline: "🌐 Играть онлайн", findOpponent: "Автоматически найти соперника. Цвет случайный.",
-                findMatch: "🔍 Найти соперника", cancelSearch: "✖ Отменить поиск", inviteFriend: "🔗 Пригласить друга",
-                yourStats: "Ваша статистика", games: "🎮 Игры:", wins: "🏆 Победы:", losses: "💀 Поражения:",
-                draws: "🤝 Ничьи:", winRate: "📊 Процент побед:", gameHistory: "📜 История игр",
-                showMore: "Показать ещё", playBot: "Играть с ботом", botHint: "Выберите бота — игра начнётся сразу.",
-                playWhite: "⚪ Я играю белыми", playBlack: "⚫ Я играю чёрными", randomColor: "🎲 Случайно",
-                surrender: "Сдаться", back: "← Назад", chessBoard: "Шахматная доска", moveHistory: "История ходов",
-                analyzeGame: "🔍 Анализ партии"
-            }
-        };
-        function applyUiLanguage(lang) {
-            const selected = uiTranslations[lang] ? lang : "en";
-            const dict = uiTranslations[selected];
-            document.documentElement.lang = selected;
-            const setText = (id, key) => {
-                const el = document.getElementById(id);
-                if (el && dict[key]) el.textContent = dict[key];
-            };
-            setText("languageLabel", "languageLabel");
-            setText("lichessTitle", "lichessTitle");
-            setText("lichessLoginBtn", "loginLichess");
-            setText("lichessLogoutBtn", "logoutLichess");
-            setText("onlineTitle", "playOnline");
-            setText("findMatchBtn", "findMatch");
-            setText("cancelMatchBtn", "cancelSearch");
-            setText("inviteFriendBtn", "inviteFriend");
-            setText("statsTitle", "yourStats");
-            setText("gameHistoryTitle", "gameHistory");
-            setText("gameHistoryMoreBtn", "showMore");
-            setText("botTitle", "playBot");
-            setText("botHint", "botHint");
-            setText("colorWhiteBtn", "playWhite");
-            setText("colorBlackBtn", "playBlack");
-            setText("colorRandomBtn", "randomColor");
-            setText("stopBotBtn", "surrender");
-            setText("backToMenuBtn", "back");
-            setText("chessBoardTitle", "chessBoard");
-            setText("moveHistoryTitle", "moveHistory");
-            setText("analyzeBtn", "analyzeGame");
-            const onlineCard = document.getElementById("onlineTitle")?.closest(".card");
-            const hint = onlineCard?.querySelector("p.status");
-            if (hint) hint.textContent = dict.findOpponent;
-            const statLabels = {
-                statGames: dict.games, statWins: dict.wins, statLosses: dict.losses,
-                statDraws: dict.draws, statWinRate: dict.winRate
-            };
-            Object.entries(statLabels).forEach(([id, label]) => {
-                const value = document.getElementById(id);
-                if (value?.parentElement) {
-                    const parent = value.parentElement;
-                    if (!parent.dataset.originalLabel) parent.dataset.originalLabel = parent.firstChild.textContent;
-                    parent.firstChild.textContent = label + " ";
-                }
-            });
-            localStorage.setItem("litvm-language", selected);
-            const selector = document.getElementById("languageSelect");
-            if (selector) selector.value = selected;
-        }
-        (function initUiLanguage() {
-            const saved = localStorage.getItem("litvm-language");
-            const telegramLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-            const browserLang = (navigator.language || "en").split("-")[0].toLowerCase();
-            const initial = saved || (uiTranslations[telegramLang] ? telegramLang : null)
-                || (uiTranslations[browserLang] ? browserLang : "en");
-            const selector = document.getElementById("languageSelect");
-            if (selector) selector.addEventListener("change", () => applyUiLanguage(selector.value));
-            applyUiLanguage(initial);
-        })();
-          // ==== НАСТРОЙКИ ====
-        const CONTRACT_ADDRESS = "0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8";
-        const LITVM_CHAIN_ID = "0x1159"; // 4441
-
-                const ABI = [
-            "function createMatch(address _blackPlayer, uint256 _timeControl) returns (uint256)",
-            "function createOpenMatch(uint256 _timeControl) returns (uint256)",
-            "function joinMatch(uint256 _matchId)",
-            "function submitResult(uint256 _matchId, string _result)",
-            "function getMatch(uint256 _matchId) view returns (tuple(uint256 id, address whitePlayer, address blackPlayer, string result, uint256 timeControl, bool isFinished, uint256 createdAt))",
-            "function matchCounter() view returns (uint256)",
-            "function getOpenMatches() view returns (uint256[])",
-            "event MatchCreated(uint256 indexed id, address indexed white, uint256 timeControl)",
-            "event MatchJoined(uint256 indexed id, address indexed black)",
-            "event MatchResultSubmitted(uint256 indexed id, string result, address submittedBy)"
-        ];
-
-        let provider, signer, contract, userAddress;
-          const MY_OWNER_ADDRESS = "0x5Ab2b4c0627092503424dDf64328f0e4cC2ef5B2"; // Твой кошелек
-const GAME_REGISTRY = "0x92a4B8B47BbB22B13e08841454F3437Cb9C46BD8"; // Контракт игры
-const RELAY_API = "https://litvm-chess-relay.onrender.com";
-
-async function submitResultViaRelay(matchId, resultString) {
-    if (!window.tgSession || !window.tgSession.isTelegram) return;
-
-    // Если matchId нет (null или 0), значит это игра с ботом без блокчейна
-    if (matchId == null || !/^[1-9]\d*$/.test(String(matchId))) {
-        console.warn("On-chain матч отсутствует. Результат остается в локальной истории.");
-        document.getElementById("boardStatus").textContent = "✅ Партия завершена (локально)";
-        return;
-    }
-
-    const RELAY_API = "https://litvm-chess-relay.onrender.com";
-    const CHESS_ACCOUNT = window.tgSession.chessAccount;
-    const wallet = window.tgSession.sessionKey;
-
-    try {
-        document.getElementById("boardStatus").textContent = "⏳ Подпись...";
-        
-        const rpcProvider = new ethers.providers.JsonRpcProvider("https://liteforge.rpc.caldera.xyz/http");
-        const accountContract = new ethers.Contract(CHESS_ACCOUNT, ["function nonce() view returns (uint256)"], rpcProvider);
-        
-        const nonceBN = await accountContract.nonce();
-        const currentNonce = nonceBN.toString();
-
-        const domain = {
-            name: "LitVM Chess",
-            version: "1",
-            chainId: 4441,
-            verifyingContract: CHESS_ACCOUNT
-        };
-        const types = {
-            SubmitResult: [
-                { name: "matchId", type: "uint256" },
-                { name: "result", type: "string" },
-                { name: "nonce", type: "uint256" }
-            ]
-        };
-        const value = {
-            matchId: String(matchId),
-            result: resultString,
-            nonce: currentNonce
-        };
-
-        console.log("EIP-712 параметры для подписи (PvP):", value);
-
-        const signature = await wallet._signTypedData(domain, types, value);
-        
-        document.getElementById("boardStatus").textContent = "📤 Отправка в сеть...";
-
-        const response = await fetch(`${RELAY_API}/relay`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                account: CHESS_ACCOUNT,
-                action: "submitResult",
-                params: { matchId: matchId, result: resultString },
-                signature: signature
-            })
-        });
-
-        const txData = await response.json();
-        if (!response.ok) throw new Error(txData.error || "Relay error");
-
-        console.log("✅ Записано (PvP):", txData.txHash);
-        document.getElementById("boardStatus").textContent = "✅ Результат записан в блокчейн!";
-        
-        if (typeof loadMatches === "function") loadMatches();
-
-    } catch (e) {
-        console.error("❌ Ошибка релейера:", e);
-        document.getElementById("boardStatus").textContent = "❌ Ошибка записи: " + e.message;
-    }
-}
-        
-        // ===== LICHESS OAUTH (PKCE) — Шаг 2 =====
-        const LICHESS_CLIENT_ID = "litvm-chess";
-        const LICHESS_REDIRECT_URI = "https://litvm-chess.online/";
-
-        // Генерация code_verifier (32 случайных байта → base64url)
-        function generateCodeVerifier() {
-            const array = new Uint8Array(32);
-            crypto.getRandomValues(array);
-            return base64UrlEncode(array);
-        }
-
-        // Base64url кодирование (без +, /, =)
-        function base64UrlEncode(buffer) {
-            return btoa(String.fromCharCode(...new Uint8Array(buffer)))
-                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        }
-
-        // SHA-256 хэш для code_challenge
-        async function generateCodeChallenge(verifier) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(verifier);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            return base64UrlEncode(hash);
-        }
-
-        // Редирект на Lichess OAuth
-        async function loginWithLichess() {
-            const verifier = generateCodeVerifier();
-            const challenge = await generateCodeChallenge(verifier);
-
-            // Сохраняем verifier — понадобится на callback
-            localStorage.setItem("lichess_code_verifier", verifier);
-
-            const params = new URLSearchParams({
-                client_id: LICHESS_CLIENT_ID,
-                redirect_uri: LICHESS_REDIRECT_URI,
-                response_type: "code",
-                code_challenge: challenge,
-                code_challenge_method: "S256"
-            });
-
-            window.location.href = "https://lichess.org/oauth?" + params.toString();
-        }
-        // ===== /LICHESS OAUTH — Шаг 2 =====
-        
-        // ===== LICHESS OAUTH (PKCE) — Шаг 3 =====
-        // Обработка возврата от Lichess (?code=...)
-        async function handleLichessCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get("code");
-
-            if (!code) return false;
-
-            const verifier = localStorage.getItem("lichess_code_verifier");
-            if (!verifier) return false;
-
-            try {
-                const response = await fetch("https://lichess.org/api/token", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: new URLSearchParams({
-                        grant_type: "authorization_code",
-                        code: code,
-                        redirect_uri: LICHESS_REDIRECT_URI,
-                        client_id: LICHESS_CLIENT_ID,
-                        code_verifier: verifier
-                    })
-                });
-
-                if (!response.ok) throw new Error("Token exchange failed");
-
-                const data = await response.json();
-                localStorage.setItem("lichess_access_token", data.access_token);
-                localStorage.removeItem("lichess_code_verifier");
-
-                // Убираем ?code=... из URL
-                window.history.replaceState({}, document.title, LICHESS_REDIRECT_URI);
-
-                await loadLichessProfile();
-                return true;
-            } catch (e) {
-                console.error("Lichess OAuth error:", e);
-                const statusEl = document.getElementById("lichessStatus");
-                if (statusEl) statusEl.textContent = "❌ Login failed: " + e.message;
-                return false;
-            }
-        }
-
-        // Загрузка профиля Lichess (username + rapid рейтинг)
-        async function loadLichessProfile() {
-            const token = localStorage.getItem("lichess_access_token");
-            if (!token) return;
-
-            try {
-                const response = await fetch("https://lichess.org/api/account", {
-                    headers: { "Authorization": "Bearer " + token }
-                });
-
-                if (!response.ok) throw new Error("Failed to fetch profile");
-
-                const data = await response.json();
-                const username = data.username;
-                const rapidRating = data.perfs && data.perfs.rapid && data.perfs.rapid.rating
-                    ? data.perfs.rapid.rating
-                    : "—";
-
-                                // Сохраняем профиль под фиксированным ключом (не зависит от кошелька)
-                localStorage.setItem("lichess_profile", JSON.stringify({
-                    username: username,
-                    rapidRating: rapidRating
-                }));
-
-                // Если кошелёк уже подключён — сразу привязываем к адресу
-                if (userAddress) {
-                    localStorage.setItem("lichess_" + userAddress.toLowerCase(), JSON.stringify({
-                        username: username,
-                        rapidRating: rapidRating
-                    }));
-                }
-
-                // Показываем в UI
-                const statusEl = document.getElementById("lichessStatus");
-                if (statusEl) {
-                    statusEl.innerHTML = "✅ Logged in as <b>" + username + "</b> (Rapid: " + rapidRating + ")";
-                }
-                const loginBtn = document.getElementById("lichessLoginBtn");
-                const logoutBtn = document.getElementById("lichessLogoutBtn");
-                if (loginBtn) loginBtn.style.display = "none";
-                if (logoutBtn) logoutBtn.style.display = "inline-block";
-
-                console.log("Lichess profile loaded:", username, rapidRating);
-            } catch (e) {
-                console.error("Lichess profile error:", e);
-            }
-        }
-        // ===== /LICHESS OAUTH — Шаг 3 =====
-       
-        // ===== LICHESS OAUTH (PKCE) — Шаг 4 =====
-        // Выход из Lichess
-        function logoutLichess() {
-            localStorage.removeItem("lichess_access_token");
-            if (userAddress) {
-                localStorage.removeItem("lichess_" + userAddress.toLowerCase());
-            }
-            const statusEl = document.getElementById("lichessStatus");
-            const loginBtn = document.getElementById("lichessLoginBtn");
-            const logoutBtn = document.getElementById("lichessLogoutBtn");
-            if (statusEl) statusEl.textContent = "Not connected";
-            if (loginBtn) loginBtn.style.display = "inline-block";
-            if (logoutBtn) logoutBtn.style.display = "none";
-        }
-
-        // Привязка кнопок Lichess — делаем после загрузки DOM
-        window.addEventListener("DOMContentLoaded", () => {
-            const loginBtn = document.getElementById("lichessLoginBtn");
-            const logoutBtn = document.getElementById("lichessLogoutBtn");
-            if (loginBtn) loginBtn.onclick = loginWithLichess;
-            if (logoutBtn) logoutBtn.onclick = logoutLichess;
-        });
-        // ===== /LICHESS OAUTH — Шаг 4 =====
-
-
-
-
-        // ===== WEBSOCKET ДЛЯ PVP =====
-const SOCKET_URL = "https://litvm-chess-server.onrender.com";
-const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
-const BOT_TIME_CONTROL = 300;
-let socket = null;
-let currentMatchId = null;
-let myColor = null;
-let pendingMove = false;       // ждём подтверждения от сервера
-let lastMoveSentAt = 0;        // для дебага race
-
-function connectSocket() {
-    if (socket && socket.connected) return;
-    socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
-    
-    socket.on("connect", () => {
-        console.log("✅ Socket connected:", socket.id);
-        setTimeout(() => handlePrivateRoomLink(), 800);
-        
-        // Пытаемся восстановить игру при подключении
-        const savedToken = localStorage.getItem("resumeToken");
-        const savedRoom = localStorage.getItem("roomId");
-
-        if (savedToken && savedRoom) {
-            console.log("🔄 Попытка восстановления игры...");
-            socket.emit("resumeGame", {
-                roomId: savedRoom,
-                resumeToken: savedToken
-            });
-        }
-    });
-    
-    socket.on("disconnect", () => {
-        console.log("❌ Socket disconnected");
-    });
-    
-    socket.on("connect_error", (err) => {
-        console.log("⚠️ Socket error:", err.message);
-    });
-
-    // Сохраняем токен при нахождении матча
-    socket.on("matchFound", (data) => {
-        if (!data?.resumeToken || !data?.roomId) return;
-
-        localStorage.setItem("resumeToken", data.resumeToken);
-        localStorage.setItem("roomId", data.roomId);
-        console.log("💾 Токен для переподключения сохранен");
-    });
-
-    // Восстанавливаем игру
-    socket.on("gameResumed", (data) => {
-        console.log("✅ Игра восстановлена:", data);
-
-        if (typeof game !== "undefined" && game.load) {
-            game.load(data.fen);
-        }
-
-        if (typeof board !== "undefined" && board.position) {
-            board.position(data.fen, false);
-            board.orientation(data.color);
-        }
-
-        const boardStatus = document.getElementById("boardStatus");
-        if (boardStatus) boardStatus.textContent = "✅ Игра восстановлена. Ваш ход!";
-        
-        document.getElementById("chessBoardCard").style.display = "block";
-        document.body.classList.add("game-mode");
-        
-        if (data.clocks) {
-            whiteTime = Math.floor(data.clocks.white / 1000);
-            blackTime = Math.floor(data.clocks.black / 1000);
-            updateClocks();
-        }
-    });
-
-    // Обработка ошибки восстановления
-    socket.on("resumeFailed", (data) => {
-        console.warn("Не удалось восстановить игру:", data.message);
-        localStorage.removeItem("resumeToken");
-        localStorage.removeItem("roomId");
-    });
-}
-
-        // Принудительно переключает MetaMask на LitVM
-        async function ensureLitVM() {
-            const current = await window.ethereum.request({ method: "eth_chainId" });
-            if (current === LITVM_CHAIN_ID) return;
-            try {
-                await window.ethereum.request({
-                    method: "wallet_switchEthereumChain",
-                    params: [{ chainId: LITVM_CHAIN_ID }]
-                });
-            } catch (e) {
-                if (e.code === 4902) {
-                    await window.ethereum.request({
-                        method: "wallet_addEthereumChain",
-                        params: [{
-                            chainId: LITVM_CHAIN_ID,
-                            chainName: "LitVM LiteForge",
-                            nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
-                            rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
-                            blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
-                        }]
-                    });
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        async function initContract() {
-    // Проверяем сеть (без автоматического переключения — только проверка)
-    const current = await window.ethereum.request({ method: "eth_chainId" });
-    if (current !== LITVM_CHAIN_ID) {
-        throw new Error("Please switch MetaMask to LitVM LiteForge network");
-    }
-
-    // Пересоздаём провайдер только если его нет
-    if (!provider) {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-    }
-
-    // НЕ запрашиваем аккаунты заново — они уже есть после connect()
-    signer = provider.getSigner();
-    userAddress = await signer.getAddress();
-    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-}
-
-        async function connect() {
-    if (!window.ethereum) return alert("Установи MetaMask!");
-    try {
-        // 1. Запрашиваем аккаунты
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        userAddress = await signer.getAddress();
-        
-        // 2. Проверяем сеть
-        const currentChain = await window.ethereum.request({ method: "eth_chainId" });
-        
-        if (currentChain === LITVM_CHAIN_ID) {
-            // Сеть правильная — создаём контракт и активируем кнопки
-            contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-            document.getElementById("walletStatus").innerHTML = 
-                "Connected: " + userAddress + ' <span class="net-badge net-ok">LitVM ✅</span>';
-            document.getElementById("createBtn").disabled = false;
-            document.getElementById("loadBtn").disabled = false;
-            document.getElementById("findMatchBtn").disabled = false;
-            document.getElementById("cancelMatchBtn").disabled = true;
-            document.getElementById("switchNetworkBtn").style.display = "none";
-                        // Доклеиваем Lichess-профиль к адресу кошелька (если профиль уже есть)
-            const savedProfile = localStorage.getItem("lichess_profile");
-            if (savedProfile && userAddress) {
-                try {
-                    const parsed = JSON.parse(savedProfile);
-                    localStorage.setItem("lichess_" + userAddress.toLowerCase(), JSON.stringify(parsed));
-                    console.log("Lichess profile linked to", userAddress);
-                } catch (e) {
-                    console.error("Lichess profile parse error:", e);
-                }
-            }
-        } else {
-            // Не та сеть — показываем кнопку Switch to LitVM
-            document.getElementById("walletStatus").innerHTML = 
-                "Connected: " + userAddress + ' <span class="net-badge net-bad">⚠️ Wrong network</span>';
-            document.getElementById("switchNetworkBtn").style.display = "inline-block";
-            document.getElementById("createBtn").disabled = true;
-            document.getElementById("loadBtn").disabled = true;
-            document.getElementById("createOpenBtn").disabled = true;
-            document.getElementById("refreshOpenBtn").disabled = true;
-        }
-    } catch (e) {
-        document.getElementById("walletStatus").textContent = "❌ " + (e.message || e);
-    }
-}
-
-        async function createMatch() {
-            const opponent = document.getElementById("opponentInput").value.trim();
-            const tc = parseInt(document.getElementById("timeControlSelect").value, 10);
-            if (!ethers.utils.isAddress(opponent)) return alert("Некорректный адрес!");
-            try {
-                await initContract();
-                document.getElementById("createStatus").textContent = "Отправка транзакции...";
-                const tx = await contract.createMatch(opponent, tc);
-                document.getElementById("createStatus").textContent = "Ожидание подтверждения...";
-                await tx.wait();
-                document.getElementById("createStatus").textContent = "✅ Партия создана! Транзакция: " + tx.hash;
-            } catch (e) {
-                document.getElementById("createStatus").textContent = "❌ Ошибка: " + (e.reason || e.message);
-            }
-        }
-
-        function formatTime(sec) {
-            if (sec === 60) return "1 мин";
-            if (sec === 300) return "5 мин";
-            if (sec === 900) return "15 мин";
-            if (sec === 1800) return "30 мин";
-            return sec + " сек";
-        }
-
-             async function submitResult(matchId, result) {
-         if (window.tgSession && window.tgSession.isTelegram) {
-             return submitResultViaRelay(matchId, result);
-         }
-         try {
-             await initContract();
-                const tx = await contract.submitResult(matchId, result);
-                alert("Транзакция отправлена: " + tx.hash);
-                await tx.wait();
-                alert("✅ Результат записан!");
-                loadMatches();
-            } catch (e) {
-                alert("❌ Ошибка: " + (e.reason || e.message));
-            }
-        }
-
-        async function loadMatches() {
-            const list = document.getElementById("matchesList");
-            list.innerHTML = "Загрузка...";
-            try {
-                await initContract();
-                const total = await contract.matchCounter();
-                let html = "";
-                // Счётчики статистики
-                 let statGames = 0;
-                 let statWins = 0;
-                 let statLosses = 0;
-                 let statDraws = 0;
-                for (let i = 1; i <= total.toNumber(); i++) {
-                    const m = await contract.getMatch(i);
-                    if (m.whitePlayer.toLowerCase() !== userAddress.toLowerCase() &&
-                        m.blackPlayer.toLowerCase() !== userAddress.toLowerCase()) continue;
-
-                    const isMyMatch = !m.isFinished;
-                    html += '<div class="match' + (m.isFinished ? ' finished' : '') + '">'
-                        + '<b>Партия #' + m.id + '</b>'
-                        + '<span class="timer">⏱ ' + formatTime(m.timeControl.toNumber()) + '</span>'
-                        + '<br>'
-                        + '<small>Белые: ' + m.whitePlayer + '</small><br>'
-                        + '<small>Чёрные: ' + m.blackPlayer + '</small><br>'
-                        + '<small>Результат: ' + (m.isFinished ? m.result : "не завершена") + '</small>';
-                    // Подсчёт статистики (только для завершённых партий)
-if (m.isFinished) {
-    statGames++;
-    const result = m.result;
-    const iAmWhite = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
-    if (result === "draw") {
-        statDraws++;
-    } else if (result === "white") {
-        if (iAmWhite) statWins++; else statLosses++;
-    } else if (result === "black") {
-        if (iAmWhite) statLosses++; else statWins++;
-    }
-}
-
-                    if (isMyMatch) {
-    html += '<div>'
-        + '<button class="small" onclick="startMatchGame(' + m.id + ', ' + m.timeControl.toNumber() + ')">▶️ Play</button>'
-        + '<button class="small white-win" onclick="submitResult(' + m.id + ', \'white\')">⚪ White wins</button>'
-        + '<button class="small black-win" onclick="submitResult(' + m.id + ', \'black\')">⚫ Black wins</button>'
-        + '<button class="small draw" onclick="submitResult(' + m.id + ', \'draw\')">🤝 Draw</button>'
-        + '</div>';
- }
-                    html += '</div>';
-                }
-                 // Обновляем блок статистики
-document.getElementById("statGames").textContent = statGames;
-document.getElementById("statWins").textContent = statWins;
-document.getElementById("statLosses").textContent = statLosses;
-document.getElementById("statDraws").textContent = statDraws;
-const winRate = statGames > 0 ? Math.round((statWins / statGames) * 100) : 0;
-document.getElementById("statWinRate").textContent = winRate + "%";
-                list.innerHTML = html || "<p>Пока нет партий с твоим участием.</p>";
-            } catch (e) {
-                list.innerHTML = "❌ Ошибка: " + (e.reason || e.message);
-            }
-        }
-        // ===== ПРИЁМ ХОДОВ ОТ СОПЕРНИКА =====
-
-function attachSocketListeners() {
-    if (!socket) return;
-
-    socket.on("moveMade", (data) => {
-        console.log("Move received:", data);
-        pendingMove = false;   // ← сервер подтвердил, разблокируем доску
-
-        // Полная синхронизация из FEN, который прислал сервер.
-        // Не вызываем game.move() — иначе у отправителя будет двойной ход.
-        game.load(data.fen);
-        if (data.san && currentMatchId && myColor) pvpMoveHistory.push(data.san);
-        board.position(data.fen, false);   // false = без анимации
-        updateBoardStatus();
-        updateMoveHistory();
-                // Обновляем часы с сервера
-        if (data.clocks && currentMatchId) {
-            whiteTime = Math.floor(data.clocks.white / 1000);
-            blackTime = Math.floor(data.clocks.black / 1000);
-            updateClocks();
-        }
-
-        // Если игра окончена — обрабатываем результат
-        if (data.isGameOver && currentMatchId && myColor) {
-            handleGameOver(data);
-        }
-    });
-
-    socket.on("gameState", (data) => {
-        console.log("Game state:", data);
-        game.load(data.fen);
-        board.position(game.fen(), false);
-        updateBoardStatus();
-    });
-
-    socket.on("opponentJoined", (data) => {
-        console.log("Opponent joined:", data);
-        document.getElementById("boardStatus").textContent += " — Opponent joined!";
-    });
-
-    socket.on("moveError", (data) => {
-        console.error("Move rejected by server:", data.message);
-        pendingMove = false;
-        // Откатывать нечего — в PvP мы не двигали фигуру локально.
-        // Просто перерисовываем доску из текущего game и показываем ошибку.
-        board.position(game.fen(), false);
-        document.getElementById("boardStatus").textContent =
-            "❌ Server rejected move: " + data.message;
-        setTimeout(updateBoardStatus, 2000);
-    });
-}
-                // ===== Игровой режим =====
-        function enterGameMode() {
-            document.body.classList.add("game-mode");
-            // Обновляем URL: ?game=1
-            history.pushState({ game: true }, "", "?game=1");
-        }
-
-        function exitGameMode() {
-            document.body.classList.remove("game-mode");
-            // Убираем ?game=1 из URL
-            history.pushState({}, "", window.location.pathname);
-            // Скрываем доску
-            const b = document.getElementById("chessBoardCard");
-            if (b) b.style.display = "none";
-        }
-         
-        // Привязка кнопки «← Back» из игрового режима
-        document.addEventListener("DOMContentLoaded", () => {
-            const backBtn = document.getElementById("backToMenuBtn");
-            if (backBtn) backBtn.addEventListener("click", () => {
-                exitGameMode();
-                stopBotGame();   // останавливаем бота, если шла партия с ботом
-            });
-        });
-
-                function handleGameOver(data) {
-            const winner = data.isCheckmate
-                ? data.winner
-                : (data.isDraw ? "draw" : null);
-
-            if (!winner) return;
-
-            const isDraw = winner === "draw";
-            const iAmWinner = winner === myColor;
-            const iAmWhite = myColor === "white";
-
-            // Результат PvP уже записывает сервер через релейер.
-            if (window.currentMatchId != null || activeMatchId != null) {
-                console.log("🏁 Результат партии обрабатывается сервером через релейер.");
-                return;
-            }
-
-            // Старый путь оставляем только для случаев вне on-chain PvP.
-            if (iAmWinner || (isDraw && iAmWhite)) {
-                console.log("🏆 Сохранение результата вне серверного PvP");
-                saveMatchToBlockchain(
-                    winner,
-                    window.opponentAddress,
-                    window.currentTimeControl
-                );
-            }
-        }
-
-        document.getElementById("connectBtn").onclick = connect;
-        document.getElementById("switchNetworkBtn").onclick = async function() {
-    try {
-        await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: LITVM_CHAIN_ID }]
-        });
-        window.location.reload();
-    } catch (e) {
-        if (e.code === 4902) {
-            try {
-                await window.ethereum.request({
-                    method: "wallet_addEthereumChain",
-                    params: [{
-                        chainId: LITVM_CHAIN_ID,
-                        chainName: "LitVM LiteForge",
-                        nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
-                        rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
-                        blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
-                    }]
-                });
-                window.location.reload();
-            } catch (e2) {
-                alert("Failed to add LitVM network: " + (e2.message || e2));
-            }
-        } else {
-            alert("Failed to switch network: " + (e.message || e));
-        }
-    }
-};
-        document.getElementById("createBtn").onclick = createMatch;
-        document.getElementById("loadBtn").onclick = loadMatches;
-        document.getElementById("analyzeBtn").onclick = analyzeGame;
-        // ===== ШАХМАТНАЯ ДОСКА =====
+    <!-- Скрытые элементы для совместимости со скриптом -->
+    <div id="opponentPanel" style="display: none;">
+        <img id="opponentAvatar" src="" alt="">
+        <div id="opponentName">—</div>
+        <div id="opponentElo">—</div>
+    </div>
+    <div id="clockRow" style="display: none;"></div>
+    <select id="onlineTimeControl" style="display: none;">
+        <option value="60">1 min</option>
+        <option value="300" selected>5 min</option>
+        <option value="900">15 min</option>
+        <option value="1800">30 min</option>
+    </select>
+    <div id="matchStatus"></div>
+    <div id="botStatus"></div>
+    <div id="moveHistoryList"></div>
+
+    <!-- Новая навигация -->
+    <div id="bottomNav">
+        <button id="mainPlayBtn">Играть</button>
+        <div class="nav-icons">
+            <div class="nav-item active" onclick="switchTab('home')">
+                <span class="nav-icon">🏠</span><span class="nav-label">Главная</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('puzzles')">
+                <span class="nav-icon">🧩</span><span class="nav-label">Задачи</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('learn')">
+                <span class="nav-icon">📚</span><span class="nav-label">Учеба</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('watch')">
+                <span class="nav-icon">👁️</span><span class="nav-label">Смотреть</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('more')">
+                <span class="nav-icon">☰</span><span class="nav-label">Еще</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран новой игры -->
+    <div id="newGameScreen">
+        <div id="newGameHeader">
+            <button id="newGameBack">←</button>
+            <h2 id="newGameTitle">Новая партия</h2>
+        </div>
+        <select id="newGameTimeControl">
+            <option value="60">⏱️ 1 минута</option>
+            <option value="300" selected>⏱️ 5 минут</option>
+            <option value="900">⏱️ 15 минут</option>
+            <option value="1800">⏱️ 30 минут</option>
+        </select>
+        <button id="startNewGameBtn">Начать партию</button>
+        <button class="new-game-option" id="newGameTournaments">🏆 Турниры</button>
+        <button class="new-game-option" id="newGameFriend">👥 Играть с другом</button>
+        <button class="new-game-option" id="newGameBots">💻 Играть с ботами</button>
+    </div>
+
+    <!-- Библиотеки -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="chessboard.min.js"></script>
+    <script src="chess.min.js"></script>
+    <script src="ethers.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+
+    <script>
+        // ==== НАСТРОЙКИ ====
+        const SOCKET_URL = "https://litvm-chess-server.onrender.com";
+        const BOT_ADDRESS = "0xEb4eCf92738a4b3d82Fb143aDe9dD34Cf90D8B0e";
+        const BOT_TIME_CONTROL = 300;
+
+        let socket = null;
+        let currentMatchId = null;
+        let myColor = null;
+        let pendingMove = false;
         let board = null;
         let game = new Chess();
-        let selectedSquare = null;      // выбранная клетка (click-to-move)
-        let legalMovesFromSelected = []; // легальные ходы от выбранной фигуры
-                  // ===== CLICK-TO-MOVE =====
-        function clearHighlights() {
-            document.querySelectorAll(".square-55d63").forEach(sq => {
-                sq.classList.remove("highlight-selected", "highlight-legal");
+        let selectedSquare = null;
+        let legalMovesFromSelected = [];
+        let pvpMoveHistory = [];
+        let whiteTime = 0;
+        let blackTime = 0;
+        let timerInterval = null;
+        let activeMatchId = null;
+
+        // ==== НАВИГАЦИЯ ====
+        const screen = document.getElementById("newGameScreen");
+        const nav = document.getElementById("bottomNav");
+
+        function openNewGameScreen() {
+            screen.style.display = "flex";
+            nav.style.display = "none";
+        }
+        function closeNewGameScreen() {
+            screen.style.display = "none";
+            nav.style.display = "block";
+        }
+
+        document.getElementById("mainPlayBtn").onclick = openNewGameScreen;
+        document.getElementById("newGameBack").onclick = closeNewGameScreen;
+        document.getElementById("startNewGameBtn").onclick = () => {
+            const tc = parseInt(document.getElementById("newGameTimeControl").value, 10);
+            document.getElementById("onlineTimeControl").value = tc;
+            closeNewGameScreen();
+            findMatch();
+        };
+        document.getElementById("newGameFriend").onclick = () => {
+            closeNewGameScreen();
+            inviteFriend();
+        };
+        document.getElementById("newGameBots").onclick = () => {
+            closeNewGameScreen();
+            startBotGame();
+        };
+        document.getElementById("newGameTournaments").onclick = () => {
+            alert("Tournaments coming soon!");
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // ==== ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ====
+        function connectSocket() {
+            if (socket && socket.connected) return;
+            socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+
+            socket.on("connect", () => {
+                console.log("✅ Socket connected");
+                const savedToken = localStorage.getItem("resumeToken");
+                const savedRoom = localStorage.getItem("roomId");
+                if (savedToken && savedRoom) {
+                    socket.emit("resumeGame", { roomId: savedRoom, resumeToken: savedToken });
+                }
+            });
+
+            socket.on("matchFound", (data) => {
+                if (data?.resumeToken && data?.roomId) {
+                    localStorage.setItem("resumeToken", data.resumeToken);
+                    localStorage.setItem("roomId", data.roomId);
+                }
+            });
+
+            socket.on("gameState", (data) => {
+                game.load(data.fen);
+                board.position(data.fen, false);
+            });
+
+            socket.on("moveMade", (data) => {
+                pendingMove = false;
+                game.load(data.fen);
+                board.position(data.fen, false);
+                if (data.clocks) {
+                    whiteTime = Math.floor(data.clocks.white / 1000);
+                    blackTime = Math.floor(data.clocks.black / 1000);
+                    updateClocks();
+                }
+            });
+
+            socket.on("moveError", (data) => {
+                pendingMove = false;
+                board.position(game.fen(), false);
+            });
+
+            socket.on("opponentDisconnected", (data) => {
+                document.getElementById("boardStatus").textContent = "⚠️ " + data.message;
             });
         }
 
-        function highlightSquare(square, className) {
-            const el = document.querySelector('[data-square="' + square + '"]');
-            if (el) el.classList.add(className);
+        // ==== ИНИЦИАЛИЗАЦИЯ ДОСКИ ====
+        function initBoard() {
+            const touchOnly = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+            board = Chessboard("board", {
+                draggable: !touchOnly,
+                position: "start",
+                orientation: "white",
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+            });
+            attachSquareClickHandlers();
+            updateBoardStatus();
         }
-                  function makeMove(from, to) {
-            // PvP: отправляем ход на сервер, локально не двигаем
+
+        function onDragStart(source, piece) {
+            if (game.game_over()) return false;
+            if (pendingMove) return false;
+            if (currentMatchId && myColor) {
+                const myPrefix = myColor === "white" ? "^w" : "^b";
+                if (piece.search(new RegExp(myPrefix)) === -1) return false;
+            }
+        }
+
+        function onDrop(source, target) {
             if (socket && currentMatchId && myColor) {
                 const probe = new Chess(game.fen());
-                const dry = probe.move({ from: from, to: to, promotion: "q" });
-                if (dry === null) return false;
-
+                if (probe.move({ from: source, to: target, promotion: "q" }) === null) return "snapback";
                 pendingMove = true;
-                lastMoveSentAt = Date.now();
-                socket.emit("makeMove", {
-                    roomId: currentMatchId,
-                    from: from,
-                    to: to,
-                    promotion: "q"
-                });
-                return true;
+                socket.emit("makeMove", { roomId: currentMatchId, from: source, to: target, promotion: "q" });
+                return "snapback";
             }
-
-            // Партия с ботом: двигаем локально
-            const move = game.move({ from: from, to: to, promotion: "q" });
-            if (move === null) return false;
+            const move = game.move({ from: source, to: target, promotion: "q" });
+            if (move === null) return "snapback";
             board.position(game.fen());
-            updateBoardStatus();
-            updateMoveHistory();
-            if (botEnabled && !game.game_over()) {
-                setTimeout(requestBotMove, 100);
-            }
-            return true;
-        }
-                  function makeMove(from, to) {
-            // PvP: отправляем ход на сервер, локально не двигаем
-            if (socket && currentMatchId && myColor) {
-                const probe = new Chess(game.fen());
-                const dry = probe.move({ from: from, to: to, promotion: "q" });
-                if (dry === null) return false;
-
-                pendingMove = true;
-                lastMoveSentAt = Date.now();
-                socket.emit("makeMove", {
-                    roomId: currentMatchId,
-                    from: from,
-                    to: to,
-                    promotion: "q"
-                });
-                return true;
-            }
-
-            // Партия с ботом: двигаем локально
-            const move = game.move({ from: from, to: to, promotion: "q" });
-            if (move === null) return false;
-            board.position(game.fen());
-            updateBoardStatus();
-            updateMoveHistory();
-            if (botEnabled && !game.game_over()) {
-                setTimeout(requestBotMove, 100);
-            }
-            return true;
         }
 
+        function attachSquareClickHandlers() {
+            const boardEl = document.getElementById("board");
+            if (!boardEl) return;
+            boardEl.addEventListener("touchstart", (e) => {
+                const touch = e.changedTouches[0];
+                const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+                const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
+                if (sq) {
+                    e.preventDefault();
+                    onSquareClick.call(sq);
+                }
+            }, { passive: false });
+        }
 
-
-        function onSquareClick(event) {
-            // В PvP запрещаем клики, пока ждём подтверждения от сервера
-            if (pendingMove) return;
-            if (game.game_over()) return;
-
+        function onSquareClick() {
+            if (pendingMove || game.game_over()) return;
             const square = this.getAttribute("data-square");
             if (!square) return;
-
             const piece = game.get(square);
-
-            // ===== Если уже что-то выбрано — пробуем сделать ход =====
             if (selectedSquare) {
                 const legal = legalMovesFromSelected.find(m => m.to === square);
                 if (legal) {
-                    // Это легальный ход — играем!
                     makeMove(selectedSquare, square);
                     clearHighlights();
                     selectedSquare = null;
@@ -1323,1525 +366,89 @@ function attachSocketListeners() {
                     return;
                 }
             }
-
-            // ===== Иначе — пытаемся выбрать фигуру =====
             clearHighlights();
             selectedSquare = null;
             legalMovesFromSelected = [];
-
-            if (!piece) return; // пустая клетка — просто снимаем выделение
-
-            // Проверяем, что это наша фигура и сейчас наш ход
-            if (currentMatchId && myColor) {
-                // PvP
-                const myPrefix = myColor === "white" ? "w" : "b";
-                if (piece.color !== myPrefix) return;
-                const currentTurn = game.turn() === "w" ? "white" : "black";
-                if (currentTurn !== myColor) return;
-            } else {
-                // Игра с ботом
-                if (game.turn() === "w" && piece.color !== "w") return;
-                if (game.turn() === "b" && piece.color !== "b") return;
-            }
-
-            // Выделяем фигуру
+            if (!piece) return;
             selectedSquare = square;
             legalMovesFromSelected = game.moves({ square: square, verbose: true });
             highlightSquare(square, "highlight-selected");
-            legalMovesFromSelected.forEach(m => highlightSquare(m.to, "highlight-legal"));
         }
 
-        function onDragStart(source, piece, position, orientation) {
-    if (game.game_over()) return false;
-
-    // ← НОВОЕ: пока сервер не подтвердил прошлый ход — доска заблокирована
-    if (pendingMove) return false;
-
-    // Если PvP — блокируем ход, если сейчас не наш цвет
-    if (currentMatchId && myColor) {
-        const myPiecePrefix = myColor === "white" ? "^w" : "^b";
-        if (piece.search(new RegExp(myPiecePrefix)) === -1) return false;
-        const currentTurn = game.turn() === "w" ? "white" : "black";
-        if (currentTurn !== myColor) return false;
-        return;
-    }
-
-    // Игра с ботом — старая логика
-    if (game.turn() === "w" && piece.search(/^b/) !== -1) return false;
-    if (game.turn() === "b" && piece.search(/^w/) !== -1) return false;
-}
-              // ===== Move history (PGN-стиль) =====
-                let pvpMoveHistory = [];   // отдельная история для PvP
-                  // ===== ИСТОРИЯ ПАРТИЙ (localStorage) =====
-        const GAME_HISTORY_KEY = "litvm_chess_history";
-        const GAME_HISTORY_MAX = 50;
-
-        function getGameHistory() {
-            try {
-                const raw = localStorage.getItem(GAME_HISTORY_KEY);
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) {
-                console.error("History parse error:", e);
-                return [];
-            }
+        function clearHighlights() {
+            document.querySelectorAll(".square-55d63").forEach(sq => sq.classList.remove("highlight-selected", "highlight-legal"));
         }
 
-        function saveGameToHistory() {
-            try {
-                // Собираем ходы
-                const moves = (currentMatchId && pvpMoveHistory.length > 0)
-                    ? [...pvpMoveHistory]
-                    : game.history();
-
-                if (moves.length < 4) return;  // слишком короткая партия
-
-                                // Определяем цвет игрока и результат
-                const playerColor = (currentMatchId && myColor)
-                    ? myColor
-                    : (window._playerColorForAnalysis === "b" ? "black" : "white");
-                const iAmWhite = (playerColor === "white");
-
-                let result = "unknown";
-                if (game.in_checkmate()) {
-                    const loser = game.turn();
-                    const winner = loser === "w" ? "black" : "white";
-                    result = (winner === playerColor) ? "win" : "loss";
-                } else if (game.in_draw()) {
-                    result = "draw";
-                }
-
-                // Соперник
-                const opponentName = document.getElementById("opponentName")?.textContent || "Unknown";
-                const opponentElo = document.getElementById("opponentElo")?.textContent || "";
-                const opponentAvatar = document.getElementById("opponentAvatar")?.src || "";
-
-                const entry = {
-                    id: Date.now(),
-                    date: new Date().toISOString(),
-                    mode: currentMatchId ? "pvp" : "bot",
-                    playerColor: playerColor,
-                    result: result,
-                    opponent: opponentName,
-                    opponentElo: opponentElo,
-                    opponentAvatar: opponentAvatar,
-                    moves: moves,
-                    accuracy: null,
-                    acpl: null
-                };
-
-                const history = getGameHistory();
-                history.unshift(entry);  // новая партия — в начало
-                if (history.length > GAME_HISTORY_MAX) history.pop();
-
-                localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
-                console.log("Game saved to history:", entry.id);
-                updateStatsFromHistory();
-            } catch (e) {
-                console.error("Save history error:", e);
-            }
+        function highlightSquare(square, className) {
+            const el = document.querySelector('[data-square="' + square + '"]');
+            if (el) el.classList.add(className);
         }
 
-                function updateGameHistoryEntry(accuracy, acpl) {
-            try {
-                const history = getGameHistory();
-                if (history.length === 0) return;
-
-                // Обновляем самую свежую запись (последнюю добавленную)
-                history[0].accuracy = accuracy;
-                history[0].acpl = acpl;
-
-                // Сохраняем пометки (mark) для каждого хода
-                history[0].marks = (analysisResults || [])
-                    .filter(r => r.isPlayer)
-                    .map(r => ({ index: r.index, mark: r.mark }));
-
-                localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
-                console.log("History entry updated with ACPL and marks:", acpl);
-            } catch (e) {
-                console.error("Update history error:", e);
+        function makeMove(from, to) {
+            if (socket && currentMatchId && myColor) {
+                const probe = new Chess(game.fen());
+                if (probe.move({ from: from, to: to, promotion: "q" }) === null) return false;
+                pendingMove = true;
+                socket.emit("makeMove", { roomId: currentMatchId, from: from, to: to, promotion: "q" });
+                return true;
             }
-        }
-                          // ===== РЕНДЕР ИСТОРИИ ПАРТИЙ =====
-        let historyVisibleCount = 10;
-        const HISTORY_PAGE_SIZE = 10;
-                  function updateStatsFromHistory() {
-            const history = getGameHistory();
-
-            const games = history.length;
-            let wins = 0, losses = 0, draws = 0;
-
-            history.forEach(g => {
-                if (g.result === "win") wins++;
-                else if (g.result === "loss") losses++;
-                else if (g.result === "draw") draws++;
-            });
-
-            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-
-            const el = id => document.getElementById(id);
-            if (el("statGames")) el("statGames").textContent = games;
-            if (el("statWins")) el("statWins").textContent = wins;
-            if (el("statLosses")) el("statLosses").textContent = losses;
-            if (el("statDraws")) el("statDraws").textContent = draws;
-            if (el("statWinRate")) el("statWinRate").textContent = winRate + "%";
+            const move = game.move({ from: from, to: to, promotion: "q" });
+            if (move === null) return false;
+            board.position(game.fen());
+            return true;
         }
 
-                function renderGameHistory() {
-            const list = document.getElementById("gameHistoryList");
-            const moreBtn = document.getElementById("gameHistoryMoreBtn");
-            if (!list) return;
-
-            const history = getGameHistory();
-            if (history.length === 0) {
-                list.textContent = "No games yet. Play your first!";
-                return;
-            }
-
-            const visible = history.slice(0, historyVisibleCount);
-
-            let html = "";
-            visible.forEach((g, index) => {
-                const dateStr = new Date(g.date).toLocaleString("ru-RU", {
-                    day: "2-digit", month: "2-digit",
-                    hour: "2-digit", minute: "2-digit"
-                });
-
-                let resultColor = "#8a92a6";
-                let resultText = g.result;
-                if (g.result === "win") { resultColor = "#b6f7c4"; resultText = "🏆 Win"; }
-                else if (g.result === "loss") { resultColor = "#f7b6b6"; resultText = "💀 Loss"; }
-                else if (g.result === "draw") { resultColor = "#ffd88a"; resultText = "🤝 Draw"; }
-
-                const accText = g.accuracy ? `Acc: ${g.accuracy}%` : "";
-                const acplText = g.acpl ? `ACPL: ${g.acpl}` : "";
-
-                html += `<div class="history-entry" data-idx="${index}" style="padding: 8px 0; border-bottom: 1px solid #1a1d26; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                    <img src="${g.opponentAvatar || ''}" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #0f1117;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 13px; color: #e6e6e6;">
-                            vs <b>${g.opponent || "Unknown"}</b>
-                            ${g.opponentElo ? `<span style="color: #8a92a6; font-size: 11px;">(${g.opponentElo})</span>` : ""}
-                        </div>
-                        <div style="font-size: 11px; color: #8a92a6; margin-top: 2px;">
-                            ${dateStr} · ${g.moves.length} plies
-                            ${accText ? ` · ${accText}` : ""}
-                            ${acplText ? ` · ${acplText}` : ""}
-                        </div>
-                    </div>
-                    <div style="font-size: 12px; font-weight: 600; color: ${resultColor};">${resultText}</div>
-                </div>`;
-            });
-
-            list.innerHTML = html;
-
-            // Клик по записи → загрузка партии
-            list.querySelectorAll(".history-entry").forEach(el => {
-                el.addEventListener("click", () => {
-                    const idx = parseInt(el.getAttribute("data-idx"), 10);
-                    loadGameFromHistory(idx);
-                });
-            });
-
-            // Кнопка «Show more»
-            if (moreBtn) {
-                if (history.length > historyVisibleCount) {
-                    moreBtn.style.display = "block";
-                    moreBtn.textContent = `Show more (${history.length - historyVisibleCount})`;
-                } else {
-                    moreBtn.style.display = "none";
-                }
-            }
+        // ==== ТАЙМЕР ====
+        function updateClocks() {
+            document.getElementById("whiteTimer").textContent = formatClock(whiteTime);
+            document.getElementById("blackTimer").textContent = formatClock(blackTime);
         }
-
-        function loadGameFromHistory(index) {
-            const history = getGameHistory();
-            const g = history[index];
-            if (!g || !g.moves) return;
-
-            // Загружаем партию в game
-            game.reset();
-            for (const san of g.moves) {
-                game.move(san);
-            }
-
-                        // Ориентация доски под цвет игрока
-            const orient = (g.playerColor === "black") ? "black" : "white";
-            board.orientation(orient);
-
-            // Показываем на доске финальную позицию
-            board.position(game.fen(), false);
-
-            // Запоминаем ходы для навигации
-            window._savedHistory = [...g.moves];
-            window._playerColorForAnalysis = (g.playerColor === "white") ? "w" : "b";
-
-            // Рисуем историю ходов
-            updateMoveHistory();
-                        // Восстанавливаем пометки из записи
-            if (g.marks && g.marks.length > 0) {
-                analysisResults = g.marks.map(m => ({
-                    index: m.index,
-                    mark: m.mark,
-                    isPlayer: true,
-                    cpLoss: 0,
-                    san: ""
-                }));
-                renderAnalysisInHistory();
-            }
-
-                        // Показываем кнопку навигации
-            const navRow = document.getElementById("moveNavRow");
-            if (navRow) navRow.style.display = "flex";
-            window._currentPly = g.moves.length - 1;
-            bindMoveNav();
-
-            // Показываем точность (если есть)
-            const accRow = document.getElementById("accuracyRow");
-            if (accRow && g.accuracy && g.acpl) {
-                accRow.innerHTML =
-                    `🎯 <b>Accuracy:</b> ${g.accuracy}% ` +
-                    `<span style="color:#8a92a6; margin-left:12px;">ACPL: ${g.acpl} cp</span>`;
-                accRow.style.display = "block";
-            }
-                        // Показываем игровой экран
-            document.getElementById("chessBoardCard").style.display = "block";
-            enterGameMode();
-
-            // Размер доски — после показа
-            setTimeout(() => { if (board && board.resize) board.resize(); }, 50);
-
-            // Скрываем панель истории (она в меню)
-            const histPanel = document.getElementById("gameHistoryList");
-            if (histPanel && histPanel.parentElement) histPanel.parentElement.style.display = "none";
-
-            console.log("Loaded game from history:", g.id);
-        }
-                   function renderAnalysisInHistory() {
-            const list = document.getElementById("moveHistoryList");
-            if (!list) return;
-
-            if (!analysisResults || analysisResults.length === 0) {
-                updateMoveHistory();
-                return;
-            }
-
-            const history = (window._savedHistory && window._savedHistory.length > 0)
-                ? window._savedHistory
-                : game.history();
-
-            if (history.length === 0) {
-                list.textContent = "—";
-                return;
-            }
-
-            const marksMap = {};
-            analysisResults.forEach(r => {
-                marksMap[r.index] = r.mark;
-            });
-
-            let html = "";
-            for (let i = 0; i < history.length; i += 2) {
-                const num = (i / 2) + 1;
-                const wSan = history[i] || "";
-                const bSan = history[i + 1] || "";
-                const wMark = marksMap[i] || "";
-                const bMark = marksMap[i + 1] || "";
-
-                html += '<span class="move-num">' + num + '.</span> ';
-                html += '<span class="move-link" data-ply="' + i + '">' + wSan + wMark + '</span> ';
-                if (bSan) {
-                    html += '<span class="move-link" data-ply="' + (i + 1) + '">' + bSan + bMark + '</span> ';
-                }
-            }
-            list.innerHTML = html;
-
-            // Привязываем клики
-            list.querySelectorAll(".move-link").forEach(el => {
-                el.addEventListener("click", () => {
-                    const ply = parseInt(el.getAttribute("data-ply"), 10);
-                    goToPly(ply);
-                });
-            });
-        }
-
-        // Перейти к позиции после хода № ply (0-based)
-                // Текущая позиция в навигации (ply — индекс последнего сыгранного хода)
-        window._currentPly = -1;
-
-                function goToPly(ply) {
-            const history = window._savedHistory || [];
-            if (ply < -1 || ply >= history.length) return;
-
-            const tempGame = new Chess();
-            for (let i = 0; i <= ply; i++) {
-                tempGame.move(history[i]);
-            }
-            game.load(tempGame.fen());
-            board.position(tempGame.fen(), false);
-            window._currentPly = ply;
-
-            // Подсветка активного хода
-            const list = document.getElementById("moveHistoryList");
-            list.querySelectorAll(".move-link").forEach(el => el.classList.remove("active"));
-            if (ply >= 0) {
-                const activeEl = list.querySelector('.move-link[data-ply="' + ply + '"]');
-                if (activeEl) activeEl.classList.add("active");
-            }
-
-            // Значок на доске
-            clearBoardMarks();
-            if (ply >= 0) {
-                const mark = getMarkForPly(ply);
-                if (mark) {
-                    const verboseMove = new Chess();
-                    for (let i = 0; i < ply; i++) verboseMove.move(history[i]);
-                    const mv = verboseMove.move(history[ply]);
-                    if (mv) showBoardMark(mv.to, mark);
-                }
-            }
-
-            // Кнопки
-            const prevBtn = document.getElementById("movePrevBtn");
-            const nextBtn = document.getElementById("moveNextBtn");
-            if (prevBtn) prevBtn.disabled = (ply <= -1);
-            if (nextBtn) nextBtn.disabled = (ply >= history.length - 1);
-        }
-
-        // Убирает все значки с доски
-        function clearBoardMarks() {
-            document.querySelectorAll(".analysis-mark").forEach(el => el.remove());
-        }
-
-        // Достаёт пометку для хода ply
-        function getMarkForPly(ply) {
-            if (!analysisResults || analysisResults.length === 0) return "";
-            const found = analysisResults.find(r => r.index === ply);
-            return found ? found.mark : "";
-        }
-
-        // Ставит значок на клетку
-        function showBoardMark(square, mark) {
-            if (!mark) return;
-            const sqEl = document.querySelector('.square-55d63[data-square="' + square + '"]');
-            if (!sqEl) return;
-
-            const el = document.createElement("div");
-            el.className = "analysis-mark";
-            if (mark === "??") el.classList.add("mark-blunder");
-            else if (mark === "?") el.classList.add("mark-mistake");
-            else if (mark === "?!") el.classList.add("mark-inaccuracy");
-            el.textContent = mark;
-            sqEl.appendChild(el);
-        }
-
-        // Привязка кнопок навигации
-        function bindMoveNav() {
-            const prevBtn = document.getElementById("movePrevBtn");
-            const nextBtn = document.getElementById("moveNextBtn");
-            const navRow = document.getElementById("moveNavRow");
-
-            if (navRow) navRow.style.display = "flex";
-
-            if (prevBtn && !prevBtn._bound) {
-                prevBtn._bound = true;
-                prevBtn.addEventListener("click", () => {
-                    const cur = window._currentPly;
-                    if (cur > -1) goToPly(cur - 1);
-                });
-            }
-
-            if (nextBtn && !nextBtn._bound) {
-                nextBtn._bound = true;
-                nextBtn.addEventListener("click", () => {
-                    const cur = window._currentPly;
-                    const history = window._savedHistory || [];
-                    if (cur < history.length - 1) goToPly(cur + 1);
-                });
-            }
-        }
-
-
-        function updateMoveHistory() {
-            const list = document.getElementById("moveHistoryList");
-            if (!list) return;
-
-            const history = (currentMatchId && myColor) ? pvpMoveHistory : game.history();
-
-            if (history.length === 0) {
-                list.textContent = "—";
-                return;
-            }
-            const parts = [];
-            for (let i = 0; i < history.length; i += 2) {
-                const num = (i / 2) + 1;
-                const whiteMove = history[i];
-                const blackMove = history[i + 1] || "";
-                parts.push(num + ". " + whiteMove + " " + blackMove);
-            }
-            list.textContent = parts.join("  ");
-        }
-
-
- function onDrop(source, target) {
-    // ===== PvP: не двигаем локально, ждём сервер =====
-    if (socket && currentMatchId && myColor) {
-        // Предварительная локальная проверка — отсекаем заведомо нелегальные ходы,
-        // чтобы не гонять их на сервер. Играем на копии, чтобы не портить состояние.
-        const probe = new Chess(game.fen());
-        const dry = probe.move({ from: source, to: target, promotion: "q" });
-        if (dry === null) return "snapback";
-
-        pendingMove = true;
-        lastMoveSentAt = Date.now();
-        socket.emit("makeMove", {
-            roomId: currentMatchId,
-            from: source,
-            to: target,
-            promotion: "q"
-        });
-        // Возвращаем "snapback" — фигура визуально вернётся на место,
-        // реальный ход придёт от сервера через moveMade и перерисует доску.
-        return "snapback";
-    }
-
-    // ===== Игра с ботом — старая логика =====
-    const move = game.move({
-        from: source,
-        to: target,
-        promotion: "q"
-    });
-    if (move === null) return "snapback";
-    updateBoardStatus();
-    updateMoveHistory();
-
-    if (botEnabled && !game.game_over()) {
-        setTimeout(requestBotMove, 100);
-    }
-}
-        function updateBoardStatus() {
-    const status = document.getElementById("boardStatus");
-    if (game.game_over()) {
-                     // Показываем кнопку «Analyze» — и для бота, и для PvP
-            const anBtn = document.getElementById("analyzeBtn");
-            if (anBtn) anBtn.style.display = "inline-block";
-                        // Сохраняем партию в историю
-            saveGameToHistory();
-        let resultText = "";
-        let resultCode = "";
-        
-        if (game.in_checkmate()) {
-            // Если мат — тот, чей ход сейчас, проиграл
-            const loser = game.turn();     // тот, кто должен ходить, и есть проигравший
-            const winner = loser === "w" ? "b" : "w";
-            resultText = "Checkmate! " + (winner === "w" ? "White" : "Black") + " wins";
-            resultCode = winner === "w" ? "white" : "black";
-        } else if (game.in_draw()) {
-            resultText = "Draw!";
-            resultCode = "draw";
-        } else {
-            resultText = "Game over";
-        }
-        
-        status.textContent = resultText;
-        
-        // Автоматически завершаем партию в блокчейне
-        if (resultCode !== "") {
-    autoFinishMatch(resultCode);
-    }
-    } else {
-        status.textContent = "Turn: " + (game.turn() === "w" ? "White" : "Black")
-            + (game.in_check() ? " (check!)" : "");
-    }
-}
-
-async function autoFinishMatch(resultCode) {
-        // В PvP результат обрабатывает сервер.
-    if (window.currentMatchId != null) {
-        console.log("🏁 PvP: клиентскую запись результата пропускаем.");
-        return;
-    }
-    const matchId = activeMatchId;
-    activeMatchId = null;  // сбрасываем сразу, чтобы не вызвалось дважды
-    
-        try {
-        if (window.tgSession && window.tgSession.isTelegram) {
-            await submitResultViaRelay(matchId, resultCode);
-            botEnabled = false;
-            return; // Выходим из функции, чтобы не вызывать MetaMask
-        }
-
-        await initContract();
-        const tx = await contract.submitResult(matchId, resultCode);
-        document.getElementById("boardStatus").textContent += 
-            " — Saving to blockchain...";
-        await tx.wait();
-        document.getElementById("boardStatus").textContent += 
-            " ✅ Saved to LitVM!";
-        botEnabled = false;
-    } catch (e) {
-        document.getElementById("boardStatus").textContent += 
-            " ❌ Blockchain error: " + (e.reason || e.message);
-    }
-}
-
-              function initBoard() {
-    // На устройствах с основным сенсорным вводом используем tap-to-move,
-    // чтобы chessboard.js не перехватывал первое касание для перетаскивания.
-    const touchOnly = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
-    board = Chessboard("board", {
-        draggable: !touchOnly,
-        position: "start",
-        orientation: "white",
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
-    });
-
-    // Привязка click-to-move: на каждую клетку — обработчик клика
-    attachSquareClickHandlers();
-
-    // Перерисовываем класс "occupied" при каждом ходе
-    const origPosition = board.position.bind(board);
-    board.position = function(pos, useAnimation) {
-        const result = origPosition(pos, useAnimation);
-        setTimeout(markOccupiedSquares, 30);
-        return result;
-    };
-
-    updateBoardStatus();
-}
-
-// ===== CLICK-TO-MOVE: helpers =====
-function attachSquareClickHandlers() {
-    const boardEl = document.getElementById("board");
-    if (!boardEl) return;
-
-    // Компьютер: обычный клик мышью.
-    boardEl.addEventListener("mousedown", (e) => {
-        // На сенсорных устройствах не обрабатываем синтетический mousedown.
-        if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) return;
-        const els = document.elementsFromPoint(e.clientX, e.clientY);
-        const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
-        if (!sq) return;
-        onSquareClick.call(sq, { currentTarget: sq, target: e.target });
-    });
-
-    // Телефон/планшет: тап по фигуре, затем тап по клетке назначения.
-    boardEl.addEventListener("touchstart", (e) => {
-        const touch = e.changedTouches && e.changedTouches[0];
-        if (!touch) return;
-        const els = document.elementsFromPoint(touch.clientX, touch.clientY);
-        const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
-        if (!sq) return;
-
-        // Не даём браузеру сгенерировать второй mouse event для того же тапа.
-        e.preventDefault();
-        onSquareClick.call(sq, { currentTarget: sq, target: e.target });
-    }, { passive: false });
-
-    markOccupiedSquares();
-}
-
-function markOccupiedSquares() {
-    document.querySelectorAll("#board .square-55d63").forEach(sq => {
-        const square = sq.getAttribute("data-square");
-        if (!square) return;
-        const piece = game.get(square);
-        if (piece) {
-            sq.classList.add("occupied");
-        } else {
-            sq.classList.remove("occupied");
-        }
-    });
-}
-         
-                // ===== ТАЙМЕР =====
-        let whiteTime = 0;
-        let blackTime = 0;
-        let timerInterval = null;
-
         function formatClock(seconds) {
             const m = Math.floor(seconds / 60);
             const s = seconds % 60;
             return m + ":" + (s < 10 ? "0" : "") + s;
         }
 
-        function updateClocks() {
-            document.getElementById("whiteTimer").textContent = formatClock(whiteTime);
-            document.getElementById("blackTimer").textContent = formatClock(blackTime);
-        }
-
-        function startClock(timeControl) {
-            whiteTime = timeControl;
-            blackTime = timeControl;
-            updateClocks();
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(tick, 1000);
-        }
-
-        function stopClock() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = null;
-        }
-
-        function tick() {
-            if (game.game_over()) { stopClock(); return; }
-            if (game.turn() === "w") {
-                whiteTime--;
-                if (whiteTime <= 0) { whiteTime = 0; updateClocks(); onTimeOut("black"); return; }
-            } else {
-                blackTime--;
-                if (blackTime <= 0) { blackTime = 0; updateClocks(); onTimeOut("white"); return; }
-            }
-            updateClocks();
-        }
-
-        function onTimeOut(winnerColor) {
-            stopClock();
-            document.getElementById("boardStatus").textContent =
-                "⏰ Time out! " + (winnerColor === "white" ? "White" : "Black") + " wins on time";
-            if (activeMatchId !== null) {
-                autoFinishMatch(winnerColor);
-            }
-        }
-        window.addEventListener("load", initBoard);
-        window.addEventListener("load", () => {
-    renderGameHistory();
-    updateStatsFromHistory();
-});
-        document.getElementById("gameModeWrap").style.display = "block";
-        window.addEventListener("load", async () => {
-    // Если вернулись с Lichess OAuth — обрабатываем callback
-    const wasCallback = await handleLichessCallback();
-    if (wasCallback) {
-        console.log("Lichess OAuth callback processed");
-    } else {
-        // Если токен уже есть — подтягиваем профиль
-        const existingToken = localStorage.getItem("lichess_access_token");
-        if (existingToken) {
-            await loadLichessProfile();
-        }
-    }
-});
-        window.addEventListener("load", () => {
-    connectSocket();
-    setTimeout(() => {
-        attachSocketListeners();
-        setupMatchmakingListeners();
-    }, 500);
-});
-// ===== АКТИВНАЯ ПАРТИЯ =====
-let activeMatchId = null;   
-let activePlayerColor = "w";        
-   // ===== PVP GAME (Matchmaking) =====
-        
-                function startPvPGame(roomId, color, opponentAddress, timeControl) {
-            console.log("[PvP] startPvPGame called", { roomId, color, opponentAddress, timeControl });
-            
-            const boardCard = document.getElementById("chessBoardCard");
-            console.log("[PvP] board card BEFORE:", {
-                exists: !!boardCard,
-                display: boardCard?.style.display,
-                className: boardCard?.className,
-                parentDisplay: boardCard?.parentElement?.style.display
-            });
-
-            window._resultSaved = false;
-            window.opponentAddress = opponentAddress;
-            window.currentTimeControl = timeControl;
-            
-            botEnabled = false;
-            stopBotGame();
-            
-            currentMatchId = roomId;
-            myColor = color;
-            playerColor = color === "white" ? "w" : "b";
-            
-            game.reset();
-            pvpMoveHistory = [];
-            board.position("start");
-            board.orientation(color);
-            updateBoardStatus();
-            
-            document.getElementById("botStatus").textContent = 
-                "🆚 PvP: You play " + color.toUpperCase() + 
-                " vs " + opponentAddress.substring(0, 6) + "..." + opponentAddress.substring(38);
-            
-            document.getElementById("matchStatus").textContent = 
-                "✅ Match started! Color: " + color.toUpperCase();
-            
-            // Показываем доску
-            boardCard.style.display = "block";
-            enterGameMode();
-            document.getElementById("clockRow").style.display = "flex";
-            
-            // Принудительно перерисовываем доску (на случай, если контейнер был скрыт)
-            setTimeout(() => {
-                if (board && board.resize) board.resize();
-            }, 100);
-
-            console.log("[PvP] board card AFTER:", {
-                display: boardCard.style.display,
-                computedDisplay: window.getComputedStyle(boardCard).display,
-                visibility: window.getComputedStyle(boardCard).visibility
-            });
-            // Запускаем таймер
-            startClock(timeControl);
-        }
-                      // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
-                  // ===== POST-GAME АНАЛИЗ (только для партий с ботом) =====
-        async function analyzeGame() {
-            if (!game.game_over()) {
-                console.log("Game not over");
-                return;
-            }
-
-            const btn = document.getElementById("analyzeBtn");
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = "⏳ Analyzing...";
-            }
-
-                        // Берём историю: в PvP — из pvpMoveHistory, в боте — из game.history()
-            analysisResults = [];
-
-            const savedHistory = (currentMatchId && pvpMoveHistory.length > 0)
-                ? [...pvpMoveHistory]
-                : game.history();
-
-            window._savedHistory = savedHistory;
-            window._playerColorForAnalysis = (currentMatchId && myColor)
-                ? (myColor === "white" ? "w" : "b")
-                : (playerColor || "w");
-
-            // Восстанавливаем verbose-историю из SAN через временный Chess()
-            const replayGame = new Chess();
-            for (const san of savedHistory) {
-                replayGame.move(san);
-            }
-            const history = replayGame.history({ verbose: true });
-            const originalFen = replayGame.fen();
-
-            // Пробегаем по каждому ходу
-            for (let i = 0; i < history.length; i++) {
-                const move = history[i];
-
-                // Позиция ДО хода
-                const tempGame = new Chess();
-                for (let j = 0; j < i; j++) {
-                    tempGame.move(history[j].san);
-                }
-                const fenBefore = tempGame.fen();
-
-                // Что сыграл игрок (или бот — нам нужны только ходы ИГРОКА)
-                // Игрок — всегда БЕЛЫЕ (в партиях с ботом)
-                const playerColorForAnalysis = window._playerColorForAnalysis || "w";
-                const isPlayerMove = (playerColorForAnalysis === "w") ? (i % 2 === 0) : (i % 2 === 1);
-
-                if (isPlayerMove) {
-                    // Считаем лучший ход через analysisStockfish
-                    const best = await getBestMove(fenBefore, 15);
-                    const evalBefore = await getEval(fenBefore, 15);
-                    tempGame.move(history[i]);  // ← ПРИМЕНЯЕМ ход перед evalAfter
-                    const evalAfter = await getEval(tempGame.fen(), 15);
-
-                    // Centipawn loss = разница между лучшим и сыгранным
-                        const playerColorForAnalysis = window._playerColorForAnalysis || "w";
-
-                        // Пропускаем ходы, где позиция уже безнадёжна или ведёт к мату
-                    if (Math.abs(evalBefore) < 700 && Math.abs(evalAfter) < 700) {
-                        let cpLoss = (playerColorForAnalysis === "w")
-                            ? Math.max(0, evalBefore - evalAfter)
-                            : Math.max(0, evalAfter - evalBefore);
-                        // Кап: одна ошибка не должна ломать средний ACPL
-                        cpLoss = Math.min(300, cpLoss);
-
-                        // Пометка
-                        let mark = "";
-                        if (cpLoss >= 200) mark = "??";
-                        else if (cpLoss >= 100) mark = "?";
-                        else if (cpLoss >= 50) mark = "?!";
-
-                        analysisResults.push({
-                            index: i,
-                            san: move.san,
-                            isPlayer: true,
-                            cpLoss: cpLoss,
-                            mark: mark
-                        });
-                    }
-                }
-            }
-
-            // Восстанавливаем исходную позицию
-            game.load(originalFen);
-            board.position(game.fen(), false);
-
-            // Обновляем кнопку
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = "🔍 Analyze game";
-            }
-
-            console.log("Analysis done:", analysisResults);
-                        // Перерисовываем историю ходов с пометками
-            renderAnalysisInHistory();
-                        // Считаем ACPL и точность (формула Lichess)
-            const playerIsWhite = (window._playerColorForAnalysis || "w") === "w";
-            const playerResults = analysisResults.filter(r => r.isPlayer);
-
-            if (playerResults.length > 0) {
-                const totalCpLoss = playerResults.reduce((sum, r) => sum + (r.cpLoss || 0), 0);
-                const acpl = totalCpLoss / playerResults.length;
-
-                                    // Линейная формула (Chess.com-стиль):
-                // ACPL 0 → 100%, ACPL 50 → 75%, ACPL 100 → 50%, ACPL 200 → 0%
-                let accuracy = Math.max(0, Math.min(100, 100 - acpl * 0.5));
-                updateGameHistoryEntry(accuracy.toFixed(1), acpl.toFixed(1));
-
-                const accRow = document.getElementById("accuracyRow");
-                if (accRow) {
-                    accRow.innerHTML =
-                        `🎯 <b>Accuracy:</b> ${accuracy.toFixed(1)}% ` +
-                        `<span style="color:#8a92a6; margin-left:12px;">` +
-                        `ACPL: ${acpl.toFixed(1)} cp` +
-                        `</span>`;
-                    accRow.style.display = "block";
-                }
-            }
-            bindMoveNav();
-        }
-
-        // Запрос к analysisStockfish: лучший ход
-        function getBestMove(fen, depth) {
-            return new Promise((resolve) => {
-                const handler = (e) => {
-                    const line = e.data;
-                    if (typeof line !== "string") return;
-                    if (line.indexOf("bestmove") === 0) {
-                        analysisStockfish.removeEventListener("message", handler);
-                        const best = line.split(" ")[1];
-                        resolve(best || "");
-                    }
-                };
-                analysisStockfish.addEventListener("message", handler);
-                analysisStockfish.postMessage("position fen " + fen);
-                analysisStockfish.postMessage("go depth " + depth);
-            });
-        }
-
-        // Запрос к analysisStockfish: оценка позиции (в сантипешках)
-                function getEval(fen, depth) {
-            return new Promise((resolve) => {
-                let lastScore = 0;
-                const handler = (e) => {
-                    const line = e.data;
-                    if (typeof line !== "string") return;
-                    const cpMatch = line.match(/score cp (-?\d+)/);
-                    const mateMatch = line.match(/score mate (-?\d+)/);
-                    if (cpMatch) lastScore = parseInt(cpMatch[1], 10);
-                    if (mateMatch) {
-                        const m = parseInt(mateMatch[1], 10);
-                        lastScore = m > 0 ? 10000 : -10000;
-                    }
-                    if (line.indexOf("bestmove") === 0) {
-                        analysisStockfish.removeEventListener("message", handler);
-
-                        // Нормализация к БЕЛЫМ: Stockfish оценивает от лица того, чей ход.
-                        const turn = fen.split(" ")[1];
-                        if (turn === "b") lastScore = -lastScore;
-
-                        resolve(lastScore);
-                    }
-                };
-                analysisStockfish.addEventListener("message", handler);
-                analysisStockfish.postMessage("position fen " + fen);
-                analysisStockfish.postMessage("go depth " + depth);
-            });
-        }
-        
-        async function saveMatchToBlockchain(winner, opponentAddress, timeControl) {
-                        // Защита от дублей: сохраняем результат только один раз
-            if (window._resultSaved) {
-                console.log("Result already saved, skipping");
-                return;
-            }
-            window._resultSaved = true;
-            try {
-                await initContract();
-                document.getElementById("boardStatus").textContent += 
-                    " — Saving to blockchain...";
-                
-                // 1. Создаём партию в блокчейне
-                const tx1 = await contract.createMatch(opponentAddress, timeControl || 300);
-                await tx1.wait();
-                
-                // 2. Получаем ID новой партии
-                const counter = await contract.matchCounter();
-                const matchId = counter.toNumber();
-                
-                // 3. Записываем результат
-                if (window.tgSession && window.tgSession.isTelegram) {
-                await submitResultViaRelay(matchId, winner);
-                 return;
-                }
-                const tx2 = await contract.submitResult(matchId, winner);
-                await tx2.wait();
-                
-                document.getElementById("boardStatus").textContent = 
-                    "Checkmate! " + (winner === "white" ? "White" : winner === "black" ? "Black" : "Draw") + 
-                    " ✅ Saved to LitVM (match #" + matchId + ")";
-            } catch (e) {
-                document.getElementById("boardStatus").textContent += 
-                    " ❌ Blockchain error: " + (e.reason || e.message);
-                console.error("Blockchain save error:", e);
-            }
-        }
-
-function startMatchGame(matchId, timeControl) {
-    activeMatchId = matchId;
-    game.reset();
-    board.position("start");
-    updateBoardStatus();
-    
-    // Включаем бота автоматически
-    botEnabled = true;
-    document.getElementById("botStatus").textContent = 
-        "Playing match #" + matchId + " (time: " + formatTime(timeControl) + ")";
-    
-    startClock(timeControl);
-    initBot();
-    alert("Match #" + matchId + " loaded. You play White. Bot is opponent.");
-}
-     // ===== STOCKFISH BOT =====
-  let stockfish = new Worker('stockfish-19-lite-single.js');
-  let analysisStockfish = new Worker('stockfish-19-lite-single.js');
-  let analysisResults = [];
-  let botEnabled = false;
-  let playerColor = "w"; // игрок всегда играет белыми
-
-  stockfish.onmessage = onEngineMessage;
-
-        function initBot() {
-    console.log("Stockfish initialized (Worker mode)");
- }
-
-            function onEngineMessage(event) {
-        const line = event.data;
-        if (typeof line !== "string") return;
-
-        if (line.indexOf("bestmove") === 0) {
-            const move = line.split(" ")[1];
-            if (move && move !== "(none)") {
-                makeBotMove(move);
-            }
-        }
-    }
-
-        function makeBotMove(moveStr) {
-            const from = moveStr.substring(0, 2);
-            const to = moveStr.substring(2, 4);
-            const promotion = moveStr.length > 4 ? moveStr[4] : "q";
-            game.move({ from: from, to: to, promotion: promotion });
-            board.position(game.fen());
-            updateBoardStatus();
-            updateMoveHistory();
-        }
-
-                        function requestBotMove() {
-            if (!stockfish || !botEnabled) return;
-            if (game.game_over()) return;
-            if (game.turn() === playerColor) return;
-
-            // Раскладка 5 ботов: [Elo, depth]
-            const BOT_LEVELS = {
-                "0":  { elo: 1320, depth: 1  },   // Easy
-                "5":  { elo: 1500, depth: 3  },   // Medium
-                "10": { elo: 1800, depth: 6  },   // Hard
-                "15": { elo: 2200, depth: 10 },   // Very Hard
-                "20": { elo: 3190, depth: 22 }    // Master — полная сила
-            };
-
-            // Определяем уровень: либо из карточки бота (новая логика), либо из select (fallback)
-            let level = null;
-            if (window.currentBotLevel) {
-                level = window.currentBotLevel;
-            } else {
-                const sel = document.getElementById("botDifficulty");
-                if (sel) {
-                    level = BOT_LEVELS[sel.value] || null;
-                }
-            }
-
-            // Если по какой-то причине уровень не определён — берём Medium
-            if (!level) {
-                level = BOT_LEVELS["5"];
-            }
-
-                        // Master (elo 3190) — полная сила, без ограничения
-            if (level.elo >= 3190) {
-                stockfish.postMessage("setoption name UCI_LimitStrength value false");
-            } else {
-                stockfish.postMessage("setoption name UCI_LimitStrength value true");
-                stockfish.postMessage("setoption name UCI_Elo value " + level.elo);
-            }
-            stockfish.postMessage("ucinewgame");
-            stockfish.postMessage("position fen " + game.fen());
-            stockfish.postMessage("go depth " + level.depth);
-        }
-
-    async function startBotGame() {
-        try {
-                        if (window.tgSession && window.tgSession.isTelegram) {
-                activeMatchId = null;
-                document.getElementById("botStatus").textContent = "Starting game...";
-            } else {
-                await initContract();
-                document.getElementById("botStatus").textContent = "Creating match on blockchain...";
-                const tx = await contract.createMatch(BOT_ADDRESS, BOT_TIME_CONTROL);
-                document.getElementById("botStatus").textContent = "Waiting for confirmation...";
-                await tx.wait();
-                const counter = await contract.matchCounter();
-                activeMatchId = counter.toNumber();
-            }
-            initBot();
-            stockfish.postMessage("ucinewgame");
-            botEnabled = true;
-            game.reset();
-            // Сбрасываем PvP-состояние (мы в партии с ботом)
-            currentMatchId = null;
-            myColor = null;
-            pvpMoveHistory = [];
-
-            // Применяем выбранный цвет игрока
-            const chosen = window._playerChosenColor || "white";
-            const myBotColor = (chosen === "random")
-                ? (Math.random() < 0.5 ? "white" : "black")
-                : chosen;
-            playerColor = (myBotColor === "white") ? "w" : "b";
-            window._playerColorForAnalysis = playerColor;
-            board.orientation(myBotColor);
-
-            updateMoveHistory();
-            board.position("start");
-            updateBoardStatus();
-                        // Если игрок чёрный — бот (белые) ходит первым
-            if (myBotColor === "black") {
-                setTimeout(requestBotMove, 500);
-            }
-            const botNamesMap = { "0":"Easy", "5":"Medium", "10":"Hard", "15":"Very Hard", "20":"Master" };
-const selectedKey = document.querySelector("#botGrid .bot-card.selected")?.dataset.bot;
-const difficulty = botNamesMap[selectedKey] || "Bot";
-            document.getElementById("botStatus").textContent = 
-                "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
-           document.getElementById("chessBoardCard").style.display = "block";
-           enterGameMode();
-            document.getElementById("analyzeBtn").style.display = "none";
-            document.getElementById("accuracyRow").style.display = "none";
-            document.getElementById("clockRow").style.display = "none";
-            const oppPanel = document.getElementById("opponentPanel");
-            if (oppPanel) oppPanel.style.display = "flex";
-            document.getElementById("opponentName").textContent = difficulty;
-            document.getElementById("opponentElo").textContent = (window.currentBotLevel ? window.currentBotLevel.elo : "—") + " Elo";
-           setTimeout(() => { if (board && board.resize) board.resize(); }, 50);
-        } catch (e) {
-            document.getElementById("botStatus").textContent = 
-                "❌ Error: " + (e.reason || e.message);
-        }
-    }
-
-             function stopBotGame() {
-    botEnabled = false;
-    stopClock();
-    document.getElementById("botStatus").textContent = "Bot stopped.";
-    document.getElementById("chessBoardCard").style.display = "none";
- }
-
-                // ===== Сетка ботов: клик по карточке = старт =====
-        window.currentBotLevel = null;
-                  // ===== ВЫБОР ЦВЕТА =====
-        window._playerChosenColor = "white";  // по умолчанию
-
-        function setPlayerColor(color) {
-            window._playerChosenColor = color;
-            ["colorWhiteBtn", "colorBlackBtn", "colorRandomBtn"].forEach(id => {
-                const btn = document.getElementById(id);
-                if (!btn) return;
-                btn.style.background = "";  // сброс
-                btn.style.opacity = "0.6";
-            });
-            const activeId = color === "white" ? "colorWhiteBtn"
-                           : color === "black" ? "colorBlackBtn"
-                           : "colorRandomBtn";
-            const active = document.getElementById(activeId);
-            if (active) {
-                active.style.opacity = "1";
-                active.style.background = "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)";
-            }
-        }
-
-        // Привязка кнопок
-        document.addEventListener("DOMContentLoaded", () => {
-            const w = document.getElementById("colorWhiteBtn");
-            const b = document.getElementById("colorBlackBtn");
-            const r = document.getElementById("colorRandomBtn");
-            if (w) w.addEventListener("click", () => setPlayerColor("white"));
-            if (b) b.addEventListener("click", () => setPlayerColor("black"));
-            if (r) r.addEventListener("click", () => setPlayerColor("random"));
-            setPlayerColor("white");  // по умолчанию активна White
-        });
-
-        document.querySelectorAll("#botGrid .bot-card").forEach(card => {
-            card.addEventListener("click", () => {
-                const botKey = card.dataset.bot;
-                const BOT_LEVELS = {
-                    "0":  { elo: 1320, depth: 1  },
-                    "5":  { elo: 1500, depth: 3  },
-                    "10": { elo: 1800, depth: 6  },
-                    "15": { elo: 2200, depth: 10 },
-                    "20": { elo: 3190, depth: 22 }
-                };
-                const level = BOT_LEVELS[botKey];
-                if (!level) return;
-
-                // Подсветка выбранной карточки
-                document.querySelectorAll("#botGrid .bot-card").forEach(c => c.classList.remove("selected"));
-                card.classList.add("selected");
-
-                // Устанавливаем выбранный уровень — requestBotMove() его подхватит
-                window.currentBotLevel = level;
-
-                // Обновляем надпись «Medium (level 5)» в статусе через имя карточки
-                document.getElementById("botStatus").textContent = "Starting game vs " + card.querySelector(".bot-name").textContent + " (" + level.elo + ")...";
-
-                // Запускаем партию
-                startBotGame();
-            });
-        });
-
-        // Кнопка «Сдаться» (бывшая Stop Bot)
-        const stopBtn = document.getElementById("stopBotBtn");
-        if (stopBtn) stopBtn.onclick = stopBotGame;
-                // ===== ЛОББИ (OPEN GAMES) =====
-        
-        async function createOpenMatch() {
-            const tc = parseInt(document.getElementById("timeControlSelect").value, 10);
-            try {
-                await initContract();
-                document.getElementById("openStatus").textContent = "Creating open game...";
-                const tx = await contract.createOpenMatch(tc);
-                document.getElementById("openStatus").textContent = "Waiting for confirmation...";
-                await tx.wait();
-                document.getElementById("openStatus").textContent = "✅ Open game created! Waiting for opponent...";
-                loadOpenMatches();
-                loadMatches();
-            } catch (e) {
-                document.getElementById("openStatus").textContent = "❌ Error: " + (e.reason || e.message);
-            }
-        }
-
-        async function joinMatch(matchId) {
-            try {
-                await initContract();
-                document.getElementById("openStatus").textContent = "Joining match #" + matchId + "...";
-                const tx = await contract.joinMatch(matchId);
-                document.getElementById("openStatus").textContent = "Waiting for confirmation...";
-                await tx.wait();
-                document.getElementById("openStatus").textContent = "✅ Joined match #" + matchId + "! Load the game and play.";
-                loadOpenMatches();
-                loadMatches();
-            } catch (e) {
-                document.getElementById("openStatus").textContent = "❌ Error: " + (e.reason || e.message);
-            }
-        }
-
-        async function loadOpenMatches() {
-            const list = document.getElementById("openMatchesList");
-            list.innerHTML = "Loading...";
-            try {
-                await initContract();
-                const ids = await contract.getOpenMatches();
-                if (ids.length === 0) {
-                    list.innerHTML = "<p class='status'>No open games right now. Create one!</p>";
-                    return;
-                }
-                let html = "";
-                for (let i = 0; i < ids.length; i++) {
-                    const id = ids[i].toNumber();
-                    const m = await contract.getMatch(id);
-                    const isMine = m.whitePlayer.toLowerCase() === userAddress.toLowerCase();
-                    html += '<div class="match">'
-                        + '<b>Game #' + id + '</b>'
-                        + '<span class="timer">⏱ ' + formatTime(m.timeControl.toNumber()) + '</span>'
-                        + '<br><small>White: ' + m.whitePlayer + '</small>'
-                        + '<br><small>Status: ' + (isMine ? 'Waiting for opponent (yours)' : 'Open for join') + '</small>';
-                    if (!isMine) {
-                        html += '<br><button class="small" onclick="joinMatch(' + id + ')">Join</button>';
-                    }
-                    html += '</div>';
-                }
-                list.innerHTML = html;
-            } catch (e) {
-                list.innerHTML = "❌ Error: " + (e.reason || e.message);
-            }
-        }
-
-                // ===== MATCHMAKING (FIND MATCH) =====
-        
-        async function findMatch() {
-    if (!socket || !socket.connected) {
-        document.getElementById("matchStatus").textContent = "❌ Not connected to server";
-        return;
-    }
-    
-    const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
-    document.getElementById("matchStatus").textContent = "🔍 Searching for opponent...";
-    document.getElementById("findMatchBtn").disabled = true;
-    document.getElementById("cancelMatchBtn").disabled = false;
-    
-    // 1. Логика Lichess (остается без изменений)
-    let lichessUsername = null;
-    let lichessElo = null;
-    if (userAddress) {
-        const saved = localStorage.getItem("lichess_" + userAddress.toLowerCase());
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                lichessUsername = parsed.username || null;
-                lichessElo = parsed.rapidRating || null;
-            } catch (e) { /* ignore */ }
-        }
-    }
-
-    // 2. Логика Telegram (новое)
-        const myAddress = window.tgSession && window.tgSession.chessAccount
-        ? window.tgSession.chessAccount
-        : userAddress;
-
-    // 3. Диагностика
-    console.log("[MATCHMAKING] identity:", myAddress);
-    console.log("[MATCHMAKING] timeControl:", tc);
-    console.log("[MATCHMAKING] socket.connected:", socket?.connected);
-
-    // 4. Отправка
-    const tgSession = window.tgSession || {};
-    // Read the Telegram profile again at click time, in case auth initialized it later.
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName]
-        .filter(Boolean).join(" ").trim()
-        || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
-    const tgPhoto = tgUser?.photo_url || tgSession.photoUrl || null;
-
-    console.log("[MATCHMAKING] profile:", {
-        name: tgName,
-        hasTelegramPhoto: Boolean(tgUser?.photo_url),
-        hasSessionPhoto: Boolean(tgSession.photoUrl),
-        sendingPhoto: Boolean(tgPhoto)
-    });
-
-    socket.emit("findMatch", {
-        userAddress: myAddress, // Отправляем Telegram ID (или старый кошелек как fallback)
-        timeControl: tc,
-        lichessUsername: lichessUsername,
-        lichessElo: lichessElo,
-        tgName: tgName,
-        tgPhoto: tgPhoto
-    });
-}
- 
-        async function inviteFriend() {
-            if (!socket || !socket.connected) return alert("Not connected to server");
+        // ==== ИГРА ====
+        function findMatch() {
+            if (!socket || !socket.connected) return alert("Not connected");
             const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
-            const playerAddress = window.tgSession?.chessAccount || userAddress;
-            if (!playerAddress) return alert("Please login first");
-            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            const tgSession = window.tgSession || {};
-            const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName].filter(Boolean).join(" ").trim()
-                || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
-            socket.emit("createPrivateRoom", { userAddress: playerAddress, timeControl: tc, tgName, tgPhoto: tgUser?.photo_url || tgSession.photoUrl || null });
-            document.getElementById("matchStatus").textContent = "Creating private room...";
-        }
-
-        function handlePrivateRoomLink() {
-            const roomId = new URLSearchParams(window.location.search).get("room");
-            if (!roomId || !socket) return;
-            const playerAddress = window.tgSession?.chessAccount || userAddress;
-            if (!playerAddress) {
-                document.getElementById("matchStatus").textContent = "Please open this invite inside Telegram after login.";
-                return;
-            }
-            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            const tgSession = window.tgSession || {};
-            const tgName = [tgUser?.first_name || tgSession.firstName, tgUser?.last_name || tgSession.lastName].filter(Boolean).join(" ").trim()
-                || (tgUser?.username || tgSession.username ? "@" + (tgUser?.username || tgSession.username) : "Player");
-            socket.emit("joinPrivateRoom", { roomId, userAddress: playerAddress, tgName, tgPhoto: tgUser?.photo_url || tgSession.photoUrl || null });
-            document.getElementById("matchStatus").textContent = "Joining private room...";
-        }
-
-        
-        function cancelMatch() {
-            if (socket && socket.connected) {
-                socket.emit("cancelFindMatch");
-            }
-            document.getElementById("matchStatus").textContent = "❌ Search cancelled";
-            document.getElementById("findMatchBtn").disabled = false;
-            document.getElementById("cancelMatchBtn").disabled = true;
-        }
-        
-                // Обработчики событий от сервера
-        function setupMatchmakingListeners() {
-            if (!socket) return;
-            
-            socket.on("privateRoomCreated", (data) => {
-                const link = "https://t.me/Litchess_bot/game?room=" + encodeURIComponent(data.roomId);
-                document.getElementById("matchStatus").textContent = "Choose a Telegram chat to send your invite.";
-
-                if (window.Telegram?.WebApp?.openTelegramLink) {
-                    const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(link)
-                        + "&text=" + encodeURIComponent("Join my chess game on LitVM!");
-                    window.Telegram.WebApp.openTelegramLink(shareUrl);
-                } else {
-                    alert("Copy this link and send it to your friend:\n\n" + link);
-                }
-            });
-            socket.on("privateRoomError", (data) => {
-                document.getElementById("matchStatus").textContent = "❌ " + (data?.message || "Private room error");
-            });
-
-            socket.on("waitingForOpponent", () => {
-                document.getElementById("matchStatus").textContent = 
-                    "⏳ Waiting for opponent... (don't close the page)";
-            });
-            
-            socket.on("matchFound", (data) => {
-                console.log("Match found:", data);
-                document.getElementById("matchStatus").textContent = 
-                    "✅ Match found! Color: " + data.color.toUpperCase();
-                document.getElementById("findMatchBtn").disabled = false;
-                document.getElementById("cancelMatchBtn").disabled = true;
-                
-                // Запускаем PvP-партию
-                startPvPGame(data.roomId, data.color, data.opponentAddress, data.timeControl);
-
-                // Показываем данные соперника в панели
-                const oppPanel = document.getElementById("opponentPanel");
-                if (oppPanel) oppPanel.style.display = "flex";
-
-                const oppName = document.getElementById("opponentName");
-                const oppElo = document.getElementById("opponentElo");
-                const oppAvatar = document.getElementById("opponentAvatar");
-
-                const name = data.opponentName || data.opponentLichess || "Anonymous";
-                const elo = data.opponentElo ? (data.opponentElo + " Elo") : "— Elo";
-                const avatarUrl = data.opponentPhoto || "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(name);
-
-                if (oppName) oppName.textContent = name;
-                if (oppElo) oppElo.textContent = elo;
-                if (oppAvatar) {
-                    oppAvatar.onerror = () => {
-                        oppAvatar.onerror = null;
-                        oppAvatar.src = "https://api.dicebear.com/9.x/avataaars/svg?seed=" + encodeURIComponent(name);
-                    };
-                    oppAvatar.src = avatarUrl;
-                }
-            });
-
-            // НОВЫЙ ОБРАБОТЧИК: Когда сервер создал матч в блокчейне
-            socket.on("onChainMatchCreated", (data) => {
-                console.log("✅ Матч создан в блокчейне! ID:", data.matchId);
-                window.currentMatchId = data.matchId;
-                
-                const boardStatus = document.getElementById("boardStatus");
-                if (boardStatus) {
-                    boardStatus.textContent = "✅ Матч создан в блокчейне (ID: " + data.matchId + "). Играйте!";
-                }
-            });
-
-            // Обработчик ошибки создания матча
-            socket.on("onChainCreationFailed", (data) => {
-                console.warn("❌ Не удалось создать матч в блокчейне:", data.message);
-                const boardStatus = document.getElementById("boardStatus");
-                if (boardStatus) {
-                    boardStatus.textContent = "⚠️ Матч не записан в блокчейн (игра продолжается).";
-                }
-            });
-            
-            socket.on("searchCancelled", () => {
-                document.getElementById("matchStatus").textContent = "Search cancelled";
-            });
-            
-            socket.on("opponentDisconnected", (data) => {
-                console.log("Opponent disconnected:", data.message);
-                document.getElementById("boardStatus").textContent = 
-                    "⚠️ " + data.message;
-            });
-            
-            socket.on("opponentForfeit", (data) => {
-                console.log("🏆 Opponent forfeit:", data);
-                alert("🏆 You win by forfeit! " + data.reason);
-                
-                // Записываем результат в блокчейн
-                if (window.opponentAddress) {
-                    saveMatchToBlockchain(
-                        data.winner,
-                        window.opponentAddress,
-                        window.currentTimeControl
-                    );
-                }
+            const myAddress = window.tgSession?.chessAccount;
+            if (!myAddress) return alert("Please login first");
+            socket.emit("findMatch", {
+                userAddress: myAddress,
+                timeControl: tc,
+                tgName: window.tgSession?.firstName || "Player",
+                tgPhoto: window.tgSession?.photoUrl || null
             });
         }
-          
-        document.getElementById("findMatchBtn").onclick = findMatch;
-        document.getElementById("cancelMatchBtn").onclick = cancelMatch;
-        document.getElementById("inviteFriendBtn").onclick = inviteFriend;
+
+        function inviteFriend() {
+            if (!socket || !socket.connected) return alert("Not connected");
+            const tc = parseInt(document.getElementById("onlineTimeControl").value, 10);
+            const myAddress = window.tgSession?.chessAccount;
+            if (!myAddress) return alert("Please login first");
+            socket.emit("createPrivateRoom", {
+                userAddress: myAddress,
+                timeControl: tc,
+                tgName: window.tgSession?.firstName || "Player",
+                tgPhoto: window.tgSession?.photoUrl || null
+            });
+        }
+
+        function startBotGame() {
+            alert("Bot game started (local)");
+            // Твой код для бота
+        }
+
+        // ==== ЗАПУСК ====
+        window.addEventListener("load", () => {
+            initBoard();
+            connectSocket();
+            document.getElementById("gameModeWrap").style.display = "block";
+        });
     </script>
-    </div>
-<script src="telegram-auth.js?v=42"></script>
 
-<!-- Fixed bottom navigation overlay -->
-<div id="bottomNav" class="bottom-nav">
- <button id="mainPlayBtn" class="main-play-btn">Играть</button>
- <div class="nav-icons">
-  <button class="nav-item active" data-tab="home"><span class="nav-icon">♟</span><span class="nav-label">Главная</span></button>
-  <button class="nav-item" data-tab="puzzles"><span class="nav-icon">🧩</span><span class="nav-label">Задачи</span></button>
-  <button class="nav-item" data-tab="learn"><span class="nav-icon">🎓</span><span class="nav-label">Учёба</span></button>
-  <button class="nav-item" data-tab="watch"><span class="nav-icon">◉</span><span class="nav-label">Смотреть</span></button>
-  <button class="nav-item" data-tab="more"><span class="nav-icon">☰</span><span class="nav-label">Ещё</span></button>
- </div>
-</div>
-<div id="newGameScreen" role="dialog" aria-label="Новая партия">
- <div id="newGameHeader"><button id="newGameBack" aria-label="Назад">←</button><h2 id="newGameTitle">🏆 Новая партия</h2></div>
- <select id="newGameTimeControl" aria-label="Время игры">
-  <option value="60">⏱️ 1 минута</option><option value="300" selected>⏱️ 5 минут</option><option value="900">⏱️ 15 минут</option><option value="1800">⏱️ 30 минут</option>
- </select>
- <button id="startNewGameBtn">Начать партию</button>
- <button class="new-game-option" id="newGameTournaments">🏆 Турниры</button>
- <button class="new-game-option" id="newGameFriend">👥 Играть с другом</button>
- <button class="new-game-option" id="newGameBots">🤖 Играть с ботами</button>
- <button class="new-game-option" id="newGameTrainer">🧔 Играть с тренером</button>
-</div>
-<script>
-(() => {
- const screen=document.getElementById("newGameScreen"), nav=document.getElementById("bottomNav");
- const open=()=>{screen.style.display="flex";nav.style.display="none";};
- const close=()=>{screen.style.display="none";nav.style.display="";};
- document.getElementById("mainPlayBtn").addEventListener("click",open);
- document.getElementById("newGameBack").addEventListener("click",close);
- document.getElementById("startNewGameBtn").addEventListener("click",()=>{
-  document.getElementById("onlineTimeControl").value=document.getElementById("newGameTimeControl").value;
-  close(); findMatch();
- });
- document.getElementById("newGameFriend").addEventListener("click",()=>{close();document.getElementById("inviteFriendBtn").click();});
- document.getElementById("newGameBots").addEventListener("click",()=>{close();document.getElementById("botGrid")?.scrollIntoView({behavior:"smooth",block:"start"});});
- document.getElementById("newGameTrainer").addEventListener("click",()=>{close();document.getElementById("botGrid")?.scrollIntoView({behavior:"smooth",block:"start"});});
- document.getElementById("newGameTournaments").addEventListener("click",()=>{close();document.getElementById("gameHistoryTitle")?.scrollIntoView({behavior:"smooth",block:"start"});});
- const targets={home:"menuWrap",puzzles:"botGrid",learn:"gameHistoryTitle",watch:"gameHistoryTitle",more:"languageCard"};
- document.querySelectorAll("#bottomNav .nav-item").forEach(btn=>btn.addEventListener("click",()=>{
-  document.querySelectorAll("#bottomNav .nav-item").forEach(item=>item.classList.toggle("active",item===btn));
-  document.getElementById(targets[btn.dataset.tab])?.scrollIntoView({behavior:"smooth",block:"start"});
- }));
-})();
-</script>
-
+    <script src="telegram-auth.js?v=50"></script>
 </body>
 </html>
