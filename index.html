@@ -13,6 +13,7 @@
             background: linear-gradient(180deg, #0a0d14 0%, #0f1117 100%);
             color: #e6e6e6;
             min-height: 100vh;
+            position: relative;
         }
         h1 { color: #ffb84d; text-align: center; font-size: 28px; margin: 0 0 24px 0; }
         h3 { margin: 0 0 12px 0; font-size: 17px; color: #ffb84d; }
@@ -108,17 +109,16 @@
 <body>
 
     <div id="gameModeWrap" style="display: none;">
-        <h1>♟ LitVM Chess</h1>
+        <h1>♟ LitChess</h1>
 
         <div id="menuWrap">
             <!-- Переключатель языков -->
-            <div class="card" id="languageCard" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
-                <label for="languageSelect" id="languageLabel" style="font-weight:600; white-space:nowrap;">🌐 Language / Язык</label>
-                <select id="languageSelect" aria-label="Language" style="margin:0; max-width:190px;">
-                    <option value="en">🇬🇧 English</option>
-                    <option value="ru">🇷🇺 Русский</option>
-                </select>
-            </div>
+            <div id="languageSwitcher" style="position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 4px; z-index: 100;">
+                  <select id="languageSelect" aria-label="Language" style="background: transparent; border: 1px solid #2a2e3a; color: #e6e6e6; padding: 4px 8px; border-radius: 6px; font-size: 13px; width: auto; margin: 0;">
+              <option value="en">EN</option>
+              <option value="ru">RU</option>
+           </select>
+           </div>
 
             <!-- Профиль Telegram -->
             <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
@@ -2659,7 +2659,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
 
-    <script src="telegram-auth.js?v=53"></script>
+    <script src="telegram-auth.js?v=54"></script>
     <div style="display: none;">
     <button id="connectBtn"></button>
     <button id="switchNetworkBtn"></button>
