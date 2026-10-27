@@ -299,13 +299,23 @@ const uiTranslations = {
         playWhite: "⚪ I play White", playBlack: "⚫ I play Black", randomColor: "🎲 Random",
         surrender: "Surrender", back: "← Back", chessBoard: "Chess Board", moveHistory: "Move history",
         analyzeGame: "🔍 Analyze game",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ НАВИГАЦИИ
+        // Навигация
         playButton: "Play",
         navHome: "Home",
         navPuzzles: "Puzzles",
         navLearn: "Learn",
         navWatch: "Watch",
-        navMore: "More"
+        navMore: "More",
+        // Экран новой игры
+        newGameTitle: "New Game",
+        startGame: "Start Game",
+        tournaments: "Tournaments",
+        playFriend: "Play with Friend",
+        playBots: "Play with Bots",
+        timeControl1: "1 minute",
+        timeControl5: "5 minutes",
+        timeControl15: "15 minutes",
+        timeControl30: "30 minutes"
     },
     ru: {
         languageLabel: "🌐 Язык",
@@ -319,13 +329,23 @@ const uiTranslations = {
         playWhite: "⚪ Я играю белыми", playBlack: "⚫ Я играю чёрными", randomColor: "🎲 Случайно",
         surrender: "Сдаться", back: "← Назад", chessBoard: "Шахматная доска", moveHistory: "История ходов",
         analyzeGame: "🔍 Анализ партии",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ НАВИГАЦИИ
+        // Навигация
         playButton: "Играть",
         navHome: "Главная",
         navPuzzles: "Задачи",
         navLearn: "Учеба",
         navWatch: "Смотреть",
-        navMore: "Еще"
+        navMore: "Еще",
+        // Экран новой игры
+        newGameTitle: "Новая партия",
+        startGame: "Начать партию",
+        tournaments: "Турниры",
+        playFriend: "Играть с другом",
+        playBots: "Играть с ботами",
+        timeControl1: "1 минута",
+        timeControl5: "5 минут",
+        timeControl15: "15 минут",
+        timeControl30: "30 минут"
     }
 };
 
@@ -377,7 +397,7 @@ function applyUiLanguage(lang) {
     const selector = document.getElementById("languageSelect");
     if (selector) selector.value = selected;
 
-    // ===== НОВОЕ: ПЕРЕВОД НИЖНЕЙ НАВИГАЦИИ =====
+    // ===== НАВИГАЦИЯ =====
     const mainPlayBtn = document.getElementById("mainPlayBtn");
     if (mainPlayBtn) mainPlayBtn.textContent = dict.playButton;
 
@@ -389,6 +409,31 @@ function applyUiLanguage(lang) {
             label.textContent = dict[navKeys[index]];
         }
     });
+
+    // ===== ЭКРАН "НОВАЯ ПАРТИЯ" =====
+    const newGameTitle = document.getElementById("newGameTitle");
+    if (newGameTitle) newGameTitle.textContent = dict.newGameTitle;
+
+    const startBtn = document.getElementById("startNewGameBtn");
+    if (startBtn) startBtn.textContent = dict.startGame;
+
+    const tournamentsBtn = document.getElementById("newGameTournaments");
+    if (tournamentsBtn) tournamentsBtn.textContent = "🏆 " + dict.tournaments;
+
+    const friendBtn = document.getElementById("newGameFriend");
+    if (friendBtn) friendBtn.textContent = "👥 " + dict.playFriend;
+
+    const botsBtn = document.getElementById("newGameBots");
+    if (botsBtn) botsBtn.textContent = "💻 " + dict.playBots;
+
+    const tcSelect = document.getElementById("newGameTimeControl");
+    if (tcSelect) {
+        const options = tcSelect.options;
+        if (options[0]) options[0].textContent = "⏱️ " + dict.timeControl1;
+        if (options[1]) options[1].textContent = "⏱️ " + dict.timeControl5;
+        if (options[2]) options[2].textContent = "⏱️ " + dict.timeControl15;
+        if (options[3]) options[3].textContent = "⏱️ " + dict.timeControl30;
+    }
 }
 
 (function initUiLanguage() {
@@ -2686,7 +2731,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
 
-    <script src="telegram-auth.js?v=55"></script>
+    <script src="telegram-auth.js?v=56"></script>
     <div style="display: none;">
     <button id="connectBtn"></button>
     <button id="switchNetworkBtn"></button>
