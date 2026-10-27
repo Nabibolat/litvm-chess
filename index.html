@@ -278,12 +278,29 @@
             #board { width: 100% !important; max-width: 100% !important; }
             .clock-row { font-size: 14px; }
         }
-    </style>
+    
+/* Bottom navigation overlay; leaves the original game UI in place */
+body { padding-bottom: 118px !important; }
+#bottomNav { position:fixed; left:0; right:0; bottom:0; z-index:9998; padding:8px 10px calc(6px + env(safe-area-inset-bottom)); background:rgba(22,25,34,.97); border-top:1px solid #34343a; box-shadow:0 -3px 14px rgba(0,0,0,.35); }
+#mainPlayBtn { display:block; width:100%; max-width:560px; min-height:48px; margin:0 auto 7px; border:0; border-radius:10px; color:#fff; font-size:22px; font-weight:800; background:linear-gradient(180deg,#8bc34a,#5d9f35); }
+#bottomNav .nav-icons { display:flex; width:100%; justify-content:space-around; gap:2px; }
+#bottomNav .nav-item { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px; padding:3px 0; border:0; background:transparent; box-shadow:none; color:#aaa; font-size:10px; }
+#bottomNav .nav-item.active { color:#fff; }
+#bottomNav .nav-icon { font-size:21px; line-height:1.1; }
+#newGameScreen { display:none; position:fixed; inset:0; z-index:10000; overflow:auto; box-sizing:border-box; padding:calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom)); background:#292725; flex-direction:column; }
+#newGameHeader { display:flex; align-items:center; gap:14px; margin-bottom:32px; }
+#newGameBack { padding:0 8px; background:transparent; border:0; box-shadow:none; color:#fff; font-size:34px; }
+#newGameTitle { margin:0; color:#fff; font-size:27px; }
+#newGameTimeControl { width:100%; min-height:62px; margin-bottom:14px; text-align:center; font-size:20px; font-weight:700; color:#fff; background:#393735; border:1px solid #484542; border-radius:12px; }
+#startNewGameBtn { width:100%; min-height:76px; margin-bottom:26px; border:0; border-radius:12px; color:#fff; font-size:24px; font-weight:800; background:linear-gradient(180deg,#8bc34a,#5d9f35); }
+#newGameScreen .new-game-option { width:100%; min-height:62px; margin-bottom:10px; border:1px solid #45423f; border-radius:12px; color:#eee; background:#393735; font-size:19px; font-weight:700; }
+
+</style>
   </head>
   <body>
     <div id="gameModeWrap" style="display: none;">
     <h1>♟ LitVM Chess</h1>
-    <div id="menuWrap">\n
+    <div id="menuWrap">
     <div class="card" id="languageCard" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
         <label for="languageSelect" id="languageLabel" style="font-weight:600; white-space:nowrap;">🌐 Language / Язык</label>
         <select id="languageSelect" aria-label="Language" style="margin:0; max-width:190px;">
@@ -2780,5 +2797,51 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
     </script>
     </div>
 <script src="telegram-auth.js?v=42"></script>
+
+<!-- Fixed bottom navigation overlay -->
+<div id="bottomNav" class="bottom-nav">
+ <button id="mainPlayBtn" class="main-play-btn">Играть</button>
+ <div class="nav-icons">
+  <button class="nav-item active" data-tab="home"><span class="nav-icon">♟</span><span class="nav-label">Главная</span></button>
+  <button class="nav-item" data-tab="puzzles"><span class="nav-icon">🧩</span><span class="nav-label">Задачи</span></button>
+  <button class="nav-item" data-tab="learn"><span class="nav-icon">🎓</span><span class="nav-label">Учёба</span></button>
+  <button class="nav-item" data-tab="watch"><span class="nav-icon">◉</span><span class="nav-label">Смотреть</span></button>
+  <button class="nav-item" data-tab="more"><span class="nav-icon">☰</span><span class="nav-label">Ещё</span></button>
+ </div>
+</div>
+<div id="newGameScreen" role="dialog" aria-label="Новая партия">
+ <div id="newGameHeader"><button id="newGameBack" aria-label="Назад">←</button><h2 id="newGameTitle">🏆 Новая партия</h2></div>
+ <select id="newGameTimeControl" aria-label="Время игры">
+  <option value="60">⏱️ 1 минута</option><option value="300" selected>⏱️ 5 минут</option><option value="900">⏱️ 15 минут</option><option value="1800">⏱️ 30 минут</option>
+ </select>
+ <button id="startNewGameBtn">Начать партию</button>
+ <button class="new-game-option" id="newGameTournaments">🏆 Турниры</button>
+ <button class="new-game-option" id="newGameFriend">👥 Играть с другом</button>
+ <button class="new-game-option" id="newGameBots">🤖 Играть с ботами</button>
+ <button class="new-game-option" id="newGameTrainer">🧔 Играть с тренером</button>
+</div>
+<script>
+(() => {
+ const screen=document.getElementById("newGameScreen"), nav=document.getElementById("bottomNav");
+ const open=()=>{screen.style.display="flex";nav.style.display="none";};
+ const close=()=>{screen.style.display="none";nav.style.display="";};
+ document.getElementById("mainPlayBtn").addEventListener("click",open);
+ document.getElementById("newGameBack").addEventListener("click",close);
+ document.getElementById("startNewGameBtn").addEventListener("click",()=>{
+  document.getElementById("onlineTimeControl").value=document.getElementById("newGameTimeControl").value;
+  close(); findMatch();
+ });
+ document.getElementById("newGameFriend").addEventListener("click",()=>{close();document.getElementById("inviteFriendBtn").click();});
+ document.getElementById("newGameBots").addEventListener("click",()=>{close();document.getElementById("botGrid")?.scrollIntoView({behavior:"smooth",block:"start"});});
+ document.getElementById("newGameTrainer").addEventListener("click",()=>{close();document.getElementById("botGrid")?.scrollIntoView({behavior:"smooth",block:"start"});});
+ document.getElementById("newGameTournaments").addEventListener("click",()=>{close();document.getElementById("gameHistoryTitle")?.scrollIntoView({behavior:"smooth",block:"start"});});
+ const targets={home:"menuWrap",puzzles:"botGrid",learn:"gameHistoryTitle",watch:"gameHistoryTitle",more:"languageCard"};
+ document.querySelectorAll("#bottomNav .nav-item").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll("#bottomNav .nav-item").forEach(item=>item.classList.toggle("active",item===btn));
+  document.getElementById(targets[btn.dataset.tab])?.scrollIntoView({behavior:"smooth",block:"start"});
+ }));
+})();
+</script>
+
 </body>
 </html>
