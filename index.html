@@ -1056,36 +1056,36 @@ function attachSocketListeners() {
             }
         }
 
-        document.getElementById("connectBtn").onclick = connect;
-        document.getElementById("switchNetworkBtn").onclick = async function() {
-    try {
-        await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: LITVM_CHAIN_ID }]
-        });
-        window.location.reload();
-    } catch (e) {
-        if (e.code === 4902) {
-            try {
-                await window.ethereum.request({
-                    method: "wallet_addEthereumChain",
-                    params: [{
-                        chainId: LITVM_CHAIN_ID,
-                        chainName: "LitVM LiteForge",
-                        nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
-                        rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
-                        blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
-                    }]
-                });
-                window.location.reload();
-            } catch (e2) {
-                alert("Failed to add LitVM network: " + (e2.message || e2));
-            }
-        } else {
-            alert("Failed to switch network: " + (e.message || e));
-        }
-    }
-};
+        // document.getElementById("connectBtn").onclick = connect;
+        // document.getElementById("switchNetworkBtn").onclick = async function() {
+        //     try {
+        //         await window.ethereum.request({
+        //             method: "wallet_switchEthereumChain",
+        //             params: [{ chainId: LITVM_CHAIN_ID }]
+        //         });
+        //         window.location.reload();
+        //     } catch (e) {
+        //         if (e.code === 4902) {
+        //             try {
+        //                 await window.ethereum.request({
+        //                     method: "wallet_addEthereumChain",
+        //                     params: [{
+        //                         chainId: LITVM_CHAIN_ID,
+        //                         chainName: "LitVM LiteForge",
+        //                         nativeCurrency: { name: "zkLTC", symbol: "zkLTC", decimals: 18 },
+        //                         rpcUrls: ["https://liteforge.rpc.caldera.xyz/http"],
+        //                         blockExplorerUrls: ["https://liteforge.explorer.caldera.xyz"]
+        //                     }]
+        //                 });
+        //                 window.location.reload();
+        //             } catch (e2) {
+        //                 alert("Failed to add LitVM network: " + (e2.message || e2));
+        //             }
+        //         } else {
+        //             alert("Failed to switch network: " + (e.message || e));
+        //         }
+        //     }
+        // };
         document.getElementById("createBtn").onclick = createMatch;
         document.getElementById("loadBtn").onclick = loadMatches;
         document.getElementById("analyzeBtn").onclick = analyzeGame;
@@ -2659,6 +2659,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
     </script>
 
-    <script src="telegram-auth.js?v=50"></script>
+    <script src="telegram-auth.js?v=51"></script>
 </body>
 </html>
