@@ -180,6 +180,21 @@
     border-color: #4CAF50;
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
 }
+    /* Стили для задач */
+#puzzleScreen {
+    background: linear-gradient(180deg, #0a0d14 0%, #0f1117 100%);
+}
+
+#puzzleBoard {
+    border: 4px solid #ffb84d;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Прогресс-бар */
+#puzzleProgressBar {
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
     </style>
 </head>
 <body>
@@ -188,6 +203,21 @@
         <h1>♟ LitChess</h1>
 
         <div id="menuWrap">
+            <!-- Карточка задач на главном экране -->
+            <div class="card" id="puzzleCard" style="background: linear-gradient(135deg, #2a2418 0%, #1a1d26 100%); border-color: #ffb84d;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <h3 style="margin: 0; color: #ffb84d;">🧩 Задачи</h3>
+                  <span id="puzzleLevelLabel" style="font-size: 14px; font-weight: bold; color: #fff;">Уровень 1</span>
+              </div>
+              <div style="font-size: 13px; color: #8a92a6; margin-bottom: 10px;">
+                  Решено: <b id="puzzleSolvedCount">0</b> / <b id="puzzleTotalCount">10</b>
+              </div>
+                  <!-- Прогресс-бар -->
+              <div style="background: #0f1117; border-radius: 8px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 12px;">
+                <div id="puzzleProgressBar" style="background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; width: 0%; transition: width 0.3s;"></div>
+              </div>
+              <button id="startPuzzlesBtn" style="width: 100%; background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff;">Решать задачи</button>
+            </div>
             <!-- Переключатель языков -->
             <div id="languageSwitcher" style="position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 4px; z-index: 100;">
                   <select id="languageSelect" aria-label="Language" style="background: transparent; border: 1px solid #2a2e3a; color: #e6e6e6; padding: 4px 8px; border-radius: 6px; font-size: 13px; width: auto; margin: 0;">
@@ -195,6 +225,10 @@
               <option value="ru">RU</option>
            </select>
            </div>
+            <!-- Огонек стрика -->
+            <div id="streakBadge" style="display: none; position: absolute; top: 20px; right: 80px; background: #ffb84d; color: #0f1117; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 14px; align-items: center; gap: 4px; z-index: 100; cursor: pointer;">
+            🔥 <span id="streakCount">1</span>
+            </div>
 
             <!-- Профиль Telegram -->
             <div class="card" id="telegramProfileCard" style="display: none; align-items: center; gap: 12px;">
@@ -276,6 +310,37 @@
                 <button id="stopBotBtn" style="display: none; background: linear-gradient(180deg, #5c1e1e 0%, #3a1212 100%); color: #fff; margin-top: 12px;">Сдаться</button>
                 <p class="status" id="botStatus"></p>
             </div>
+                <!-- Экран решения задач -->
+                <div id="puzzleScreen" style="display: none; position: fixed; inset: 0; z-index: 10000; background: #0a0d14; flex-direction: column; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                <button id="puzzleBackBtn" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="color: white; margin: 0; font-size: 20px;">🧩 Задачи</h2>
+                </div>
+
+                               <!-- Ассистент -->
+                           <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-start;">
+                           <div style="width: 40px; height: 40px; background: #ffb84d; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px;">👨‍🏫</div>
+                           <div id="puzzleHint" style="background: #1a1d26; border: 1px solid #2a2e3a; padding: 10px 14px; border-radius: 12px; border-top-left-radius: 0; font-size: 14px; color: #e6e6e6;">
+                                  Ход белых. Найдите лучший ход.
+                            </div>
+                           </div>
+
+                             <!-- Доска для задач -->
+                           <div id="puzzleBoard" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
+    
+                             <!-- Кнопки управления -->
+                            <div style="margin-top: auto; display: flex; gap: 10px;">
+                            <button id="puzzleSkipBtn" style="flex: 1; background: #2a2e3a; color: #fff;">Пропустить</button>
+                              </div>
+                            </div>
+
+                    <!-- Модальное окно "Задача дня решена" -->
+                    <div id="dailyCompleteModal" style="display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; flex-direction: column; padding: 20px; text-align: center;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🔥</div>
+                    <h2 style="color: #fff; font-size: 28px; margin: 0 0 10px 0;">Задача дня решена!</h2>
+                    <p style="color: #8a92a6; font-size: 16px; margin-bottom: 30px;">Твой стрик: <span id="modalStreakCount" style="color: #ffb84d; font-weight: bold;">1</span> дней</p>
+                    <button id="dailyCompleteCloseBtn" style="background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%); color: #fff; width: 100%; max-width: 300px; padding: 15px; font-size: 18px;">Приходите завтра!</button>
+                    </div>
         </div>
 
         <!-- Доска -->
@@ -1847,6 +1912,7 @@ function markOccupiedSquares() {
         window.addEventListener("load", () => {
     renderGameHistory();
     updateStatsFromHistory();
+    loadStreak();
 });
         document.getElementById("gameModeWrap").style.display = "block";
         window.addEventListener("load", () => {
@@ -2605,6 +2671,163 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
+                // ===== БАЗА ЗАДАЧ (30 дней) =====
+        const dailyPuzzles = [
+            { fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1", solution: "e1g1", hint: "Ход белых. Сделайте рокировку." },
+            { fen: "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1", solution: "f1c4", hint: "Ход белых. Развейте слона." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "h1h8", hint: "Ход белых. Поставьте мат в 1 ход." },
+            { fen: "8/8/8/8/8/5k2/8/4K2R w K - 0 1", solution: "h1h3", hint: "Ход белых. Атакуйте короля." },
+            { fen: "8/8/8/8/8/8/1k6/4K2R w K - 0 1", solution: "h1h2", hint: "Ход белых. Защитите короля." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1e2", hint: "Ход белых. Отведите короля." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1f2", hint: "Ход белых. Приблизьтесь к врагу." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1d2", hint: "Ход белых. Уйдите от шаха." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1d1", hint: "Ход белых. Сохраните позицию." },
+            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1f1", hint: "Ход белых. Вернитесь в центр." }
+        ];
+
+        let puzzleBoard = null;
+        let puzzleGame = new Chess();
+        let currentPuzzleIndex = 0;
+        let solvedCount = 0;
+        let streakCount = 0;
+
+        // ===== ЛОГИКА ДНЯ И СТРИКА =====
+        function getTodayStr() {
+            return new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        }
+
+        function loadStreak() {
+            const savedStreak = localStorage.getItem("puzzle-streak");
+            const lastSolvedDate = localStorage.getItem("puzzle-last-date");
+            const today = getTodayStr();
+
+            if (savedStreak) {
+                streakCount = parseInt(savedStreak, 10);
+            } else {
+                streakCount = 0;
+            }
+
+            // Если сегодня уже решали — показываем стрик, но блокируем задачу
+            if (lastSolvedDate === today) {
+                document.getElementById("streakBadge").style.display = "flex";
+                document.getElementById("streakCount").textContent = streakCount;
+                document.getElementById("startPuzzlesBtn").textContent = "Задача решена на сегодня";
+                document.getElementById("startPuzzlesBtn").disabled = true;
+            } else {
+                if (streakCount > 0) {
+                    document.getElementById("streakBadge").style.display = "flex";
+                    document.getElementById("streakCount").textContent = streakCount;
+                }
+                document.getElementById("startPuzzlesBtn").textContent = "Решать задачу дня";
+                document.getElementById("startPuzzlesBtn").disabled = false;
+            }
+        }
+
+        function loadPuzzleForToday() {
+            const lastSolvedDate = localStorage.getItem("puzzle-last-date");
+            const today = getTodayStr();
+            if (lastSolvedDate === today) {
+                alert("Задача на сегодня уже решена. Приходите завтра!");
+                return;
+            }
+
+            // Выбираем задачу по дню года (или по счётчику)
+            const startOfYear = new Date(new Date().getFullYear(), 0, 0);
+            const diff = new Date().getTime() - startOfYear.getTime();
+            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            // Если задач меньше, чем дней, берём по модулю
+            currentPuzzleIndex = dayOfYear % dailyPuzzles.length;
+            solvedCount = 0; // Сбрасываем для текущей сессии
+
+            const puzzle = dailyPuzzles[currentPuzzleIndex];
+            puzzleGame.load(puzzle.fen);
+            
+            if (puzzleBoard) {
+                puzzleBoard.position(puzzle.fen, false);
+            } else {
+                puzzleBoard = Chessboard("puzzleBoard", {
+                    draggable: true,
+                    position: puzzle.fen,
+                    orientation: "white",
+                    onDragStart: (source, piece) => {
+                        if (piece.search(/^b/) !== -1) return false;
+                    },
+                    onDrop: handlePuzzleDrop
+                });
+            }
+
+            document.getElementById("puzzleHint").textContent = puzzle.hint;
+        }
+
+        function handlePuzzleDrop(source, target) {
+            const puzzle = dailyPuzzles[currentPuzzleIndex];
+            const moveStr = source + target;
+            
+            if (moveStr === puzzle.solution) {
+                // Правильный ход
+                puzzleGame.move({ from: source, to: target, promotion: "q" });
+                puzzleBoard.position(puzzleGame.fen(), false);
+                document.getElementById("puzzleHint").innerHTML = "✅ <b>Правильно!</b> Задача решена.";
+                
+                // Обновляем стрик и дату
+                const today = getTodayStr();
+                const lastSolvedDate = localStorage.getItem("puzzle-last-date");
+                let newStreak = streakCount;
+
+                // Если последний раз решали вчера — увеличиваем стрик, иначе сбрасываем на 1
+                if (lastSolvedDate) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split("T")[0];
+                    if (lastSolvedDate === yesterdayStr) {
+                        newStreak += 1;
+                    } else if (lastSolvedDate !== today) {
+                        newStreak = 1;
+                    }
+                } else {
+                    newStreak = 1;
+                }
+
+                localStorage.setItem("puzzle-streak", newStreak);
+                localStorage.setItem("puzzle-last-date", today);
+                streakCount = newStreak;
+
+                // Показываем модалку
+                setTimeout(() => {
+                    document.getElementById("puzzleScreen").style.display = "none";
+                    document.getElementById("dailyCompleteModal").style.display = "flex";
+                    document.getElementById("modalStreakCount").textContent = newStreak;
+                    loadStreak(); // Обновляем UI на главном экране
+                }, 1500);
+            } else {
+                // Неправильный ход
+                document.getElementById("puzzleHint").innerHTML = "❌ <b>Неправильно.</b> Попробуйте ещё раз.";
+                return "snapback";
+            }
+        }
+
+        function startPuzzles() {
+            document.getElementById("puzzleScreen").style.display = "flex";
+            document.getElementById("menuWrap").style.display = "none";
+            document.getElementById("bottomNav").style.display = "none";
+            loadPuzzleForToday();
+        }
+
+        function closePuzzles() {
+            document.getElementById("puzzleScreen").style.display = "none";
+            document.getElementById("menuWrap").style.display = "block";
+            document.getElementById("bottomNav").style.display = "block";
+            if (puzzleBoard) puzzleBoard.resize();
+        }
+
+        // Привязка кнопок
+        document.getElementById("startPuzzlesBtn").onclick = startPuzzles;
+        document.getElementById("puzzleBackBtn").onclick = closePuzzles;
+        document.getElementById("dailyCompleteCloseBtn").onclick = () => {
+            document.getElementById("dailyCompleteModal").style.display = "none";
+            closePuzzles();
+        };
     </script>
 
     <script src="telegram-auth.js?v=59"></script>
