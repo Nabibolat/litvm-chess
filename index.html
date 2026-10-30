@@ -2750,6 +2750,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                     draggable: true,
                     position: puzzle.fen,
                     orientation: "white",
+                    pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
                     onDragStart: (source, piece) => {
                         if (piece.search(/^b/) !== -1) return false;
                     },
