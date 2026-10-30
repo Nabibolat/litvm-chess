@@ -2447,6 +2447,7 @@ const selectedKey = document.querySelector("#botGrid .bot-card.selected")?.datas
 const difficulty = botNamesMap[selectedKey] || "Bot";
             document.getElementById("botStatus").textContent = 
                 "Match #" + activeMatchId + " vs Bot (" + difficulty + "). Good luck!";
+            document.getElementById("menuWrap").style.display = "none";
            document.getElementById("chessBoardCard").style.display = "block";
            enterGameMode();
             document.getElementById("analyzeBtn").style.display = "none";
@@ -2467,7 +2468,8 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
     botEnabled = false;
     stopClock();
     document.getElementById("botStatus").textContent = "Bot stopped.";
-    document.getElementById("chessBoardCard").style.display = "none";
+    document.getElementById("chessBoardCard").style.display = "none"
+    document.getElementById("menuWrap").style.display = "block";
  }
 
                 // ===== Сетка ботов: клик по карточке = старт =====
