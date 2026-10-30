@@ -2795,8 +2795,12 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("startPuzzlesBtn").onclick = startPuzzles;
         document.getElementById("puzzleBackBtn").onclick = closePuzzles;
         document.getElementById("dailyCompleteCloseBtn").onclick = () => {
-            document.getElementById("dailyCompleteModal").style.display = "none";
-            closePuzzles();
+         document.getElementById("dailyCompleteModal").style.display = "none";
+         closePuzzles(); 
+    
+         // 3. Принудительно возвращаем главное меню и навигацию
+         document.getElementById("menuWrap").style.display = "block"; // или "flex", проверь как было изначально
+         document.getElementById("bottomNav").style.display = "flex";  // или "block"
         };
     </script>
 
