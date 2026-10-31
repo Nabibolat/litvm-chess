@@ -2641,19 +2641,38 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
                 // ===== БАЗА ЗАДАЧ (30 дней) =====
-        const dailyPuzzles = [
-            { fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1", solution: "e1g1", hint: "Ход белых. Сделайте рокировку." },
-            { fen: "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1", solution: "f1c4", hint: "Ход белых. Развейте слона." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "h1h8", hint: "Ход белых. Поставьте мат в 1 ход." },
-            { fen: "8/8/8/8/8/5k2/8/4K2R w K - 0 1", solution: "h1h3", hint: "Ход белых. Атакуйте короля." },
-            { fen: "8/8/8/8/8/8/1k6/4K2R w K - 0 1", solution: "h1h2", hint: "Ход белых. Защитите короля." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1e2", hint: "Ход белых. Отведите короля." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1f2", hint: "Ход белых. Приблизьтесь к врагу." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1d2", hint: "Ход белых. Уйдите от шаха." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1d1", hint: "Ход белых. Сохраните позицию." },
-            { fen: "8/8/8/8/8/8/6k1/4K2R w K - 0 1", solution: "e1f1", hint: "Ход белых. Вернитесь в центр." }
-        ];
-
+             const dailyPuzzles = [
+                 {
+                   fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+                   hint: "Ход белых. Найдите мат в 1 ход.",
+                   solution: "c4f7" // Слон с c4 бьет на f7 (детский мат)
+                 },
+                 {
+                   fen: "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
+                   hint: "Ход белых. Как поставить мат ладьей?",
+                   solution: "d1d8" // Ладья с d1 на d8
+                 },
+                 {
+                   fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
+                   hint: "Ход белых. Сделайте так, чтобы выиграть ладью.",
+                   solution: "c1c8" // Ладья бьет ладью на c8
+                 },
+                 {
+                   fen: "r1b1k2r/pppp1ppp/2n2q2/2b5/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 1",
+                   hint: "Ход белых. Поставьте вилку конем.",
+                   solution: "c3d5" // Конь с c3 на d5 (нападает на ферзя и слона)
+                 },
+                 {
+                   fen: "6k1/5p1p/6p1/8/8/8/5PPP/4R1K1 w - - 0 1",
+                   hint: "Ход белых. Мат в 1 ход.",
+                   solution: "e1e8" // Ладья с e1 на e8
+                 },
+                 {
+                   fen: "8/8/8/8/8/2k5/8/K1R5 w - - 0 1",
+                   hint: "Ход белых. Оттесните короля.",
+                   solution: "c1c2" // Ладья делает шах
+                 }
+            ];
         let puzzleBoard = null;
         let puzzleGame = new Chess();
         let currentPuzzleIndex = 0;
