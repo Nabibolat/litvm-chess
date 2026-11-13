@@ -2706,6 +2706,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             if (puzzleBoard) {
                 puzzleBoard.position(puzzle.fen, false);
                 setTimeout(() => puzzleBoard.resize(), 100);
+                attachPuzzleClickHandlers();
             } else {
                 puzzleBoard = Chessboard("puzzleBoard", {
                     draggable: true,
@@ -2778,6 +2779,67 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 else playSound(false);
                 puzzleStep++;
             }, 600);
+        }
+                // ===== КЛИКИ ДЛЯ ДОСКИ ЗАДАЧ =====
+        let puzzleSelectedSquare = null;
+
+        function attachPuzzleClickHandlers() {
+            const boardEl = document.getElementById("puzzleBoard");
+            if (!boardEl) return;
+
+            const handleClick = (e) => {
+                const touch = e.changedTouches ? e.changedTouches[0] : e;
+                if (!touch) return;
+
+                const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+                const sq = els.find(el => el.classList && el.classList.contains("square-55d63"));
+                if (!sq) return;
+
+                const square = sq.getAttribute("data-square");
+                if (!square) return;
+
+                const piece = puzzleGame.get(square);
+
+                // Если фигура уже выбрана — пробуем сходить
+                if (puzzleSelectedSquare) {
+                    const puzzle = dailyPuzzles[currentPuzzleIndex];
+                    const expectedMove = puzzle.sequence[puzzleStep];
+                    
+                    // Если кликнули по той же клетке — снимаем выделение
+                    if (puzzleSelectedSquare === square) {
+                        document.querySelectorAll("#puzzleBoard .highlight-selected").forEach(el => el.classList.remove("highlight-selected"));
+                        puzzleSelectedSquare = null;
+                        return;
+                    }
+
+                    // Пытаемся сделать ход
+                    const moveStr = puzzleSelectedSquare + square;
+                    const result = handlePuzzleDrop(puzzleSelectedSquare, square);
+                    
+                    document.querySelectorAll("#puzzleBoard .highlight-selected").forEach(el => el.classList.remove("highlight-selected"));
+                    puzzleSelectedSquare = null;
+                    return;
+                }
+
+                // Если ничего не выбрано и это белая фигура — выделяем
+                if (piece && piece.color === "w") {
+                    puzzleSelectedSquare = square;
+                    sq.classList.add("highlight-selected");
+                }
+            };
+
+            // Убираем старые обработчики (чтобы не дублировались)
+            boardEl.removeEventListener("mousedown", handleClick);
+            boardEl.removeEventListener("touchstart", handleClick);
+
+            boardEl.addEventListener("mousedown", (e) => {
+                if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) return;
+                handleClick(e);
+            });
+            boardEl.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                handleClick(e);
+            }, { passive: false });
         }
 
         function startPuzzles() {
