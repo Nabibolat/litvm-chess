@@ -2647,44 +2647,23 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
-                // ===== БАЗА ЗАДАЧ (30 дней) =====
-             const dailyPuzzles = [
-                 {
-                   fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
-                   hint: "Ход белых. Найдите мат в 1 ход.",
-                   solution: "c4f7" // Слон с c4 бьет на f7 (детский мат)
-                 },
-                 {
-                   fen: "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
-                   hint: "Ход белых. Как поставить мат ладьей?",
-                   solution: "d1d8" // Ладья с d1 на d8
-                 },
-                 {
-                   fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
-                   hint: "Ход белых. Сделайте так, чтобы выиграть ладью.",
-                   solution: "c1c8" // Ладья бьет ладью на c8
-                 },
-                 {
-                   fen: "r1b1k2r/pppp1ppp/2n2q2/2b5/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 1",
-                   hint: "Ход белых. Поставьте вилку конем.",
-                   solution: "c3d5" // Конь с c3 на d5 (нападает на ферзя и слона)
-                 },
-                 {
-                   fen: "6k1/5p1p/6p1/8/8/8/5PPP/4R1K1 w - - 0 1",
-                   hint: "Ход белых. Мат в 1 ход.",
-                   solution: "e1e8" // Ладья с e1 на e8
-                 },
-                 {
-                   fen: "8/8/8/8/8/2k5/8/K1R5 w - - 0 1",
-                   hint: "Ход белых. Оттесните короля.",
-                   solution: "c1c2" // Ладья делает шах
-                 }
-            ];
-        let puzzleBoard = null;
-        let puzzleGame = new Chess();
-        let currentPuzzleIndex = 0;
-        let solvedCount = 0;
-        let streakCount = 0;
+                        // ===== БАЗА ЗАДАЧ (Компактный формат) =====
+        // Формат: [FEN, Подсказка, [Ход игрока, Ход бота, Ход игрока...]]
+        const puzzleData = [
+            [
+                "r5k1/1p3ppp/4Q2n/3b4/1p1p4/5qp1/3B1P1P/4R1K1 w - - 0 1", 
+                "Ход белых. Вы видите, как закончить партию?", 
+                ["h6f5", "g7h6", "e6f8", "g8f8", "d2h6", "f8g8", "e1e8"]
+            ]
+            // Сюда будешь добавлять новые задачи в таком же формате
+        ];
+
+        // Автоматически превращаем в нужный формат
+        const dailyPuzzles = puzzleData.map(p => ({
+            fen: p[0],
+            hint: p[1],
+            sequence: p[2]
+        }));
 
         // ===== ЛОГИКА ДНЯ И СТРИКА =====
         function getTodayStr() {
