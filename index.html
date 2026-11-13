@@ -2650,11 +2650,15 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                         // ===== БАЗА ЗАДАЧ =====
         const puzzleData = [
             [
-                "r5k1/1p3ppp/4Q2n/3b4/1p1p4/5qp1/3B1P1P/4R1K1 w - - 0 1", 
+                fen: "r1r3k1/5ppp/3Q3p/1p1b4/1PP5/5qP1/P2P1P1P/4R1K1 w - - 0 1", // Позиция перед ходом белых (конюшка на h6 после f5-h6) 
                 "Ход белых - вы видите как закончить партию! / White to move - do you see how to finish the game?", 
-                ["h6f5", "g7h6", "e6f8", "g8f8", "d2h6", "f8g8", "e1e8"]
-            ]
-        ];
+                moves: [
+                       { white: "d6f8", black: "g8f8", comment: "Ферзь бьёт ладью с шахом, чёрный король забирает ферзя" },
+                       { white: "d2h6", black: "f8g8", comment: "Слон бьёт пешку с шахом, король уходит" },
+                       { white: "e1e8", black: null,   comment: "Ладья e1-e8 — Элегантный мат!" }
+                    ],
+                    initialTurn: "w"
+        };
         
         const dailyPuzzles = puzzleData.map(p => ({ fen: p[0], hint: p[1], sequence: p[2] }));
 
