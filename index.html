@@ -2647,62 +2647,32 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("findMatchBtn").onclick = findMatch;
         document.getElementById("cancelMatchBtn").onclick = cancelMatch;
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
-                // ===== БАЗА ЗАДАЧ (30 дней) =====
-             const dailyPuzzles = [
-                 {
-                   fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
-                   hint: "Ход белых. Найдите мат в 1 ход.",
-                   solution: "c4f7" // Слон с c4 бьет на f7 (детский мат)
-                 },
-                 {
-                   fen: "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
-                   hint: "Ход белых. Как поставить мат ладьей?",
-                   solution: "d1d8" // Ладья с d1 на d8
-                 },
-                 {
-                   fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
-                   hint: "Ход белых. Сделайте так, чтобы выиграть ладью.",
-                   solution: "c1c8" // Ладья бьет ладью на c8
-                 },
-                 {
-                   fen: "r1b1k2r/pppp1ppp/2n2q2/2b5/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 1",
-                   hint: "Ход белых. Поставьте вилку конем.",
-                   solution: "c3d5" // Конь с c3 на d5 (нападает на ферзя и слона)
-                 },
-                 {
-                   fen: "6k1/5p1p/6p1/8/8/8/5PPP/4R1K1 w - - 0 1",
-                   hint: "Ход белых. Мат в 1 ход.",
-                   solution: "e1e8" // Ладья с e1 на e8
-                 },
-                 {
-                   fen: "8/8/8/8/8/2k5/8/K1R5 w - - 0 1",
-                   hint: "Ход белых. Оттесните короля.",
-                   solution: "c1c2" // Ладья делает шах
-                 }
-            ];
+                        // ===== БАЗА ЗАДАЧ =====
+        const puzzleData = [
+            [
+                "r5k1/1p3ppp/4Q2n/3b4/1p1p4/5qp1/3B1P1P/4R1K1 w - - 0 1", 
+                "Ход белых - вы видите как закончить партию! / White to move - do you see how to finish the game?", 
+                ["h6f5", "g7h6", "e6f8", "g8f8", "d2h6", "f8g8", "e1e8"]
+            ]
+        ];
+        
+        const dailyPuzzles = puzzleData.map(p => ({ fen: p[0], hint: p[1], sequence: p[2] }));
+
         let puzzleBoard = null;
         let puzzleGame = new Chess();
         let currentPuzzleIndex = 0;
         let solvedCount = 0;
         let streakCount = 0;
+        let puzzleStep = 0;
 
-        // ===== ЛОГИКА ДНЯ И СТРИКА =====
-        function getTodayStr() {
-            return new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-        }
+        function getTodayStr() { return new Date().toISOString().split("T")[0]; }
 
         function loadStreak() {
             const savedStreak = localStorage.getItem("puzzle-streak");
             const lastSolvedDate = localStorage.getItem("puzzle-last-date");
             const today = getTodayStr();
+            streakCount = savedStreak ? parseInt(savedStreak, 10) : 0;
 
-            if (savedStreak) {
-                streakCount = parseInt(savedStreak, 10);
-            } else {
-                streakCount = 0;
-            }
-
-            // Если сегодня уже решали — показываем стрик, но блокируем задачу
             if (lastSolvedDate === today) {
                 document.getElementById("streakBadge").style.display = "flex";
                 document.getElementById("streakCount").textContent = streakCount;
@@ -2720,94 +2690,94 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
 
         function loadPuzzleForToday() {
             const lastSolvedDate = localStorage.getItem("puzzle-last-date");
-            const today = getTodayStr();
-            if (lastSolvedDate === today) {
+            if (lastSolvedDate === getTodayStr()) {
                 alert("Задача на сегодня уже решена. Приходите завтра!");
                 return;
             }
 
-            // Выбираем задачу по дню года (или по счётчику)
             const startOfYear = new Date(new Date().getFullYear(), 0, 0);
-            const diff = new Date().getTime() - startOfYear.getTime();
-            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-            
-            // Если задач меньше, чем дней, берём по модулю
+            const dayOfYear = Math.floor((new Date().getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
             currentPuzzleIndex = dayOfYear % dailyPuzzles.length;
-            solvedCount = 0; // Сбрасываем для текущей сессии
+            puzzleStep = 0;
 
             const puzzle = dailyPuzzles[currentPuzzleIndex];
             puzzleGame.load(puzzle.fen);
             
             if (puzzleBoard) {
                 puzzleBoard.position(puzzle.fen, false);
+                setTimeout(() => puzzleBoard.resize(), 100);
             } else {
                 puzzleBoard = Chessboard("puzzleBoard", {
                     draggable: true,
                     position: puzzle.fen,
                     orientation: "white",
                     pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
-                    onDragStart: (source, piece) => {
-                        if (piece.search(/^b/) !== -1) return false;
-                    },
+                    onDragStart: (source, piece) => { if (piece.search(/^b/) !== -1) return false; },
                     onDrop: handlePuzzleDrop
                 });
             }
 
-            document.getElementById("puzzleHint").textContent = puzzle.hint;
+            const currentLang = localStorage.getItem("litvm-language") || "ru";
+            const hintParts = puzzle.hint.split(" / ");
+            document.getElementById("puzzleHint").textContent = (currentLang === "en" && hintParts[1]) ? hintParts[1] : hintParts[0];
         }
 
         function handlePuzzleDrop(source, target) {
             const puzzle = dailyPuzzles[currentPuzzleIndex];
             const moveStr = source + target;
+            const expectedMove = puzzle.sequence[puzzleStep];
+
+            if (moveStr !== expectedMove) {
+                document.getElementById("puzzleHint").innerHTML = "❌ <b>Неправильно.</b> Попробуйте ещё раз.";
+                setTimeout(() => puzzleBoard.position(puzzleGame.fen(), false), 300);
+                return "snapback";
+            }
+
+            const move = puzzleGame.move({ from: source, to: target, promotion: "q" });
+            puzzleBoard.position(puzzleGame.fen(), false);
             
-            if (moveStr === puzzle.solution) {
-                // Правильный ход
-                puzzleGame.move({ from: source, to: target, promotion: "q" });
-                puzzleBoard.position(puzzleGame.fen(), false);
-                document.getElementById("puzzleHint").innerHTML = "✅ <b>Правильно!</b> Задача решена.";
-                                // Звук правильного хода
-                const move = puzzleGame.move({ from: source, to: target, promotion: "q" });
-                if (move && (move.flags.includes('c') || move.flags.includes('e'))) {
-                    playSound(true);
-                } else {
-                    playSound(false);
-                }
+            if (move && (move.flags.includes('c') || move.flags.includes('e'))) playSound(true);
+            else playSound(false);
+
+            puzzleStep++;
+
+            if (puzzleStep >= puzzle.sequence.length) {
+                document.getElementById("puzzleHint").innerHTML = "✅ <b>Правильно!</b> Отличная комбинация!";
                 
-                // Обновляем стрик и дату
                 const today = getTodayStr();
                 const lastSolvedDate = localStorage.getItem("puzzle-last-date");
                 let newStreak = streakCount;
 
-                // Если последний раз решали вчера — увеличиваем стрик, иначе сбрасываем на 1
                 if (lastSolvedDate) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toISOString().split("T")[0];
-                    if (lastSolvedDate === yesterdayStr) {
-                        newStreak += 1;
-                    } else if (lastSolvedDate !== today) {
-                        newStreak = 1;
-                    }
-                } else {
-                    newStreak = 1;
-                }
+                    if (lastSolvedDate === yesterday.toISOString().split("T")[0]) newStreak += 1;
+                    else if (lastSolvedDate !== today) newStreak = 1;
+                } else newStreak = 1;
 
                 localStorage.setItem("puzzle-streak", newStreak);
                 localStorage.setItem("puzzle-last-date", today);
                 streakCount = newStreak;
 
-                // Показываем модалку
                 setTimeout(() => {
                     document.getElementById("puzzleScreen").style.display = "none";
                     document.getElementById("dailyCompleteModal").style.display = "flex";
                     document.getElementById("modalStreakCount").textContent = newStreak;
-                    loadStreak(); // Обновляем UI на главном экране
+                    loadStreak();
                 }, 1500);
-            } else {
-                // Неправильный ход
-                document.getElementById("puzzleHint").innerHTML = "❌ <b>Неправильно.</b> Попробуйте ещё раз.";
-                return "snapback";
+                return;
             }
+
+            const botMoveStr = puzzle.sequence[puzzleStep];
+            setTimeout(() => {
+                const from = botMoveStr.substring(0, 2);
+                const to = botMoveStr.substring(2, 4);
+                const botMove = puzzleGame.move({ from: from, to: to, promotion: "q" });
+                puzzleBoard.position(puzzleGame.fen(), false);
+                if (botMove && (botMove.flags.includes('c') || botMove.flags.includes('e'))) playSound(true);
+                else playSound(false);
+                puzzleStep++;
+            }, 600);
         }
 
         function startPuzzles() {
@@ -2824,16 +2794,13 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             if (puzzleBoard) puzzleBoard.resize();
         }
 
-        // Привязка кнопок
         document.getElementById("startPuzzlesBtn").onclick = startPuzzles;
         document.getElementById("puzzleBackBtn").onclick = closePuzzles;
         document.getElementById("dailyCompleteCloseBtn").onclick = () => {
-         document.getElementById("dailyCompleteModal").style.display = "none";
-         closePuzzles(); 
-    
-         // 3. Принудительно возвращаем главное меню и навигацию
-         document.getElementById("menuWrap").style.display = "block"; // или "flex", проверь как было изначально
-         document.getElementById("bottomNav").style.display = "flex";  // или "block"
+            document.getElementById("dailyCompleteModal").style.display = "none";
+            closePuzzles(); 
+            document.getElementById("menuWrap").style.display = "block";
+            document.getElementById("bottomNav").style.display = "flex";
         };
     </script>
 
