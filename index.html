@@ -2649,11 +2649,11 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
         document.getElementById("inviteFriendBtn").onclick = inviteFriend;
                         // ===== БАЗА ЗАДАЧ =====
                 const puzzleData = [
-                   [
-                        "6k1/r4ppp/3Q3p/1p1b4/1PP5/5qP1/P2P1P1P/4R1K1 w - - 0 1", 
-                        "Ход белых - вы видите как закончить партию! / White to move - do you see how to finish the game?", 
-                        ["d6f8", "g8f8", "d2h6", "f8g8", "e1e8"]
-                   ]
+                      [
+                           "r4rk1/1p3ppp/p3p1n1/3p4/3N4/3Q3P/PqP2PP1/R3R1K1 w - - 0 19", 
+                           "Your turn. Find the best move for white. / Ход белых. Найдите лучший ход.", 
+                           ["e1b1", "g6f4", "b1b2", "f4d3", "c2d3"]
+                      ]
                 ];
         
         const dailyPuzzles = puzzleData.map(p => ({ fen: p[0], hint: p[1], sequence: p[2] }));
