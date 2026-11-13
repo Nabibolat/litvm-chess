@@ -198,7 +198,9 @@
     </style>
 </head>
 <body>
-
+              <audio id="soundMove" src="https://lichess1.org/assets/sound/standard/Move.mp3" preload="auto"></audio>
+              <audio id="soundCapture" src="https://lichess1.org/assets/sound/standard/Capture.mp3" preload="auto"></audio>
+               
     <div id="gameModeWrap" style="display: none;">
         <h1>♟ LitChess</h1>
 
@@ -973,6 +975,8 @@ function attachSocketListeners() {
         game.load(data.fen);
         if (data.san && currentMatchId && myColor) pvpMoveHistory.push(data.san);
         board.position(data.fen, false);   // false = без анимации
+                // Звук хода соперника
+        playSound(data.san && data.san.includes('x'));
         updateBoardStatus();
         updateMoveHistory();
                 // Обновляем часы с сервера
@@ -1113,7 +1117,7 @@ function attachSocketListeners() {
             const el = document.querySelector('[data-square="' + square + '"]');
             if (el) el.classList.add(className);
         }
-                  function makeMove(from, to) {
+                         function makeMove(from, to) {
             // PvP: отправляем ход на сервер, локально не двигаем
             if (socket && currentMatchId && myColor) {
                 const probe = new Chess(game.fen());
@@ -1134,35 +1138,14 @@ function attachSocketListeners() {
             // Партия с ботом: двигаем локально
             const move = game.move({ from: from, to: to, promotion: "q" });
             if (move === null) return false;
-            board.position(game.fen());
-            updateBoardStatus();
-            updateMoveHistory();
-            if (botEnabled && !game.game_over()) {
-                setTimeout(requestBotMove, 100);
-            }
-            return true;
-        }
-                  function makeMove(from, to) {
-            // PvP: отправляем ход на сервер, локально не двигаем
-            if (socket && currentMatchId && myColor) {
-                const probe = new Chess(game.fen());
-                const dry = probe.move({ from: from, to: to, promotion: "q" });
-                if (dry === null) return false;
-
-                pendingMove = true;
-                lastMoveSentAt = Date.now();
-                socket.emit("makeMove", {
-                    roomId: currentMatchId,
-                    from: from,
-                    to: to,
-                    promotion: "q"
-                });
-                return true;
+            
+            // Звук
+            if (move.flags.includes('c') || move.flags.includes('e')) {
+                playSound(true);
+            } else {
+                playSound(false);
             }
 
-            // Партия с ботом: двигаем локально
-            const move = game.move({ from: from, to: to, promotion: "q" });
-            if (move === null) return false;
             board.position(game.fen());
             updateBoardStatus();
             updateMoveHistory();
@@ -1677,13 +1660,21 @@ function attachSocketListeners() {
         return "snapback";
     }
 
-    // ===== Игра с ботом — старая логика =====
+        // ===== Игра с ботом — старая логика =====
     const move = game.move({
         from: source,
         to: target,
         promotion: "q"
     });
     if (move === null) return "snapback";
+
+    // Звук
+    if (move.flags.includes('c') || move.flags.includes('e')) {
+        playSound(true);
+    } else {
+        playSound(false);
+    }
+
     updateBoardStatus();
     updateMoveHistory();
 
@@ -1756,6 +1747,14 @@ async function autoFinishMatch(resultCode) {
             " ❌ Blockchain error: " + (e.reason || e.message);
     }
 }
+                       // Функция для звука
+        function playSound(isCapture = false) {
+            const audio = document.getElementById(isCapture ? "soundCapture" : "soundMove");
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Звук ждет клика"));
+            }
+        }
 
               function initBoard() {
     // На устройствах с основным сенсорным вводом используем tap-to-move,
@@ -2199,11 +2198,19 @@ function startMatchGame(matchId, timeControl) {
         }
     }
 
-        function makeBotMove(moveStr) {
+                function makeBotMove(moveStr) {
             const from = moveStr.substring(0, 2);
             const to = moveStr.substring(2, 4);
             const promotion = moveStr.length > 4 ? moveStr[4] : "q";
-            game.move({ from: from, to: to, promotion: promotion });
+            const move = game.move({ from: from, to: to, promotion: promotion });
+            
+            // Звук
+            if (move && (move.flags.includes('c') || move.flags.includes('e'))) {
+                playSound(true); // Взятие
+            } else {
+                playSound(false); // Обычный ход
+            }
+
             board.position(game.fen());
             updateBoardStatus();
             updateMoveHistory();
@@ -2758,6 +2765,13 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
                 puzzleGame.move({ from: source, to: target, promotion: "q" });
                 puzzleBoard.position(puzzleGame.fen(), false);
                 document.getElementById("puzzleHint").innerHTML = "✅ <b>Правильно!</b> Задача решена.";
+                                // Звук правильного хода
+                const move = puzzleGame.move({ from: source, to: target, promotion: "q" });
+                if (move && (move.flags.includes('c') || move.flags.includes('e'))) {
+                    playSound(true);
+                } else {
+                    playSound(false);
+                }
                 
                 // Обновляем стрик и дату
                 const today = getTodayStr();
