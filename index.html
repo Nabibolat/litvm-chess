@@ -2729,7 +2729,7 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
 
             const currentLang = localStorage.getItem("litvm-language") || "ru";
             const hintParts = puzzle.hint.split(" / ");
-            document.getElementById("puzzleHint").textContent = (currentLang === "en" && hintParts[1]) ? hintParts[1] : hintParts[0];
+            document.getElementById("puzzleHint").textContent = (currentLang === "en" && hintParts[0]) ? hintParts[0] : hintParts[1];
         }
                                   // ===== CLICK-TO-MOVE ДЛЯ PUZZLE BOARD =====
 
