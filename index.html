@@ -2358,6 +2358,22 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             if (b) b.addEventListener("click", () => setPlayerColor("black"));
             if (r) r.addEventListener("click", () => setPlayerColor("random"));
             setPlayerColor("random"); // по умолчанию активна Random
+
+            // Обработчики кнопок задач дня
+            const startPuzzlesBtn = document.getElementById("startPuzzlesBtn");
+            const puzzleBackBtn = document.getElementById("puzzleBackBtn");
+            const dailyCompleteCloseBtn = document.getElementById("dailyCompleteCloseBtn");
+
+            if (startPuzzlesBtn) startPuzzlesBtn.onclick = startPuzzles;
+            if (puzzleBackBtn) puzzleBackBtn.onclick = closePuzzles;
+            if (dailyCompleteCloseBtn) {
+                dailyCompleteCloseBtn.onclick = () => {
+                    document.getElementById("dailyCompleteModal").style.display = "none";
+                    closePuzzles();
+                    document.getElementById("menuWrap").style.display = "block";
+                    document.getElementById("bottomNav").style.display = "flex";
+                };
+            }
         });
 
         document.querySelectorAll("#botGrid .bot-card").forEach(card => {
@@ -2973,14 +2989,6 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
             if (puzzleBoard) puzzleBoard.resize();
         }
 
-        document.getElementById("startPuzzlesBtn").onclick = startPuzzles;
-        document.getElementById("puzzleBackBtn").onclick = closePuzzles;
-        document.getElementById("dailyCompleteCloseBtn").onclick = () => {
-            document.getElementById("dailyCompleteModal").style.display = "none";
-            closePuzzles(); 
-            document.getElementById("menuWrap").style.display = "block";
-            document.getElementById("bottomNav").style.display = "flex";
-        };
     </script>
 
     <script src="telegram-auth.js?v=59"></script>
