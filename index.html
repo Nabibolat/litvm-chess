@@ -660,6 +660,16 @@ function enterGameMode() {
   history.pushState({ game: true }, "", window.location.pathname + "?game=1");
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const backButton = document.getElementById("backToMenuBtn");
+  if (backButton) backButton.addEventListener("click", () => {
+    exitGameMode();
+    stopBotGame();
+    currentMatchId = null;
+    myColor = null;
+  });
+});
+
 function exitGameMode() {
   document.body.classList.remove("game-mode");
   history.pushState({}, "", window.location.pathname);
@@ -1867,7 +1877,8 @@ let activePlayerColor = "w";
     const difficulty = names[selected] || "Bot";
     document.getElementById("botStatus").textContent = "Playing vs " + difficulty;
     document.getElementById("menuWrap").style.display = "none";
-    document.getElementById("chessBoardCard").style.display = "block";
+    document.getElementById("menuWrap").style.display = "none";
+            document.getElementById("chessBoardCard").style.display = "block";
     enterGameMode();
     document.getElementById("analyzeBtn").style.display = "none";
     document.getElementById("clockRow").style.display = "none";
