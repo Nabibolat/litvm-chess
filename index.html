@@ -1779,22 +1779,9 @@ let activePlayerColor = "w";
             });
         }
         
-        async // Match results are persisted by the authenticated game server.\n\nfunction startMatchGame(matchId, timeControl) {
-    activeMatchId = matchId;
-    game.reset();
-    board.position("start");
-    updateBoardStatus();
-    
-    // Включаем бота автоматически
-    botEnabled = true;
-    document.getElementById("botStatus").textContent = 
-        "Playing match #" + matchId + " (time: " + formatTime(timeControl) + ")";
-    
-    startClock(timeControl);
-    initBot();
-    alert("Match #" + matchId + " loaded. You play White. Bot is opponent.");
-}
-     // ===== STOCKFISH BOT =====
+        // Match results are persisted by the authenticated game server.
+
+// ===== STOCKFISH BOT =====
   let stockfish = new Worker('stockfish-19-lite-single.js');
   let analysisStockfish = new Worker('stockfish-19-lite-single.js');
   let analysisResults = [];
