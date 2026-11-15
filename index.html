@@ -1402,7 +1402,7 @@ async function autoFinishMatch(resultCode) {
         pgn: game.pgn(),
         moves: game.history(),
         opponentName: document.getElementById("opponentName")?.textContent || "Stockfish",
-        durationSeconds: 0
+        durationSeconds: Math.max(0, Math.floor((Date.now() - (window._botStartedAt || Date.now())) / 1000))
       })
     });
     loadMatches();
@@ -1883,6 +1883,7 @@ let activePlayerColor = "w";
   try {
     activeMatchId = null;
     window._botResultSaved = false;
+    window._botStartedAt = Date.now();
     document.getElementById("botStatus").textContent = "Starting game…";
     initBot();
     stockfish.postMessage("ucinewgame");
