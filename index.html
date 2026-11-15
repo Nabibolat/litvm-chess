@@ -676,22 +676,53 @@ async function loadMatches() {
   }
 }
 
+function getTelegramWebApp() {
+  return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+}
+
+function showTelegramBackButton() {
+  const tg = getTelegramWebApp();
+  if (tg && tg.BackButton) {
+    tg.BackButton.show();
+  }
+}
+
+function hideTelegramBackButton() {
+  const tg = getTelegramWebApp();
+  if (tg && tg.BackButton) {
+    tg.BackButton.hide();
+  }
+}
+
+function expandTelegramApp() {
+  const tg = getTelegramWebApp();
+  if (!tg) return;
+  try {
+    tg.ready();
+    tg.expand();
+  } catch (error) {
+    console.warn("[Telegram] Could not expand Mini App:", error);
+  }
+}
+
 function enterGameMode() {
-  // Переключаемся на отдельный экран партии напрямую, не полагаясь только на CSS.
+  // Единый полноэкранный экран для игры с ботом, PvP и тренировочных партий.
   const gameWrap = document.getElementById("gameModeWrap");
   const menu = document.getElementById("menuWrap");
   const nav = document.getElementById("bottomNav");
   const boardCard = document.getElementById("chessBoardCard");
 
+  expandTelegramApp();
   if (gameWrap) gameWrap.style.display = "block";
   if (menu) menu.style.display = "none";
   if (nav) nav.style.display = "none";
   if (boardCard) boardCard.style.display = "block";
 
   document.body.classList.add("game-mode");
-  history.pushState({ game: true }, "", window.location.pathname + "?game=1");
-
-  // Возвращаем страницу к верхней границе, чтобы партия занимала весь экран.
+  showTelegramBackButton();
+  if (!history.state || !history.state.chessgramGame) {
+    history.pushState({ ...(history.state || {}), chessgramGame: true }, "", window.location.pathname + "?game=1");
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -703,11 +734,37 @@ document.addEventListener("DOMContentLoaded", () => {
     currentMatchId = null;
     myColor = null;
   });
+
+  const tg = getTelegramWebApp();
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    if (tg.BackButton) {
+      tg.BackButton.onClick(() => {
+        const puzzleScreen = document.getElementById("puzzleScreen");
+        if (puzzleScreen && puzzleScreen.style.display !== "none") {
+          closePuzzles();
+          return;
+        }
+        if (document.body.classList.contains("game-mode")) {
+          exitGameMode();
+          if (botEnabled) stopBotGame();
+          currentMatchId = null;
+          myColor = null;
+          return;
+        }
+        const newGameScreen = document.getElementById("newGameScreen");
+        if (newGameScreen && getComputedStyle(newGameScreen).display !== "none") {
+          newGameScreen.style.display = "none";
+          hideTelegramBackButton();
+        }
+      });
+    }
+  }
 });
 
 function exitGameMode() {
   document.body.classList.remove("game-mode");
-  history.pushState({}, "", window.location.pathname);
   const gameWrap = document.getElementById("gameModeWrap");
   const menu = document.getElementById("menuWrap");
   const nav = document.getElementById("bottomNav");
@@ -716,6 +773,10 @@ function exitGameMode() {
   if (boardCard) boardCard.style.display = "none";
   if (menu) menu.style.display = "block";
   if (nav) nav.style.display = "block";
+  hideTelegramBackButton();
+  if (history.state && history.state.chessgramGame) {
+    history.replaceState({}, "", window.location.pathname);
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -2456,16 +2517,20 @@ document.getElementById("inviteFriendBtn").onclick = inviteFriend;
  
 
         function startPuzzles() {
+            expandTelegramApp();
             document.getElementById("puzzleScreen").style.display = "flex";
             document.getElementById("menuWrap").style.display = "none";
             document.getElementById("bottomNav").style.display = "none";
+            showTelegramBackButton();
             loadPuzzleForToday();
+            setTimeout(() => { if (puzzleBoard) puzzleBoard.resize(); }, 80);
         }
 
         function closePuzzles() {
             document.getElementById("puzzleScreen").style.display = "none";
             document.getElementById("menuWrap").style.display = "block";
             document.getElementById("bottomNav").style.display = "block";
+            hideTelegramBackButton();
             if (puzzleBoard) puzzleBoard.resize();
         }
 
