@@ -1665,7 +1665,7 @@ let activePlayerColor = "w";
             console.log("Analysis done:", analysisResults);
                         // Перерисовываем историю ходов с пометками
             renderAnalysisInHistory();
-                        // Считаем ACPL и точность (формула Lichess)
+                        // Считаем ACPL и точность (формула оценки позиции)
             const playerIsWhite = (window._playerColorForAnalysis || "w") === "w";
             const playerResults = analysisResults.filter(r => r.isPlayer);
 
