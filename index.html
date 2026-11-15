@@ -462,8 +462,8 @@ function applyUiLanguage(lang) {
         if (el && dict[key]) el.textContent = dict[key];
     };
     setText("languageLabel", "languageLabel");
-    setText("lichessTitle", "lichessTitle");
-    setText("lichessLoginBtn", "loginLichess");
+    setText("chess ratingTitle", "lichessTitle");
+    setText("lichessLoginBtn", "loginchess rating");
     setText("lichessLogoutBtn", "logoutLichess");
     setText("onlineTitle", "playOnline");
     setText("findMatchBtn", "findMatch");
@@ -877,7 +877,7 @@ function connectSocket() {
               // ===== Move history (PGN-стиль) =====
                 let pvpMoveHistory = [];   // отдельная история для PvP
                   // ===== ИСТОРИЯ ПАРТИЙ (localStorage) =====
-        const GAME_HISTORY_KEY = "litvm_chess_history";
+        const GAME_HISTORY_KEY = "chessgram_game_history";
         const GAME_HISTORY_MAX = 50;
 
         function getGameHistory() {
@@ -1515,7 +1515,7 @@ let activePlayerColor = "w";
    // ===== PVP GAME (Matchmaking) =====
         
                 function startPvPGame(roomId, color, opponentName, timeControl) {
-            console.log("[PvP] startPvPGame called", { roomId, color, opponentAddress, timeControl });
+            console.log("[PvP] startPvPGame called", { roomId, color, opponentName, timeControl });
             
             const boardCard = document.getElementById("chessBoardCard");
             console.log("[PvP] board card BEFORE:", {
