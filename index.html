@@ -1537,7 +1537,7 @@ function markOccupiedSquares() {
             stopClock();
             document.getElementById("boardStatus").textContent =
                 "⏰ Time out! " + (winnerColor === "white" ? "White" : "Black") + " wins on time";
-            if (activeMatchId !== null) {
+            if (activeMatchId !== null || botEnabled || currentMatchId !== null) {
                 autoFinishMatch(winnerColor);
             }
         }
