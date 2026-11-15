@@ -2513,8 +2513,8 @@ const difficulty = botNamesMap[selectedKey] || "Bot";
     socket.emit("findMatch", {
         userAddress: myAddress, // Отправляем Telegram ID (или старый кошелек как fallback)
         timeControl: tc,
-        lichessUsername: lichessUsername,
-        lichessElo: lichessElo,
+        lichessUsername: window.lichessUsername || null,
+        lichessElo: window.lichessElo || null,
         tgName: tgName,
         tgPhoto: tgPhoto
     });
