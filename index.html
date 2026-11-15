@@ -655,6 +655,18 @@ async function loadMatches() {
   }
 }
 
+function enterGameMode() {
+  document.body.classList.add("game-mode");
+  history.pushState({ game: true }, "", window.location.pathname + "?game=1");
+}
+
+function exitGameMode() {
+  document.body.classList.remove("game-mode");
+  history.pushState({}, "", window.location.pathname);
+  const boardCard = document.getElementById("chessBoardCard");
+  if (boardCard) boardCard.style.display = "none";
+}
+
 function handleGameOver(data) {
   const winner = data.isCheckmate ? data.winner : (data.isDraw ? "draw" : null);
   if (winner) {
