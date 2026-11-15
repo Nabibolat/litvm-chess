@@ -646,7 +646,8 @@ async function loadMatches() {
       heading.textContent = outcome + " · " + formatTime(Number(match.time_control || 0));
       const detail = document.createElement("div");
       detail.className = "status";
-      detail.textContent = date + (match.finish_reason ? " · " + match.finish_reason : "");
+      const opponent = match.opponent_name || "ChessGram player";
+      detail.textContent = opponent + " · " + date + (match.finish_reason ? " · " + match.finish_reason : "");
       item.append(heading, detail);
       list.appendChild(item);
     });
@@ -1383,7 +1384,33 @@ function connectSocket() {
     }
 }
 
-async function autoFinishMatch() { botEnabled = false; stopClock(); }
+async function autoFinishMatch(resultCode) {
+  botEnabled = false;
+  stopClock();
+  if (currentMatchId || !window.tgSession?.sessionToken || !["white", "black", "draw"].includes(resultCode)) return;
+  if (window._botResultSaved) return;
+  window._botResultSaved = true;
+  try {
+    const playerColor = window._playerColorForAnalysis === "b" ? "black" : "white";
+    await chessgramFetch("/api/bot-matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        result: resultCode,
+        playerColor,
+        timeControl: 300,
+        pgn: game.pgn(),
+        moves: game.history(),
+        opponentName: document.getElementById("opponentName")?.textContent || "Stockfish",
+        durationSeconds: 0
+      })
+    });
+    loadMatches();
+  } catch (error) {
+    window._botResultSaved = false;
+    console.error("[ChessGram] Could not save bot result:", error);
+  }
+}
 
 // Функция для звука
         function playSound(isCapture = false) {
@@ -1855,6 +1882,7 @@ let activePlayerColor = "w";
     async function startBotGame() {
   try {
     activeMatchId = null;
+    window._botResultSaved = false;
     document.getElementById("botStatus").textContent = "Starting game…";
     initBot();
     stockfish.postMessage("ucinewgame");
