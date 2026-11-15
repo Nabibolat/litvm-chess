@@ -677,8 +677,22 @@ async function loadMatches() {
 }
 
 function enterGameMode() {
+  // Переключаемся на отдельный экран партии напрямую, не полагаясь только на CSS.
+  const gameWrap = document.getElementById("gameModeWrap");
+  const menu = document.getElementById("menuWrap");
+  const nav = document.getElementById("bottomNav");
+  const boardCard = document.getElementById("chessBoardCard");
+
+  if (gameWrap) gameWrap.style.display = "block";
+  if (menu) menu.style.display = "none";
+  if (nav) nav.style.display = "none";
+  if (boardCard) boardCard.style.display = "block";
+
   document.body.classList.add("game-mode");
   history.pushState({ game: true }, "", window.location.pathname + "?game=1");
+
+  // Возвращаем страницу к верхней границе, чтобы партия занимала весь экран.
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -694,8 +708,15 @@ document.addEventListener("DOMContentLoaded", () => {
 function exitGameMode() {
   document.body.classList.remove("game-mode");
   history.pushState({}, "", window.location.pathname);
+  const gameWrap = document.getElementById("gameModeWrap");
+  const menu = document.getElementById("menuWrap");
+  const nav = document.getElementById("bottomNav");
   const boardCard = document.getElementById("chessBoardCard");
+  if (gameWrap) gameWrap.style.display = "block";
   if (boardCard) boardCard.style.display = "none";
+  if (menu) menu.style.display = "block";
+  if (nav) nav.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function handleGameOver(data) {
@@ -1636,13 +1657,8 @@ let activePlayerColor = "w";
             // Запускаем таймер
             startClock(timeControl);
 
-            // После включения полноэкранного режима прокручиваем к началу доски.
-            setTimeout(() => {
-                const visibleBoardCard = document.getElementById("chessBoardCard");
-                if (visibleBoardCard) {
-                    visibleBoardCard.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-            }, 200);
+            // Принудительно поднимаем экран к началу после переключения на партию.
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
                       // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
                   // ===== POST-GAME АНАЛИЗ (только для партий с ботом) =====
@@ -1929,14 +1945,8 @@ let activePlayerColor = "w";
     const selected = document.querySelector("#botGrid .bot-card.selected")?.dataset.bot;
     const difficulty = names[selected] || "Bot";
     document.getElementById("botStatus").textContent = "Playing vs " + difficulty;
-    document.getElementById("menuWrap").style.display = "none";
-    document.getElementById("menuWrap").style.display = "none";
-            document.getElementById("chessBoardCard").style.display = "block";
+    document.getElementById("chessBoardCard").style.display = "block";
     enterGameMode();
-    setTimeout(() => {
-        const boardCard = document.getElementById("chessBoardCard");
-        if (boardCard) boardCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 200);
     document.getElementById("analyzeBtn").style.display = "none";
     document.getElementById("clockRow").style.display = "none";
     const panel = document.getElementById("opponentPanel");
