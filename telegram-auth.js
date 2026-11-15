@@ -1,4 +1,4 @@
-const CHESSGRAM_SERVER_URL = window.CHESSGRAM_SERVER_URL || "https://chessgram-server.onrender.com";
+const CHESSGRAM_AUTH_API_URL = window.CHESSGRAM_AUTH_API_URL || "https://chessgram-server.onrender.com";
 
 window.tgSession = {
   isTelegram: false,
@@ -21,7 +21,7 @@ async function initTelegramAuth() {
   webApp.expand();
 
   try {
-    const response = await fetch(CHESSGRAM_SERVER_URL + "/auth/telegram", {
+    const response = await fetch(CHESSGRAM_AUTH_API_URL + "/auth/telegram", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ initData: webApp.initData })
