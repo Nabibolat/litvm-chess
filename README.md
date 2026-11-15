@@ -1,60 +1,38 @@
-# LitVM Chess
+# ChessGram
 
-An open-source chess dApp built on **LitVM LiteForge testnet**. Play against Stockfish bot or against other players, with match results recorded on-chain.
+ChessGram is a Telegram Mini App for playing chess against Stockfish or other Telegram users.
 
-## 🌐 Live Demo
+## Features
 
-https://nabibolat.github.io/litvm-chess/
+- Telegram Mini App authentication
+- Player identity based on verified Telegram user IDs
+- Real-time matchmaking
+- Private rooms and shareable invitations via @ChessGram_bot
+- Reconnect and resume support for active games
+- Chess clocks: 1, 5, 15, and 30 minutes
+- Player statistics and PvP match history stored in Supabase
+- PGN and move-history persistence
 
-## 🔗 Network
+## Architecture
 
-- **Chain:** LitVM LiteForge (testnet)
-- **Chain ID:** 4441
-- **Currency:** zkLTC
-- **RPC:** https://liteforge.rpc.caldera.xyz/http
-- **Explorer:** https://liteforge.explorer.caldera.xyz
+- **Frontend:** vanilla HTML, CSS, and JavaScript
+- **Chess rules/UI:** chess.js and chessboard.js
+- **Bot:** Stockfish
+- **Realtime backend:** Node.js, Express, Socket.IO
+- **Authentication:** Telegram Web App initData verification and short-lived signed sessions
+- **Database:** Supabase Postgres
 
-## 📜 Smart Contract
+## Backend environment
 
-- **GameRegistryV3:** `0x92a4b8b47bbb22b13e08841454f3437cb9c46bd8`
-- **Network:** LitVM LiteForge
-- **Source:** verified in LitVM Explorer
+Configure these variables on the ChessGram game server:
 
-The contract is a simple match registry. It:
-- Does NOT accept deposits (`non-payable`)
-- Does NOT transfer funds (`no transfer/send/call`)
-- Does NOT have admin functions (`no owner`)
-- Does NOT use `delegatecall` or `selfdestruct`
+- `TELEGRAM_BOT_TOKEN` — token for the Telegram bot configured in BotFather
+- `SESSION_SECRET` — random secret with at least 32 characters
+- `SUPABASE_URL` — the Supabase project URL
+- `SUPABASE_SECRET_KEY` — server-only Supabase secret API key
 
-All player actions require explicit confirmation in MetaMask.
+Never put the Supabase secret key or session signing secret in frontend code or source control.
 
-## 🔒 Security
+## Run the frontend locally
 
-This application **never asks for**:
-- Seed phrases
-- Private keys
-- Wallet passwords
-
-All blockchain transactions are **explicitly confirmed by the user in MetaMask**.
-
-## 🎮 Features
-
-- Play chess against Stockfish (5 difficulty levels)
-- Play against other players via open game lobby
-- Match results recorded on-chain
-- Timer per game (1 / 5 / 15 / 30 minutes)
-- Player statistics (wins / losses / draws)
-
-## 🛠 Tech Stack
-
-- **Frontend:** vanilla HTML/CSS/JS
-- **Chess logic:** chess.js
-- **Chess UI:** chessboard.js + jQuery
-- **Bot:** Stockfish.js (WASM)
-- **Blockchain:** ethers.js v5
-- **Smart contract:** Solidity ^0.8.19
-
-## 📦 Local Run
-
-```bash
-npx --yes http-server -p 8000 -c-1
+Serve the repository over HTTP (rather than opening the HTML file directly), then open it as a Telegram Mini App. Set `window.CHESSGRAM_SERVER_URL` to the deployed backend URL before the auth script loads if using a non-default server address.
