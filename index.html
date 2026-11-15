@@ -462,9 +462,7 @@ function applyUiLanguage(lang) {
         if (el && dict[key]) el.textContent = dict[key];
     };
     setText("languageLabel", "languageLabel");
-    setText("chess ratingTitle", "lichessTitle");
-    setText("lichessLoginBtn", "loginchess rating");
-    setText("lichessLogoutBtn", "logoutLichess");
+
     setText("onlineTitle", "playOnline");
     setText("findMatchBtn", "findMatch");
     setText("cancelMatchBtn", "cancelSearch");
@@ -1502,13 +1500,7 @@ function markOccupiedSquares() {
     loadStreak();
 });
         document.getElementById("gameModeWrap").style.display = "block";
-        window.addEventListener("load", () => {
-    connectSocket();
-    setTimeout(() => {
-        attachSocketListeners();
-        setupMatchmakingListeners();
-    }, 500);
-});
+        window.addEventListener("load", () => { if (window.tgSession?.sessionToken) connectSocket(); });
 // ===== АКТИВНАЯ ПАРТИЯ =====
 let activeMatchId = null;   
 let activePlayerColor = "w";        
