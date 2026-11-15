@@ -731,8 +731,7 @@ function attachSocketListeners() {
 function connectSocket() {
   const token = window.tgSession && window.tgSession.sessionToken;
   if (!token) return;
-  if (socket && socket.connected) return;
-  if (socket) socket.disconnect();
+  if (socket) return;
   socket = io(SOCKET_URL, { transports: ["websocket", "polling"], auth: { token } });
   attachSocketListeners();
   setupMatchmakingListeners();
