@@ -1364,7 +1364,9 @@ function connectSocket() {
     }
 }
 
-async function autoFinishMatch() { botEnabled = false; stopClock(); }\n\n// Функция для звука
+async function autoFinishMatch() { botEnabled = false; stopClock(); }
+
+// Функция для звука
         function playSound(isCapture = false) {
             const audio = document.getElementById(isCapture ? "soundCapture" : "soundMove");
             if (audio) {
