@@ -114,7 +114,11 @@
             background: linear-gradient(180deg, #8bc34a, #5d9f35);
             border-color: #a4d46b; color: #fff; box-shadow: 0 0 0 2px rgba(139,195,74,.18);
         }
-        .time-control-clock { font-size: 21px; }
+        .time-control-clock { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; line-height: 1; }
+        .time-control-clock.icon-bullet { color: #ffd34e; font-size: 29px; }
+        .time-control-clock.icon-blitz { color: #ffd21f; font-size: 28px; }
+        .time-control-clock.icon-rapid { color: #72c96a; font-size: 29px; font-family: "Segoe UI Symbol", sans-serif; }
+        .time-control-clock.icon-tactical { width: 28px; height: 28px; border-radius: 50%; background: #27b9a8; color: #fff; font-size: 19px; font-weight: 900; letter-spacing: -2px; padding-right: 2px; }
         .time-control-main { font-size: 19px; font-weight: 800; }
         .time-control-type { font-size: 14px; opacity: .9; }
                    /* ===== Сетка ботов (5 в ряд) ===== */
@@ -399,16 +403,16 @@ body.game-mode {
         </div>
         <div id="newGameTimeChoices" aria-label="Выбор контроля времени">
             <button type="button" class="time-control-option" data-seconds="60" aria-pressed="false">
-                <span class="time-control-clock">⚡</span><span class="time-control-main">1 минута</span><span class="time-control-type">Пуля</span>
+                <span class="time-control-clock icon-bullet" aria-hidden="true">☄︎</span><span class="time-control-main">1 минута</span><span class="time-control-type">Пуля</span>
             </button>
             <button type="button" class="time-control-option selected" data-seconds="180" aria-pressed="true">
-                <span class="time-control-clock">⚡</span><span class="time-control-main">3 минуты</span><span class="time-control-type">Блиц</span>
+                <span class="time-control-clock icon-blitz" aria-hidden="true">⚡</span><span class="time-control-main">3 минуты</span><span class="time-control-type">Блиц</span>
             </button>
             <button type="button" class="time-control-option" data-seconds="600" aria-pressed="false">
-                <span class="time-control-clock">⚡</span><span class="time-control-main">10 минут</span><span class="time-control-type">Рапид</span>
+                <span class="time-control-clock icon-rapid" aria-hidden="true">⏱︎</span><span class="time-control-main">10 минут</span><span class="time-control-type">Рапид</span>
             </button>
             <button type="button" class="time-control-option" data-seconds="1800" aria-pressed="false">
-                <span class="time-control-clock">⚡</span><span class="time-control-main">30 минут</span><span class="time-control-type">Тактик</span>
+                <span class="time-control-clock icon-tactical" aria-hidden="true">‼</span><span class="time-control-main">30 минут</span><span class="time-control-type">Тактик</span>
             </button>
         </div>
         <button id="startNewGameBtn">Начать партию</button>
