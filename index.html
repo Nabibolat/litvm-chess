@@ -1594,15 +1594,20 @@ let activePlayerColor = "w";
             enterGameMode();
             document.getElementById("clockRow").style.display = "flex";
             
-            // Принудительно перерисовываем доску (на случай, если контейнер был скрыт)
+            // Дожидаемся отображения карточки, затем пересчитываем размер доски.
             setTimeout(() => {
                 if (board && board.resize) board.resize();
-            }, 100);
+                if (boardCard) {
+                    boardCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 300);
 
             console.log("[PvP] board card AFTER:", {
                 display: boardCard.style.display,
                 computedDisplay: window.getComputedStyle(boardCard).display,
-                visibility: window.getComputedStyle(boardCard).visibility
+                visibility: window.getComputedStyle(boardCard).visibility,
+                boardWidth: document.getElementById("board")?.getBoundingClientRect().width,
+                boardHeight: document.getElementById("board")?.getBoundingClientRect().height
             });
             // Запускаем таймер
             startClock(timeControl);
