@@ -1,4 +1,4 @@
-const CHESSGRAM_AUTH_API_URL = window.CHESSGRAM_AUTH_API_URL || "https://chessgram-server.onrender.com";
+const CHESSGRAM_AUTH_API_URL = window.CHESSGRAM_SERVER_URL || "https://chessgram-server.onrender.com";
 
 window.tgSession = {
   isTelegram: false,
