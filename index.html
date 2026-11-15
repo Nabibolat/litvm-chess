@@ -328,7 +328,7 @@
                 <div>⚪ White: <span id="whiteTimer">--:--</span></div>
                 <div>⚫ Black: <span id="blackTimer">--:--</span></div>
             </div>
-            <div id="board" style="width: 400px; margin: 20px auto;"></div>
+            <div id="board" style="width: 100%; max-width: 400px; margin: 20px auto;"></div>
             <div id="moveHistoryPanel" style="margin-top: 16px;">
                 <button id="analyzeBtn" style="display: none; margin-bottom: 10px;">🔍 Analyze game</button>
                 <div id="moveHistoryTitle" style="font-size: 13px; color: #8a92a6; margin-bottom: 6px;">Move history</div>
@@ -1597,10 +1597,14 @@ let activePlayerColor = "w";
             // Дожидаемся отображения карточки, затем пересчитываем размер доски.
             setTimeout(() => {
                 if (board && board.resize) board.resize();
-                if (boardCard) {
-                    boardCard.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-            }, 300);
+                const boardEl = document.getElementById("board");
+                const visibleBoardCard = document.getElementById("chessBoardCard");
+                console.log("[PvP] board dimensions:", {
+                    boardElWidth: boardEl ? boardEl.offsetWidth : "null",
+                    boardElHeight: boardEl ? boardEl.offsetHeight : "null",
+                    cardHeight: visibleBoardCard ? visibleBoardCard.offsetHeight : "null"
+                });
+            }, 500);
 
             console.log("[PvP] board card AFTER:", {
                 display: boardCard.style.display,
@@ -1611,6 +1615,12 @@ let activePlayerColor = "w";
             });
             // Запускаем таймер
             startClock(timeControl);
+
+            // Прокручиваем экран к игровой доске.
+            const visibleBoardCard = document.getElementById("chessBoardCard");
+            if (visibleBoardCard) {
+                visibleBoardCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
         }
                       // ===== СОХРАНЕНИЕ РЕЗУЛЬТАТА В БЛОКЧЕЙН =====
                   // ===== POST-GAME АНАЛИЗ (только для партий с ботом) =====
